@@ -28,6 +28,7 @@ export const radii = {
   input: 12,
   button: 14,
   card: 16,
+  profileCard: 18,
   chip: 18,
   hero: 20,
   sheet: 24,

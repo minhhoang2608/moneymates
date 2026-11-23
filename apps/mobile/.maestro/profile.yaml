@@ -1,0 +1,33 @@
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-profile"
+- assertVisible:
+    id: "screen-profile"
+- tapOn:
+    id: "profile-edit-name"
+- tapOn:
+    id: "profile-name-input"
+- inputText: "Hoàng"
+- tapOn:
+    id: "profile-name-save"
+- assertVisible: "Hoàng"
+- tapOn:
+    id: "row-bank-accounts"
+- assertVisible:
+    id: "screen-bank-accounts"
+- back
+- tapOn:
+    id: "row-categories"
+- assertVisible:
+    id: "screen-categories"
+- back
+- tapOn:
+    id: "row-settings"
+- assertVisible:
+    id: "screen-settings"
+- back
+- assertVisible:
+    id: "screen-profile"

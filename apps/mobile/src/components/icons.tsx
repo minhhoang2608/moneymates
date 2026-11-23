@@ -1,4 +1,4 @@
-import Svg, { Circle, Path } from "react-native-svg";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 type IconProps = { color: string; size?: number };
 
@@ -49,5 +49,27 @@ export const UserIcon = (p: IconProps) => (
   <Base {...p}>
     <Circle cx="12" cy="8" r="4" />
     <Path d="M4 21a8 8 0 0 1 16 0" />
+  </Base>
+);
+
+export const BankIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M3 10 12 4l9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18" />
+  </Base>
+);
+
+export const GridIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="3" y="3" width="7" height="7" rx="2" />
+    <Rect x="14" y="3" width="7" height="7" rx="2" />
+    <Rect x="3" y="14" width="7" height="7" rx="2" />
+    <Rect x="14" y="14" width="7" height="7" rx="2" />
+  </Base>
+);
+
+export const SettingsIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Circle cx="12" cy="12" r="3" />
+    <Path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
   </Base>
 );
