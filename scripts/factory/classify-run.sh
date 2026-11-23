@@ -43,7 +43,16 @@ fi
 
 case "$outcome" in
   ok) echo "Agent finished with a valid result." ;;
-  paused) echo "::warning::Claude usage limit reached – run paused. Labels unchanged; the resume sweep will continue after the reset." ;;
+  paused)
+    echo "::warning::Claude usage limit reached - run paused. Labels unchanged; the resume sweep will continue after the reset."
+    # The limit message normally says when it resets: keep it visible in the log and the run summary.
+    reset_msg="$(grep -iE 'reset|limit' <<<"$errors" | head -n 3 || true)"
+    if [[ -n "$reset_msg" ]]; then
+      echo "$reset_msg"
+      if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then printf '> %s
+' "$reset_msg" >>"$GITHUB_STEP_SUMMARY"; fi
+    fi
+    ;;
   failed)
     echo "::error::Agent run failed (step outcome: $step_outcome)."
     if [[ -n "$errors" ]]; then echo "$errors" | head -n 20; fi
