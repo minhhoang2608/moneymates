@@ -1,0 +1,10 @@
+{
+  "image": "file:///e2e/bill.jpg",
+  "response": {
+    "amount": 345000,
+    "currency": "VND",
+    "shop": "Bánh căn Nhà Chung",
+    "date": "2026-11-22",
+    "category": "Ăn uống"
+  }
+}

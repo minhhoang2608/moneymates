@@ -79,6 +79,10 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
           setMenuOpen(false);
           router.push("/voice");
         }}
+        onBill={() => {
+          setMenuOpen(false);
+          router.push("/bill");
+        }}
       />
     </View>
   );
