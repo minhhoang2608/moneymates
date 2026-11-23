@@ -33,11 +33,14 @@ describe("computeBalances", () => {
     ]);
   });
   it("paid payment settles, unpaid ignored", () => {
+    const e: GroupExpense = { paidBy: "me", amount: 900000, shares: { me: 400000, an: 400000, binh: 100000 } };
     const pay = { from: "an", to: "me", amount: 400000 };
-    expect(bal([equal], [{ ...pay, paidAt: null }]).map((x) => x.balance)).toEqual([600000, -300000, -300000]);
-    expect(bal([equal], [{ ...pay, paidAt: "2026-01-01T00:00:00Z" }]).map((x) => x.balance)).toEqual([
-      200000, 100000, -300000,
-    ]);
+    const unpaid = bal([e], [{ ...pay, paidAt: null }]);
+    expect(unpaid.map((x) => x.balance)).toEqual([500000, -400000, -100000]);
+    expect(lines([e], [{ ...pay, paidAt: null }])).toEqual(["An trả Tôi 400.000đ", "Bình trả Tôi 100.000đ"]);
+    const paid = [{ ...pay, paidAt: "2026-01-01T00:00:00Z" }];
+    expect(bal([e], paid).map((x) => x.balance)).toEqual([100000, 0, -100000]);
+    expect(lines([e], paid)).toEqual(["Bình trả Tôi 100.000đ"]);
   });
   it("empty group", () => {
     expect(bal([]).every((x) => x.paid === 0 && x.owed === 0 && x.balance === 0)).toBe(true);
@@ -61,6 +64,10 @@ describe("settlementList", () => {
   it("Tôi pays Bình when Bình fronted money", () => {
     const e: GroupExpense = { paidBy: "binh", amount: 600000, shares: { me: 200000, an: 400000 } };
     expect(lines([e])).toEqual(["An trả Tôi 400.000đ", "Tôi trả Bình 600.000đ"]);
+  });
+  it("equal split when only Bình paid", () => {
+    const e: GroupExpense = { paidBy: "binh", amount: 600000, shares: { me: 200000, an: 200000, binh: 200000 } };
+    expect(lines([e])).toEqual(["An trả Tôi 200.000đ", "Tôi trả Bình 400.000đ"]);
   });
 });
 
