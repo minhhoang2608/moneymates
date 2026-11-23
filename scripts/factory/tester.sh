@@ -59,6 +59,39 @@ open_bug() { # title body area priority -> prints new issue number
   echo "${url##*/}"
 }
 
+CHECKLIST_TITLE="Real-device checklist"
+
+# The single human-owned issue that collects checks only a physical phone can do. It carries needs-human
+# (agents skip it) and no status label (it is never assigned). Prints its number, creating it when missing.
+checklist_issue() {
+  local n url
+  n="$(gh issue list --state open --label test:real-device --search "\"$CHECKLIST_TITLE\" in:title" --json number,title     --jq ".[] | select(.title == \"$CHECKLIST_TITLE\") | .number" | head -n1)"
+  if [[ -z "$n" ]]; then
+    url="$(gh issue create --title "$CHECKLIST_TITLE" --label "test:real-device,needs-human" --body       "Checks that only a physical phone can do (bank deeplinks, camera scanning, Vietnamese speech, biometrics, how icons and native widgets look). Each verified ticket adds its items here and is closed, so these never block other work. Install a recent \`dev\` build, tick the boxes, and open a \`type:bug\` issue for anything that fails.")"
+    n="${url##*/}"
+  fi
+  echo "$n"
+}
+
+# checklist_add <ticket> <title> <notes>: append a section for the ticket (once). Prints the checklist number.
+checklist_add() {
+  local cl body
+  cl="$(checklist_issue)"
+  body="$(gh issue view "$cl" --json body --jq .body)"
+  if ! grep -qF "### #$1 " <<<"$body"; then
+    body="$body
+
+### #$1 $2
+_Verified on dev \`${GITHUB_SHA:0:7}\`. [run]($RUN_URL)_
+
+$3
+
+- [ ] Checked on a real phone"
+    gh issue edit "$cl" --body "$body" >/dev/null
+  fi
+  echo "$cl"
+}
+
 apply() {
   : "${OUTCOME:?}"
   local allowed n
@@ -100,8 +133,17 @@ $notes"
         filed=$((filed + 1))
         ;;
       real_device)
+        # Everything automatable passed: close the ticket and track the phone-only checks in the shared checklist
+        # instead of blocking the ticket (and the parent feature) on a human.
+        title="$(gh issue view "$n" --json title --jq .title)"
+        local cl
+        cl="$(checklist_add "$n" "$title" "$notes")"
+        comment "$n" ":white_check_mark: **$VERIFIER: verified on \`dev\`** (\`${GITHUB_SHA:0:7}\`). Everything that can be tested without a phone passes. The remaining device checks are tracked in #$cl and do not block this ticket.
+
+$notes"
         gh issue edit "$n" --add-label test:real-device >/dev/null
-        escalate "$n" "$VERIFIER verified everything possible on the emulator. Remaining checks need a real phone: $notes"
+        set_status "$n" status:done
+        gh issue close "$n" --reason completed >/dev/null
         ;;
       *) log "unknown verdict '$verdict' for #$n" ;;
     esac

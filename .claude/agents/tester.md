@@ -39,7 +39,7 @@ For **every** acceptance criterion, find the evidence:
 
 - `status:testing` → `status:done` + closed (`pass`). A parent feature that passes is also closed with `status:done`.
 - `fail` → a new `type:bug` + `status:triage` issue. The original stays in `status:testing` and is re-verified once the bug is closed.
-- `real_device` → `test:real-device` + `needs-human`. The human closes the ticket after testing on a phone.
+- `real_device` → the ticket is closed with `status:done` and `test:real-device`, and its phone-only checks are appended to the single human-owned issue "Real-device checklist" (label `test:real-device` + `needs-human`, never assigned). They never block the ticket or its parent feature; the human ticks them off on a build and files a `type:bug` for anything that fails.
 
 ## Limits
 
