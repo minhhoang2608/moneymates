@@ -94,11 +94,6 @@ export function createCategoryRepository(db: AnyDb) {
         tx.update(category).set({ deleted_at: now, updated_at: now }).where(eq(category.id, id)).run();
       });
     },
-
-    /** Alias kept so there is a single delete path. */
-    async delete(id: string): Promise<void> {
-      return this.deleteCategory(id);
-    },
   };
 }
 

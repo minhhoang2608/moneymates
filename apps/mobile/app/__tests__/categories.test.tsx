@@ -1,5 +1,6 @@
 import { Alert } from "react-native";
 import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
+import { router } from "expo-router";
 
 import { createCategoryRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
@@ -99,6 +100,9 @@ describe("Danh mục screen", () => {
     await waitFor(() => expect(screen.queryByTestId(`category-row-${cf.id}`)).toBeNull());
     alert.mockRestore();
     expect((await txns.list()).find((x) => x.id === t.id)!.category_id).toBe(catId("Khác"));
+    await act(async () => router.navigate("/"));
+    await screen.findByTestId("overview-add-button");
+    expect(await screen.findByText(/Khác/)).toBeTruthy();
     expect((await repo().listByKind("expense")).map((c) => c.id)).not.toContain(cf.id);
   });
 
@@ -116,6 +120,11 @@ describe("Danh mục screen", () => {
     await fireEvent.press(screen.getByTestId("category-save"));
     await waitFor(() => expect(screen.queryByTestId("category-sheet")).toBeNull());
     expect(await screen.findByText("Cafe")).toBeTruthy();
+
+    await act(async () => router.navigate("/"));
+    await screen.findByTestId("overview-add-button");
+    expect(await screen.findByText(/Cafe/)).toBeTruthy();
+    expect(screen.queryByText(/Cà phê/)).toBeNull();
   });
 
   it("AC6: an empty name is rejected and nothing is written", async () => {

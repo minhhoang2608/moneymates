@@ -71,7 +71,7 @@ describe("category repository", () => {
     expect(updated).toMatchObject({ icon: "🍜", color: "#123456", name: "Ăn uống" });
     expect(updated.updated_at > before.updated_at).toBe(true);
     await expect(repo.update(ANUONG, { name: "X" })).rejects.toMatchObject({ code: "default_rename_forbidden" });
-    await expect(repo.delete(ANUONG)).rejects.toMatchObject({ code: "default_delete_forbidden" });
+    await expect(repo.deleteCategory(ANUONG)).rejects.toMatchObject({ code: "default_delete_forbidden" });
     expect(db.select().from(category).where(eq(category.id, ANUONG)).get()!.deleted_at).toBeNull();
   });
 
@@ -106,10 +106,10 @@ describe("category repository", () => {
   it("soft-deletes custom categories and reports unknown ids", async () => {
     const { db, repo } = setup();
     const c = await repo.create({ name: "Thú cưng", kind: "expense", icon: "TC", color: "#3F6212" });
-    await repo.delete(c.id);
+    await repo.deleteCategory(c.id);
     expect((await repo.listByKind("expense")).map((x) => x.name)).not.toContain("Thú cưng");
     expect(db.select().from(category).where(eq(category.id, c.id)).get()!.deleted_at).not.toBeNull();
-    await expect(repo.delete(c.id)).rejects.toMatchObject({ code: "not_found" });
+    await expect(repo.deleteCategory(c.id)).rejects.toMatchObject({ code: "not_found" });
     await expect(repo.update("nope", { icon: "x" })).rejects.toMatchObject({ code: "not_found" });
     await expect(repo.update(ANUONG, { name: " " })).rejects.toMatchObject({ code: "name_required" });
   });
