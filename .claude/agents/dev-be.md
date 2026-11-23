@@ -11,6 +11,8 @@ model: sonnet
 
 ## Scope: `area:api`
 
+When no API ticket is available the Tech Lead may give you an `area:mobile` ticket (usually logic or data layer work). For those, load the `mobile-conventions` skill and work in `apps/mobile` following its rules.
+
 - Django + DRF in `apps/api/`. v1 endpoints are `POST /ai/parse-text`, `POST /ai/parse-bill` and `GET /me/features`; you also own request limiting per device id + app secret, and model fallback with timeouts.
 - Always load `api-conventions`. Load `money-logic` when amounts are parsed or returned, and `testing-strategy` for tests.
 - **OpenRouter is always mocked in tests.** Never call the real API from tests or CI. Keys come only from environment variables. Commit `.env.example` with placeholders and never read or write `.env`.
