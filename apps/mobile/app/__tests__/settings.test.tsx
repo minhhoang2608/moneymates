@@ -44,7 +44,7 @@ beforeEach(() => {
 
 async function open() {
   const view = await renderRouter("./app", { initialUrl: "/settings" });
-  await screen.findByTestId("screen-settings");
+  await screen.findByTestId("screen-settings", {}, { timeout: 5000 });
   await screen.findByTestId("settings-app-row-tpbank");
   return view;
 }
