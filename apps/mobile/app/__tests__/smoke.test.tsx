@@ -44,7 +44,7 @@ describe("app smoke (mirrors .maestro/smoke.yaml)", () => {
     }
     await fireEvent.press(screen.getByTestId("tab-qr"));
     expect(screen.getByTestId("screen-scan")).toBeTruthy();
-    expect(screen.getAllByText("Quét QR").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Quét mã thanh toán").length).toBeGreaterThan(0);
   });
 
   it("app stays usable when the API is unreachable", async () => {

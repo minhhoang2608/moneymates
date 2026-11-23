@@ -9,6 +9,20 @@ export const vi = {
   },
   scan: {
     title: "Quét QR",
+    heading: "Quét mã thanh toán",
+    close: "Đóng",
+    flashOn: "Bật đèn flash",
+    flashOff: "Tắt đèn flash",
+    hint: "Đưa mã VietQR hoặc mã thanh toán của quán vào khung",
+    gallery: "Chọn ảnh QR từ thư viện",
+    manual: "Không có mã? Nhập tay",
+    error: "Không đọc được mã QR. Vui lòng thử lại.",
+    permissionDenied: "MoneyMates cần quyền camera để quét mã QR.",
+    grant: "Cấp quyền",
+    openSettings: "Mở Cài đặt",
+  },
+  payConfirm: {
+    title: "Xác nhận thanh toán",
   },
   db: {
     migrationError: "Không thể khởi tạo dữ liệu trên máy. Vui lòng khởi động lại ứng dụng.",

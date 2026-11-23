@@ -35,7 +35,7 @@ appId: com.moneymates.app
     id: "tab-qr"
 - assertVisible:
     id: "screen-scan"
-- assertVisible: "Quét QR"
+- assertVisible: "Quét mã thanh toán"
 - back
 - assertVisible:
     id: "screen-overview"
