@@ -1,0 +1,7 @@
+# Keep LF everywhere so shell scripts, hooks and workflows behave the same on Windows and Linux runners.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.apk binary
+*.keystore binary
