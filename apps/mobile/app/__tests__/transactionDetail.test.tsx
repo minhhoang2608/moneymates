@@ -6,7 +6,12 @@ import { Alert } from "react-native";
 
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
-import { createGroupExpenseRepository, createGroupRepository, createTransactionRepository } from "@/db/repositories";
+import {
+  createGroupExpenseRepository,
+  createGroupRepository,
+  createMoneySourceRepository,
+  createTransactionRepository,
+} from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { generateVietQr } from "@/lib/vietqr";
@@ -92,6 +97,15 @@ async function open(id: string, from = "/history") {
 }
 
 describe("Chi tiết giao dịch screen", () => {
+  it("settings AC3: a transaction keeps its money source after the source is deleted", async () => {
+    const sources = createMoneySourceRepository(global.__DETAIL_TEST_DB__ as unknown as AnyDb);
+    const visa = await sources.addSource("Visa", "card");
+    const t = await add(50_000, "2026-11-21T07:02:00Z", { money_source: "Visa" });
+    await sources.deleteSource(visa.id);
+    await open(t.id);
+    expect(screen.getByTestId("detail-money-source").props.children).toBe("Visa");
+  });
+
   it("AC1/AC4: History row opens the detail with all fields", async () => {
     const t = await add(50_000, "2026-11-21T07:02:00Z", {
       note: "phở bò",

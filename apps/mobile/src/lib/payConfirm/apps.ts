@@ -21,17 +21,18 @@ export const PAY_APPS: PayApp[] = [
 
 const BIN_TO_APP: Record<string, string> = { "970423": "tpbank", "970407": "tcb", "970436": "vcb", "970422": "mb" };
 
-/** Recently used apps first (newest first), then the rest in catalogue order. */
-export function orderApps(apps: PayApp[], recentIds: string[]): PayApp[] {
-  const recent = recentIds
-    .map((id) => apps.find((a) => a.id === id))
+/** Apps sorted by the saved keys; unknown keys are dropped, unsaved apps follow in catalogue order. */
+export function orderAppsBySaved(apps: PayApp[], savedOrder: string[]): PayApp[] {
+  const saved = savedOrder
+    .map((key) => apps.find((a) => a.id === key))
     .filter((a, i, arr): a is PayApp => !!a && arr.indexOf(a) === i);
-  return [...recent, ...apps.filter((a) => !recent.includes(a))];
+  return [...saved, ...apps.filter((a) => !saved.includes(a))];
 }
 
 /** Default selection: the most recent app, else the app of the scanned bank, else the first. */
 export function defaultAppId(ordered: PayApp[], recentIds: string[], scannedBin?: string): string {
-  if (recentIds.includes(ordered[0].id)) return ordered[0].id;
+  const lastUsed = recentIds.find((id) => ordered.some((a) => a.id === id));
+  if (lastUsed) return lastUsed;
   const byBin = scannedBin ? BIN_TO_APP[scannedBin] : undefined;
   return ordered.find((a) => a.id === byBin)?.id ?? ordered[0].id;
 }
