@@ -1,6 +1,6 @@
 # Tester: tests only the dev branch after each merge.
 #  - tests:  unit / API / golden tests (reuses ci.yml)
-#  - e2e:    Android emulator on the Linux runner + Maestro flows (only when apps/mobile/.maestro exists)
+#  - E2E (Android emulator + Maestro) runs in its own workflow, e2e.yml; verify reads its latest completed result.
 #  - verify: Claude checks every status:testing ticket's acceptance criteria against dev and the test results.
 #            Pass -> status:done + close. Fail -> type:bug + status:triage (original re-verified when the bug closes).
 #            Needs a physical phone -> test:real-device + needs-human.
@@ -29,79 +29,9 @@ jobs:
       contents: read
     uses: ./.github/workflows/ci.yml
 
-  e2e:
-    name: E2E (Android emulator + Maestro)
-    if: vars.FACTORY_ENABLED == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 75
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: dev
-      - id: check
-        run: |
-          if [[ -f apps/mobile/package.json && -d apps/mobile/.maestro ]]; then
-            echo "run=true" >>"$GITHUB_OUTPUT"
-          else
-            echo "run=false" >>"$GITHUB_OUTPUT"
-            echo "No apps/mobile/.maestro yet – E2E skipped." >>"$GITHUB_STEP_SUMMARY"
-          fi
-      - name: Enable KVM
-        if: steps.check.outputs.run == 'true'
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - uses: actions/setup-node@v7
-        if: steps.check.outputs.run == 'true'
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: apps/mobile/package-lock.json
-      - uses: actions/setup-java@v6
-        if: steps.check.outputs.run == 'true'
-        with:
-          distribution: temurin
-          java-version: "17"
-      - name: Build release APK (E2E mode, mock data)
-        if: steps.check.outputs.run == 'true'
-        working-directory: apps/mobile
-        env:
-          # The app reads this to load fixture QR payloads, voice transcripts and AI responses.
-          EXPO_PUBLIC_E2E: "1"
-        run: |
-          npm ci
-          npx expo prebuild --platform android --no-install --clean
-          cd android && ./gradlew assembleRelease --no-daemon
-      - name: Install Maestro
-        if: steps.check.outputs.run == 'true'
-        run: |
-          curl -fsSL "https://get.maestro.mobile.dev" | bash
-          echo "$HOME/.maestro/bin" >>"$GITHUB_PATH"
-      - name: Run Maestro flows on emulator
-        if: steps.check.outputs.run == 'true'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          target: google_apis
-          disable-animations: true
-          script: >-
-            adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk &&
-            maestro test apps/mobile/.maestro --format junit --output maestro-results/report.xml --test-output-dir maestro-results
-      - name: Upload E2E results and screenshots
-        if: always() && steps.check.outputs.run == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: e2e-results
-          path: maestro-results/
-          if-no-files-found: ignore
-
   verify:
     name: Verify acceptance criteria
-    needs: [tests, e2e]
+    needs: [tests]
     if: always() && vars.FACTORY_ENABLED == 'true' && needs.tests.result != 'cancelled'
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -114,19 +44,30 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       TESTS_RESULT: ${{ needs.tests.result }}
-      E2E_RESULT: ${{ needs.e2e.result }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: dev
           fetch-depth: 50
       - uses: ./.github/actions/factory-setup
-      - name: Download E2E results
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          name: e2e-results
-          path: .factory/e2e
+      - name: Latest E2E result
+        # The newest finished (success or failure) e2e.yml run on dev; cancelled runs were superseded and mean nothing.
+        # E2E only reruns when apps/mobile changes. A "success" without an artifact means no Maestro flow ran
+        # yet, so it counts as `none`. `none` also means E2E never ran.
+        run: |
+          run="$(gh run list --workflow e2e.yml --branch dev --status completed --limit 20             --json databaseId,conclusion,headSha             --jq '[.[] | select(.conclusion == "success" or .conclusion == "failure")] | .[0] // empty')"
+          result=none
+          sha=""
+          if [[ -n "$run" ]]; then
+            id="$(jq -r .databaseId <<<"$run")"
+            result="$(jq -r .conclusion <<<"$run")"
+            sha="$(jq -r .headSha <<<"$run")"
+            if ! gh run download "$id" --name e2e-results --dir .factory/e2e && [[ "$result" == success ]]; then
+              result=none
+            fi
+          fi
+          echo "E2E_RESULT=$result" >>"$GITHUB_ENV"
+          echo "E2E_SHA=$sha" >>"$GITHUB_ENV"
       - name: Report regressions on dev
         run: '"$FACTORY_BIN/tester.sh" regression'
       - id: collect
@@ -145,8 +86,9 @@ jobs:
             Read `CLAUDE.md` and `.claude/agents/tester.md`, then load the `testing-strategy` skill.
 
             `.factory/input.json` lists the tickets in status:testing, the dev commit, and the results of the
-            test jobs on dev (`tests_job`, `e2e_job`: success / failure / skipped). Maestro JUnit results and
-            screenshots, if any, are in `.factory/e2e/`.
+            test jobs on dev (`tests_job`; `e2e_job` is the result of the latest completed E2E run, `none` if it never ran,
+            at commit `e2e_sha`: E2E only reruns when apps/mobile changes). Maestro JUnit results and screenshots, if any,
+            are in `.factory/e2e/`.
 
             Each entry has a `kind`:
             - `ticket`: a Dev sub-ticket merged into dev (find the PR via `gh pr list --state merged --search "<issue number>"`).
@@ -189,7 +131,7 @@ jobs:
             (how evidence is judged), then load the `testing-strategy` skill.
 
             `.factory/input-ba.json` lists parent features whose sub-tickets are all closed (`sub_tickets`), the dev
-            commit, and the results of the test jobs on dev (`tests_job`, `e2e_job`: success / failure / skipped).
+            commit, and the results of the test jobs on dev (`tests_job`; `e2e_job` is the latest completed E2E run, `none` if it never ran, at commit `e2e_sha`).
             Maestro JUnit results and screenshots, if any, are in `.factory/e2e/`.
 
             For each feature, check every acceptance criterion of the feature ticket against the code on `dev` and the

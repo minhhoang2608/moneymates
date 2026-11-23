@@ -1,0 +1,91 @@
+# E2E: Android emulator on the Linux runner + Maestro flows against a release build with mock data.
+# Separate from the Tester on purpose: a cold Android build takes 20+ minutes, and in one workflow it blocked
+# every ticket verification behind it. Here it runs in parallel, only when apps/mobile changed, and a newer push
+# cancels the older run (only the latest dev matters). The Tester and BA read the latest completed result.
+name: E2E
+run-name: E2E on dev
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "apps/mobile/**"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: e2e
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: E2E (Android emulator + Maestro)
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - id: check
+        run: |
+          if [[ -f apps/mobile/package.json && -d apps/mobile/.maestro ]]; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "run=false" >>"$GITHUB_OUTPUT"
+            echo "No apps/mobile/.maestro yet – E2E skipped." >>"$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Enable KVM
+        if: steps.check.outputs.run == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-node@v7
+        if: steps.check.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - uses: actions/setup-java@v6
+        if: steps.check.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - name: Build release APK (E2E mode, mock data)
+        if: steps.check.outputs.run == 'true'
+        working-directory: apps/mobile
+        env:
+          # The app reads this to load fixture QR payloads, voice transcripts and AI responses.
+          EXPO_PUBLIC_E2E: "1"
+        run: |
+          npm ci
+          npx expo prebuild --platform android --no-install --clean
+          cd android && ./gradlew assembleRelease --no-daemon
+      - name: Install Maestro
+        if: steps.check.outputs.run == 'true'
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >>"$GITHUB_PATH"
+      - name: Run Maestro flows on emulator
+        if: steps.check.outputs.run == 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: >-
+            adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk &&
+            maestro test apps/mobile/.maestro --format junit --output maestro-results/report.xml --test-output-dir maestro-results
+      - name: Upload E2E results and screenshots
+        if: always() && steps.check.outputs.run == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results
+          path: maestro-results/
+          if-no-files-found: ignore

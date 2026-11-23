@@ -39,8 +39,9 @@ collect() {
     list="$(jq -c --argjson r "$row" '. + [$r]' <<<"$list")"
   done
   jq -n --argjson issues "$list" \
-    --arg tests "${TESTS_RESULT:-unknown}" --arg e2e "${E2E_RESULT:-unknown}" --arg sha "${GITHUB_SHA:-}" \
-    '{dev_sha: $sha, tests_job: $tests, e2e_job: $e2e, issues: $issues}' >"$INPUT"
+    --arg tests "${TESTS_RESULT:-unknown}" --arg e2e "${E2E_RESULT:-unknown}" --arg e2esha "${E2E_SHA:-}" \
+    --arg sha "${GITHUB_SHA:-}" \
+    '{dev_sha: $sha, tests_job: $tests, e2e_job: $e2e, e2e_sha: $e2esha, issues: $issues}' >"$INPUT"
   local count
   count="$(jq '.issues | length' "$INPUT")"
   set_output count "$count"
