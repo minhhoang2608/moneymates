@@ -14,3 +14,14 @@ export type {
   TransactionSource,
   TransactionType,
 } from "./transactionRepository";
+export { createGroupRepository } from "./groupRepository";
+export type {
+  GroupMember,
+  GroupMemberRow,
+  GroupPatch,
+  GroupRepository,
+  GroupRow,
+  GroupSummary,
+  GroupWithMembers,
+  NewGroup,
+} from "./groupRepository";

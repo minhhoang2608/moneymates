@@ -53,6 +53,46 @@ export const bankAccount = sqliteTable(
   ],
 );
 
+/** Group trips. Dates are `YYYY-MM-DD`. `receiving_account_id` is where members pay "me" back. */
+export const groups = sqliteTable(
+  "groups",
+  {
+    ...baseColumns(),
+    name: text("name").notNull(),
+    icon: text("icon").notNull().default(""),
+    start_date: text("start_date"),
+    end_date: text("end_date"),
+    receiving_account_id: text("receiving_account_id").references(() => bankAccount.id),
+  },
+  (t) => [
+    index("groups_deleted_at_created_at_idx").on(t.deleted_at, t.created_at),
+    check(
+      "groups_dates_check",
+      sql`${t.start_date} is null or ${t.end_date} is null or ${t.end_date} >= ${t.start_date}`,
+    ),
+  ],
+);
+
+/** Group members. The `is_me` row stores an empty name; its display name comes from the profile. */
+export const groupMembers = sqliteTable(
+  "group_members",
+  {
+    ...baseColumns(),
+    group_id: text("group_id")
+      .notNull()
+      .references(() => groups.id),
+    name: text("name").notNull().default(""),
+    is_me: integer("is_me", { mode: "boolean" }).notNull().default(false),
+    user_id: text("user_id"),
+  },
+  (t) => [
+    index("group_members_group_id_deleted_at_idx").on(t.group_id, t.deleted_at),
+    uniqueIndex("group_members_one_me_idx")
+      .on(t.group_id)
+      .where(sql`${t.is_me} = 1 and ${t.deleted_at} is null`),
+  ],
+);
+
 /** Personal income/expense entries. Money is integer VND. `occurred_at` is ISO UTC. */
 export const transactions = sqliteTable(
   "transactions",
@@ -72,10 +112,13 @@ export const transactions = sqliteTable(
       .notNull()
       .default("manual"),
     qr_data: text("qr_data"),
+    group_id: text("group_id").references(() => groups.id),
+    paid_by_member_id: text("paid_by_member_id").references(() => groupMembers.id),
   },
   (t) => [
     index("transactions_deleted_at_occurred_at_idx").on(t.deleted_at, t.occurred_at),
     index("transactions_category_id_idx").on(t.category_id),
+    index("transactions_group_id_deleted_at_idx").on(t.group_id, t.deleted_at),
     check("transactions_amount_check", sql`${t.amount} > 0`),
     check("transactions_type_check", sql`${t.type} in ('expense', 'income')`),
     check("transactions_source_check", sql`${t.source} in ('manual', 'qr', 'voice', 'bill')`),
