@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { getApiUrl } from "../config";
+import { getApiUrl, getAppSecret } from "../config";
 
 describe("api config", () => {
   afterEach(() => {
@@ -23,5 +23,16 @@ describe("api config", () => {
     for (const f of fs.readdirSync(dir).filter((n) => /\.tsx?$/.test(n))) {
       expect(fs.readFileSync(path.join(dir, f), "utf8")).not.toMatch(/https?:\/\//);
     }
+  });
+});
+
+describe("getAppSecret", () => {
+  afterEach(() => {
+    delete process.env.EXPO_PUBLIC_APP_SECRET;
+  });
+  it("trims and returns null when unset", () => {
+    expect(getAppSecret()).toBeNull();
+    process.env.EXPO_PUBLIC_APP_SECRET = " abc ";
+    expect(getAppSecret()).toBe("abc");
   });
 });

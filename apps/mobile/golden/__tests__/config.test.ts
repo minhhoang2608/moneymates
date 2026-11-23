@@ -17,6 +17,11 @@ test("the env example has only EXPO_PUBLIC_* keys with placeholder values", () =
   for (const line of lines) {
     const [key, value] = line.split("=");
     expect(key).toMatch(/^EXPO_PUBLIC_[A-Z0-9_]+$/);
+    if (key === "EXPO_PUBLIC_APP_SECRET") {
+      // Rate-limit secret by spec (#153): only the placeholder may be committed.
+      expect(value).toBe("replace-me");
+      continue;
+    }
     expect(key).not.toMatch(/KEY|SECRET|TOKEN|PASSWORD/);
     expect(value).toMatch(/^(0|1|https:\/\/[a-z.]+\.invalid)$/);
   }
