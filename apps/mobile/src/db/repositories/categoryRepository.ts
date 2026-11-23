@@ -1,16 +1,21 @@
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { DEFAULT_CATEGORIES } from "../../lib/category/defaults";
 import { CategoryError, type CategoryKind } from "../../lib/category/types";
 import { newId } from "../ids";
 import { nowUtc } from "../columns";
-import { category } from "../schema";
+import { category, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 
 export type CategoryRow = typeof category.$inferSelect;
 
 export type NewCategory = { name: string; kind: CategoryKind; icon: string; color: string };
 export type CategoryPatch = { name?: string; icon?: string; color?: string };
+
+type SyncTxDb = {
+  transaction: (fn: (tx: BetterSQLite3Database) => void) => void;
+};
 
 const defaultOrder = new Map(DEFAULT_CATEGORIES.map((d, i) => [d.id, i]));
 
@@ -70,12 +75,24 @@ export function createCategoryRepository(db: AnyDb) {
       return find(id);
     },
 
-    /** Soft delete. Defaults can't be deleted. */
-    async delete(id: string): Promise<void> {
+    /**
+     * Soft delete a custom category. Its live transactions move to the default "Khác" of the same
+     * type in the same database transaction. Defaults can't be deleted.
+     */
+    async deleteCategory(id: string): Promise<void> {
       const current = await find(id);
       if (current.is_default) throw new CategoryError("default_delete_forbidden");
+      const khac = DEFAULT_CATEGORIES.find((d) => d.name === "Khác" && d.type === current.type);
+      if (!khac) throw new CategoryError("not_found");
       const now = nowUtc();
-      await db.update(category).set({ deleted_at: now, updated_at: now }).where(eq(category.id, id));
+      // expo-sqlite and better-sqlite3 are synchronous drivers: the callback must not be async.
+      (db as unknown as SyncTxDb).transaction((tx) => {
+        tx.update(transactions)
+          .set({ category_id: khac.id, updated_at: now })
+          .where(and(eq(transactions.category_id, id), isNull(transactions.deleted_at)))
+          .run();
+        tx.update(category).set({ deleted_at: now, updated_at: now }).where(eq(category.id, id)).run();
+      });
     },
   };
 }
