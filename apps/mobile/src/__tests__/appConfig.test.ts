@@ -27,4 +27,9 @@ describe("app config", () => {
   it("favicon exists and is a PNG", () => {
     expect(pngSize(expo.web.favicon).width).toBeGreaterThan(0);
   });
+
+  it("package ids match the Maestro appId", () => {
+    expect(expo.ios.bundleIdentifier).toBe("com.moneymates.app");
+    expect(expo.android.package).toBe("com.moneymates.app");
+  });
 });
