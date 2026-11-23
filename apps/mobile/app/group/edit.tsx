@@ -56,7 +56,10 @@ export default function GroupEditScreen() {
 
   useEffect(() => {
     const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
-    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOpen(false));
+    const hide = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardOpen(false);
+      scrollToAddRow();
+    });
     return () => {
       show.remove();
       hide.remove();
@@ -249,7 +252,7 @@ export default function GroupEditScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.section}>
+          <Text testID="member-count" style={styles.section}>
             {t.members} ({items.length})
           </Text>
           {items.map((m, i) => (
@@ -281,7 +284,9 @@ export default function GroupEditScreen() {
                 </>
               ) : (
                 <>
-                  <Text style={styles.memberName}>{m.name}</Text>
+                  <Text testID={`member-name-${i}`} style={styles.memberName}>
+                    {m.name}
+                  </Text>
                   <Pressable testID={`member-rename-${i}`} style={styles.smallBtn} onPress={() => setRenaming(m.key)}>
                     <Text style={styles.smallBtnText}>{t.rename}</Text>
                   </Pressable>
