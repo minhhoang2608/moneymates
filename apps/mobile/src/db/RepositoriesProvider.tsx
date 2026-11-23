@@ -5,12 +5,14 @@ import {
   createAppSettingRepository,
   createBankAccountRepository,
   createCategoryRepository,
+  createGroupExpenseRepository,
   createGroupRepository,
   createProfileRepository,
   createTransactionRepository,
   type AppSettingRepository,
   type BankAccountRepository,
   type CategoryRepository,
+  type GroupExpenseRepository,
   type GroupRepository,
   type ProfileRepository,
   type TransactionRepository,
@@ -23,6 +25,7 @@ export type Repositories = {
   categories: CategoryRepository;
   transactions: TransactionRepository;
   groups: GroupRepository;
+  groupExpenses: GroupExpenseRepository;
   appSettings: AppSettingRepository;
 };
 
@@ -38,6 +41,7 @@ export function RepositoriesProvider({ children, db }: { children: ReactNode; db
       categories: createCategoryRepository(target),
       transactions: createTransactionRepository(target),
       groups: createGroupRepository(target),
+      groupExpenses: createGroupExpenseRepository(target),
       appSettings: createAppSettingRepository(target),
     };
   }, [db]);

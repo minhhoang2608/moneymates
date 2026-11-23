@@ -114,6 +114,7 @@ export const transactions = sqliteTable(
     qr_data: text("qr_data"),
     group_id: text("group_id").references(() => groups.id),
     paid_by_member_id: text("paid_by_member_id").references(() => groupMembers.id),
+    split_mode: text("split_mode", { enum: ["equal", "amount", "percent"] }),
   },
   (t) => [
     index("transactions_deleted_at_occurred_at_idx").on(t.deleted_at, t.occurred_at),
@@ -122,5 +123,33 @@ export const transactions = sqliteTable(
     check("transactions_amount_check", sql`${t.amount} > 0`),
     check("transactions_type_check", sql`${t.type} in ('expense', 'income')`),
     check("transactions_source_check", sql`${t.source} in ('manual', 'qr', 'voice', 'bill')`),
+    check(
+      "transactions_split_mode_check",
+      sql`${t.split_mode} is null or ${t.split_mode} in ('equal', 'amount', 'percent')`,
+    ),
+  ],
+);
+
+/**
+ * One member's share of a group expense. `amount` is integer VND. `value` is the raw input
+ * (basis points for percent, đồng for amount, null for equal) so percent splits can be recomputed.
+ */
+export const expenseShares = sqliteTable(
+  "expense_shares",
+  {
+    ...baseColumns(),
+    transaction_id: text("transaction_id")
+      .notNull()
+      .references(() => transactions.id),
+    member_id: text("member_id")
+      .notNull()
+      .references(() => groupMembers.id),
+    amount: integer("amount").notNull(),
+    value: integer("value"),
+  },
+  (t) => [
+    index("expense_shares_transaction_id_deleted_at_idx").on(t.transaction_id, t.deleted_at),
+    index("expense_shares_member_id_deleted_at_idx").on(t.member_id, t.deleted_at),
+    check("expense_shares_amount_check", sql`${t.amount} >= 0`),
   ],
 );

@@ -27,3 +27,11 @@ export type {
 } from "./groupRepository";
 export { createAppSettingRepository } from "./appSettingRepository";
 export type { AppSettingRepository } from "./appSettingRepository";
+export { createGroupExpenseRepository } from "./groupExpenseRepository";
+export type {
+  GroupExpenseRepository,
+  NewGroupExpense,
+  GroupExpensePatch,
+  ShareInput,
+  ExpenseShareRow,
+} from "./groupExpenseRepository";

@@ -3,7 +3,7 @@ import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { GroupError } from "../../lib/group/types";
 import { nowUtc } from "../columns";
 import { newId } from "../ids";
-import { bankAccount, groupMembers, groups, profile, transactions } from "../schema";
+import { bankAccount, expenseShares, groupMembers, groups, profile, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 
 export type GroupRow = typeof groups.$inferSelect;
@@ -180,6 +180,18 @@ export function createGroupRepository(db: AnyDb) {
           .set(gone)
           .where(and(eq(groupMembers.group_id, id), liveMember))
           .run();
+        const txnIds = tx
+          .select({ id: transactions.id })
+          .from(transactions)
+          .where(eq(transactions.group_id, id))
+          .all()
+          .map((r: { id: string }) => r.id);
+        if (txnIds.length > 0) {
+          tx.update(expenseShares)
+            .set(gone)
+            .where(and(inArray(expenseShares.transaction_id, txnIds), isNull(expenseShares.deleted_at)))
+            .run();
+        }
         tx.update(transactions)
           .set(gone)
           .where(and(eq(transactions.group_id, id), isNull(transactions.deleted_at)))
@@ -238,7 +250,12 @@ export function createGroupRepository(db: AnyDb) {
         .from(transactions)
         .where(and(eq(transactions.paid_by_member_id, memberId), isNull(transactions.deleted_at)))
         .limit(1);
-      if (used.length > 0) throw new GroupError("member_has_transactions");
+      const shared = await db
+        .select({ id: expenseShares.id })
+        .from(expenseShares)
+        .where(and(eq(expenseShares.member_id, memberId), isNull(expenseShares.deleted_at)))
+        .limit(1);
+      if (used.length > 0 || shared.length > 0) throw new GroupError("member_has_transactions");
       const now = nowUtc();
       await db.update(groupMembers).set({ deleted_at: now, updated_at: now }).where(eq(groupMembers.id, memberId));
     },
