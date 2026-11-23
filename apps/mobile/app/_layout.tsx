@@ -8,6 +8,9 @@ import {
 } from "@expo-google-fonts/inter";
 import { Stack } from "expo-router";
 
+import { QueryProvider } from "@/api/QueryProvider";
+import { DatabaseProvider } from "@/db/DatabaseProvider";
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     Inter_400Regular,
@@ -19,9 +22,13 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="scan" options={{ presentation: "modal" }} />
-    </Stack>
+    <QueryProvider>
+      <DatabaseProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="scan" options={{ presentation: "modal" }} />
+        </Stack>
+      </DatabaseProvider>
+    </QueryProvider>
   );
 }
