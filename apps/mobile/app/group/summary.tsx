@@ -68,13 +68,21 @@ export default function GroupSummaryScreen() {
   );
 
   const markPaid = async (memberId: string, amount: number) => {
-    await settlements.markPaid(groupId, memberId, amount);
+    try {
+      await settlements.markPaid(groupId, memberId, amount);
+    } catch {
+      Alert.alert(t.errorTitle, t.markPaidError);
+    }
     setData(await load());
   };
 
   const openMember = async (memberId: string, name: string) => {
-    const expenses = await settlements.listMemberExpenses(groupId, memberId);
-    setSheet({ memberId, name, expenses });
+    try {
+      const expenses = await settlements.listMemberExpenses(groupId, memberId);
+      setSheet({ memberId, name, expenses });
+    } catch {
+      Alert.alert(t.errorTitle, t.loadError);
+    }
   };
 
   const comingSoon = () => Alert.alert(t.comingSoon, t.comingSoonMessage);

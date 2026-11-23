@@ -234,6 +234,9 @@ export const vi = {
     paidBy: "đã chi",
     close: "Đóng",
     back: "Quay lại",
+    errorTitle: "Có lỗi xảy ra",
+    markPaidError: "Không thể ghi nhận khoản thanh toán này. Số liệu đã được tải lại.",
+    loadError: "Không thể tải các khoản của người này.",
   },
   groupDetail: {
     back: "Quay lại",
