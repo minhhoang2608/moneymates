@@ -44,7 +44,8 @@ Live at `https://moneymates-api.brandkey.net` (cPanel account on a CloudLinux + 
    `cgi-bin/django.cgi` (reads the env vars from step 3) and the rewrite rules in the domain's `.htaccess`.
 6. Check `curl https://moneymates-api.brandkey.net/health`.
 
-Update: `cd ~/moneymates && git pull`, re-run `install.sh`, and run `manage.py migrate` (step 4) when
-migrations changed. CGI starts Python per request (about a second); fine for this low-traffic API.
+Auto-deploy: a cPanel cron job runs `deploy/hawkhost/update.sh` every 5 minutes. When `dev` moved it
+fast-forwards `~/moneymates`, reinstalls requirements if they changed, re-runs `install.sh`, migrates (via
+`manage_with_env.py`, which loads the Python App env vars) and logs to `~/logs/moneymates-api-deploy.log`. CGI starts Python per request (about a second); fine for this low-traffic API.
 
 Note: request counters use the Django cache. With PostgreSQL the cache is a DB cache table (`django_cache`, created by `createcachetable`); otherwise LocMem, which is per process. `DatabaseCache.incr` is not atomic, so concurrent workers may slightly undercount a soft quota.
