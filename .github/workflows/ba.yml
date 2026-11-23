@@ -8,7 +8,10 @@ on:
     branches: [dev]
     paths:
       - "docs/**"
+      # Process and design docs do not change what the product should do: don't spend an Opus run on them.
       - "!docs/factory-setup.md"
+      - "!docs/ai-software-factory.md"
+      - "!docs/design/**"
   workflow_dispatch:
     inputs:
       focus:
