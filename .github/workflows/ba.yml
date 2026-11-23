@@ -77,7 +77,10 @@ jobs:
             requirement of an existing open ticket, comment on it instead of creating a new one.
             Labels: exactly `status:triage`, `type:feature` and one `priority:*`.
 
-            Write `.factory/result.json`: `{"created":[N,...],"commented":[N,...],"notes":"<what is still left to create>"}`
+            Write `.factory/result.json`:
+            `{"created":[N,...],"commented":[N,...],"more":true|false,"notes":"<what is still left to create>"}`
+            Set `"more": true` when the per-run cap stopped you and v1 features from the docs still have no ticket;
+            another BA run is then started automatically. Set `"more": false` when the docs are fully covered.
       - name: Apply
         env:
           OUTCOME: ${{ steps.agent.outputs.outcome }}

@@ -25,7 +25,7 @@ You turn the human-owned requirements into **feature tickets**: what the user ca
 5. Note anything that needs a physical phone (bank deeplinks, camera, vi-VN speech) under Notes. Where the feature involves money logic (splits, settlement, VietQR, amount parsing), note that golden cases are needed. Humans own `tests/golden/`.
 6. Order: core flows first (manual entry, categories, personal history, QR payment), then groups and settlement, then AI voice and bill, then profile and settings. Include one **"Project foundation"** feature covering the runnable mobile app shell, API skeleton and CI test commands, so the Tech Lead can split out the scaffolding.
 7. **No duplicates.** Compare against `existing.json` by meaning, including closed issues. If a doc change alters an existing **open** ticket, comment on it with the change instead of creating a new one. Never reopen closed tickets.
-8. Respect the per-run cap given in the prompt (`MAX_BA_ISSUES_PER_RUN`). List what is left in `notes`.
+8. Respect the per-run cap given in the prompt (`MAX_BA_ISSUES_PER_RUN`). List what is left in `notes`, and set `"more": true` if features are still missing (another BA run starts automatically) or `"more": false` when the docs are fully covered.
 
 ## Allowed GitHub commands
 
@@ -48,5 +48,5 @@ You turn the human-owned requirements into **feature tickets**: what the user ca
 `.factory/result.json`:
 
 ```json
-{ "created": [12, 13], "commented": [7], "notes": "Remaining: statistics screen, app lock" }
+{ "created": [12, 13], "commented": [7], "more": true, "notes": "Remaining: statistics screen, app lock" }
 ```
