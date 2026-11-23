@@ -1,29 +1,16 @@
-import { getApiUrl } from "./config";
+import { getApiAdapter } from "./adapter";
+import type { RequestOptions } from "./constants";
 
-export const DEFAULT_TIMEOUT_MS = 5000;
+export { DEFAULT_TIMEOUT_MS, MULTIPART_TIMEOUT_MS, type RequestOptions } from "./constants";
 
-export async function apiGet<T>(
-  path: string,
-  { timeoutMs = DEFAULT_TIMEOUT_MS }: { timeoutMs?: number } = {},
-): Promise<T> {
-  const base = getApiUrl();
-  if (!base) throw new Error("EXPO_PUBLIC_API_URL is not set");
-  const controller = new AbortController();
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      controller.abort();
-      reject(new Error("request timed out"));
-    }, timeoutMs);
-  });
-  try {
-    const request = (async () => {
-      const res = await fetch(`${base}${path}`, { signal: controller.signal });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return (await res.json()) as T;
-    })();
-    return await Promise.race([request, timeout]);
-  } finally {
-    clearTimeout(timer);
-  }
+export function apiGet<T>(path: string, opts: RequestOptions = {}): Promise<T> {
+  return getApiAdapter().get<T>(path, opts);
+}
+
+export function apiPost<T>(path: string, body: unknown, opts: RequestOptions = {}): Promise<T> {
+  return getApiAdapter().post<T>(path, body, opts);
+}
+
+export function apiPostMultipart<T>(path: string, form: FormData, opts: RequestOptions = {}): Promise<T> {
+  return getApiAdapter().postMultipart<T>(path, form, opts);
 }
