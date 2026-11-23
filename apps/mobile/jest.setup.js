@@ -17,3 +17,25 @@ jest.mock("expo-camera", () => {
     scanFromURLAsync: jest.fn(async () => []),
   };
 });
+
+jest.mock("expo-image-picker", () => ({
+  launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: null })),
+  requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
+}));
+jest.mock("expo-file-system", () => {
+  class File {
+    constructor(...parts) {
+      this.uri = parts.join("/");
+    }
+    copy() {}
+  }
+  return { File, Paths: { document: "file:///doc" } };
+});
+jest.mock("@react-native-community/datetimepicker", () => {
+  const { View } = require("react-native");
+  const React = require("react");
+  return { __esModule: true, default: (props) => React.createElement(View, { ...props, testID: "datetime-picker" }) };
+});
+
+// The app database is native expo-sqlite: back it with an in-memory better-sqlite3 db under Jest.
+jest.mock("@/db/client", () => ({ db: require("./src/db/testing/testDb").openTestDb().db }));

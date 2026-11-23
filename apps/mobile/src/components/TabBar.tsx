@@ -1,10 +1,12 @@
 import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/layouts/Tabs";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, layout } from "@/theme";
 
+import { EntryMenu } from "./EntryMenu";
 import { HomeIcon, ListIcon, QrIcon, UserIcon, UsersIcon } from "./icons";
 
 type TabDef = {
@@ -25,6 +27,7 @@ const RIGHT: TabDef[] = [
 
 export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   const activeRoute = state.routes[state.index]?.name;
 
   const renderTab = (t: TabDef) => {
@@ -59,11 +62,20 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         accessibilityRole="button"
         accessibilityLabel={vi.scan.title}
         onPress={() => router.push("/scan")}
+        onLongPress={() => setMenuOpen(true)}
         style={styles.qr}
       >
         <QrIcon color={colors.onPrimary} size={26} />
       </Pressable>
       {RIGHT.map(renderTab)}
+      <EntryMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onManual={() => {
+          setMenuOpen(false);
+          router.push("/transaction/new");
+        }}
+      />
     </View>
   );
 }
