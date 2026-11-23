@@ -10,7 +10,12 @@ export type GroupRow = typeof groups.$inferSelect;
 export type GroupMemberRow = typeof groupMembers.$inferSelect;
 
 /** A member with the name to show. The UI appends "(Tôi)" when `isMe`. */
-export type GroupMember = GroupMemberRow & { displayName: string; isMe: boolean };
+export type GroupMember = GroupMemberRow & {
+  displayName: string;
+  isMe: boolean;
+  /** True when a live transaction was paid by this member; such members can't be removed. */
+  hasTransactions: boolean;
+};
 export type GroupWithMembers = GroupRow & { members: GroupMember[] };
 export type GroupSummary = GroupWithMembers & { total: number };
 
@@ -80,10 +85,15 @@ export function createGroupRepository(db: AnyDb) {
     return rows[0];
   }
 
-  function present(rows: GroupMemberRow[], me: string): GroupMember[] {
+  function present(rows: GroupMemberRow[], me: string, used: Set<string>): GroupMember[] {
     // Array sort is stable, so non-Tôi members keep insertion (rowid) order.
     return rows
-      .map((m) => ({ ...m, isMe: m.is_me, displayName: m.is_me ? me : m.name }))
+      .map((m) => ({
+        ...m,
+        isMe: m.is_me,
+        displayName: m.is_me ? me : m.name,
+        hasTransactions: used.has(m.id),
+      }))
       .sort((a, b) => Number(b.isMe) - Number(a.isMe));
   }
 
@@ -98,9 +108,19 @@ export function createGroupRepository(db: AnyDb) {
         .orderBy(sql`rowid`),
       myName(),
     ]);
+    const memberIds = rows.map((r) => r.id);
+    const used = new Set<string>();
+    if (memberIds.length > 0) {
+      const paid = await db
+        .select({ id: transactions.paid_by_member_id })
+        .from(transactions)
+        .where(and(inArray(transactions.paid_by_member_id, memberIds), isNull(transactions.deleted_at)))
+        .groupBy(transactions.paid_by_member_id);
+      for (const p of paid) if (p.id) used.add(p.id);
+    }
     const byGroup = new Map<string, GroupMemberRow[]>();
     for (const r of rows) byGroup.set(r.group_id, [...(byGroup.get(r.group_id) ?? []), r]);
-    for (const id of groupIds) map.set(id, present(byGroup.get(id) ?? [], me));
+    for (const id of groupIds) map.set(id, present(byGroup.get(id) ?? [], me, used));
     return map;
   }
 

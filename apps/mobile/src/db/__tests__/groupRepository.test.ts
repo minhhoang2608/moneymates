@@ -189,3 +189,22 @@ describe("group repository", () => {
     ).toThrow();
   });
 });
+
+describe("hasTransactions", () => {
+  it("is true only for members who paid a live transaction", async () => {
+    const s = setup();
+    const g = await s.groups.createGroup({ name: "Đà Lạt", members: ["An", "Bình"] });
+    const [, an, binh] = g.members;
+    expect(g.members.map((m) => m.hasTransactions)).toEqual([false, false, false]);
+    const txnId = await addExpense(s, g.id, 100000, { paidBy: an.id });
+    const after = await s.groups.getGroup(g.id);
+    expect(after.members.map((m) => [m.displayName, m.hasTransactions])).toEqual([
+      ["", false],
+      ["An", true],
+      ["Bình", false],
+    ]);
+    expect(binh.id).toBe(after.members[2].id);
+    await s.tx.softDelete(txnId);
+    expect((await s.groups.getGroup(g.id)).members[1].hasTransactions).toBe(false);
+  });
+});
