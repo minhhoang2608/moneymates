@@ -1,0 +1,43 @@
+# Smoke flow: the app launches, shows every tab and opens the QR screen.
+# Runs offline on purpose: the app must stay usable without the API (default feature flags).
+appId: com.moneymates.app
+onFlowComplete:
+  - setAirplaneMode: disabled
+---
+- setAirplaneMode: enabled
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- assertVisible:
+    id: "screen-overview"
+- assertVisible: "Lịch sử"
+- assertVisible: "Nhóm"
+- assertVisible: "Hồ sơ"
+- assertVisible:
+    id: "tab-qr"
+- tapOn:
+    id: "tab-history"
+- assertVisible:
+    id: "screen-history"
+- tapOn:
+    id: "tab-groups"
+- assertVisible:
+    id: "screen-groups"
+- tapOn:
+    id: "tab-profile"
+- assertVisible:
+    id: "screen-profile"
+- tapOn:
+    id: "tab-overview"
+- assertVisible:
+    id: "screen-overview"
+- tapOn:
+    id: "tab-qr"
+- assertVisible:
+    id: "screen-scan"
+- assertVisible: "Quét QR"
+- back
+- assertVisible:
+    id: "screen-overview"
