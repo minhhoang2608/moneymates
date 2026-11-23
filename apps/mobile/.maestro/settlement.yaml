@@ -21,6 +21,10 @@ appId: com.moneymates.app
     id: "account-save"
 - assertVisible: "Mặc định"
 - tapOn:
+    id: "bank-accounts-back"
+- assertVisible:
+    id: "tab-groups"
+- tapOn:
     id: "tab-groups"
 - tapOn:
     id: "group-empty-create"
@@ -31,12 +35,25 @@ appId: com.moneymates.app
 - tapOn:
     id: "member-add-input"
 - inputText: "An"
-- pressKey: Enter
+- tapOn:
+    id: "member-add"
 - tapOn:
     id: "member-add-input"
 - inputText: "Bình"
-- pressKey: Enter
+- tapOn:
+    id: "member-add"
 - hideKeyboard
+- assertVisible:
+    id: "screen-group-edit"
+- scrollUntilVisible:
+    element:
+      id: "member-name-2"
+- assertVisible:
+    id: "member-name-1"
+    text: "An"
+- assertVisible:
+    id: "member-name-2"
+    text: "Bình"
 - scrollUntilVisible:
     element:
       id: "group-save"
@@ -59,6 +76,7 @@ appId: com.moneymates.app
     id: "group-summary"
 - assertVisible:
     id: "screen-group-summary"
+- assertVisible: "An trả Tôi 300.000đ"
 - tapOn:
     text: "QR"
     index: 0
