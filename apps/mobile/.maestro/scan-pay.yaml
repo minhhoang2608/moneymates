@@ -18,9 +18,9 @@ appId: com.moneymates.app
     visible:
       id: "handoff-return-banner"
     timeout: 10000
-- assertVisible: "Đã lưu 55.000đ"
+- assertVisible: "Đã lưu 55\\.000đ.*"
 - tapOn:
     id: "tab-history"
 - assertVisible:
     id: "screen-history"
-- assertVisible: "55.000"
+- assertVisible: "−55.000đ"
