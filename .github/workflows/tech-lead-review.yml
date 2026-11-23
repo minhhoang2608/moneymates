@@ -38,6 +38,8 @@ jobs:
       contents: read
       pull-requests: read
       issues: read
+      # route reads the tech-lead-review commit status to pick "merge" mode for an already approved SHA
+      statuses: read
       actions: write
     outputs:
       run: ${{ steps.route.outputs.run }}
