@@ -76,7 +76,11 @@ async function expectManualFallback(message: string) {
   await fireEvent.press(screen.getByTestId("bill-manual"));
   await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
   const other = (await createCategoryRepository(d()).listByKind("expense")).find((c) => c.name === "Khác")!;
-  expect(screen).toHaveSearchParams({ source: "bill", categoryId: other.id });
+  expect(screen).toHaveSearchParams({
+    source: "bill",
+    categoryId: other.id,
+    attachmentUri: expect.stringMatching(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/),
+  });
 }
 
 describe("bill scan through the live adapter", () => {

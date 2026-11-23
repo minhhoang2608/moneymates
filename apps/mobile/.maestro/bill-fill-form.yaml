@@ -1,0 +1,28 @@
+# Bill -> form flow (E2E mode, fake image source + fixture AI): scan a bill, fill the form, save, see it in history.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- longPressOn:
+    id: "tab-qr"
+- tapOn:
+    id: "entry-menu-bill"
+- tapOn:
+    id: "bill-accept"
+- extendedWaitUntil:
+    visible: "AI đã đọc xong bill"
+    timeout: 10000
+- tapOn:
+    id: "bill-fill-form"
+- assertVisible:
+    id: "photo-thumbnail"
+- assertVisible: "Bánh căn Nhà Chung"
+- tapOn:
+    id: "save-button"
+- tapOn:
+    id: "tab-history"
+- assertVisible: "Bánh căn Nhà Chung"
+- assertVisible: "345.000đ"

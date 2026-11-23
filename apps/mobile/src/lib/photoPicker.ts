@@ -2,6 +2,7 @@ import { Directory, File, Paths } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
 import { newId } from "@/db/ids";
+import { isE2E } from "@/e2e/isE2E";
 
 export interface PhotoPicker {
   /** Resolves to a durable copy of the picked image, or null on cancel or denied permission. */
@@ -20,6 +21,11 @@ function persist(sourceUri: string): string {
   const target = new File(dir, `${newId()}.${extensionOf(sourceUri)}`);
   new File(sourceUri).copy(target);
   return target.uri;
+}
+
+/** Durable copy of a captured image; in E2E mode the fake uri is returned unchanged. */
+export function persistAttachment(sourceUri: string): string {
+  return isE2E() ? sourceUri : persist(sourceUri);
 }
 
 export const photoPicker: PhotoPicker = {

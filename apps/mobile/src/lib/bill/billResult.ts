@@ -36,6 +36,20 @@ export function toFormParams(
   if (r?.amount) p.amount = String(r.amount);
   if (r?.shop) p.note = r.shop;
   if (categoryId) p.categoryId = categoryId;
+  if (r?.date && /^\d{4}-\d{2}-\d{2}/.test(r.date) && !Number.isNaN(Date.parse(r.date.slice(0, 10)))) {
+    p.date = r.date.slice(0, 10);
+  }
   if (imageUri) p.attachmentUri = imageUri;
   return p;
+}
+
+/** Local calendar day of the bill with the current time of day; invalid or missing -> `now`. */
+export function billDateToLocal(iso: string | null | undefined, now: Date): Date {
+  const m = iso ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso) : null;
+  if (!m) return now;
+  const y = Number(m[1]);
+  const mo = Number(m[2]) - 1;
+  const d = Number(m[3]);
+  const out = new Date(y, mo, d, now.getHours(), now.getMinutes(), now.getSeconds());
+  return out.getFullYear() === y && out.getMonth() === mo && out.getDate() === d ? out : now;
 }

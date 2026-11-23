@@ -33,7 +33,7 @@ type Props = {
   /** Prefill (voice entry). Applied at mount; the payer only if that member exists in the group. */
   initial?: FormInitial;
   /** Stored on the new transaction. */
-  source?: "manual" | "voice";
+  source?: "manual" | "voice" | "bill";
   /** Banner shown above the fields (e.g. the AI fallback message). */
   notice?: string;
 };
@@ -43,6 +43,8 @@ export type FormInitial = {
   note: string;
   categoryId: string | null;
   payerMemberId: string | null;
+  occurredAt?: Date;
+  photoUri?: string | null;
 };
 
 export function TransactionForm({
@@ -65,10 +67,10 @@ export function TransactionForm({
   const [amountText, setAmountText] = useState(initial?.amountVnd ? String(initial.amountVnd) : "");
   const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [note, setNote] = useState(initial?.note ?? "");
-  const [occurredAt, setOccurredAt] = useState(() => new Date());
+  const [occurredAt, setOccurredAt] = useState(() => initial?.occurredAt ?? new Date());
   const [moneySource, setMoneySource] = useState<string>(vi.moneySources[0]);
   const [sourceNames, setSourceNames] = useState<string[]>([...vi.moneySources]);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoUri, setPhotoUri] = useState<string | null>(initial?.photoUri ?? null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saveFailed, setSaveFailed] = useState(false);
   const [isGroupExpense, setIsGroupExpense] = useState(false);
