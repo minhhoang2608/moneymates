@@ -84,4 +84,37 @@ describe("local migrations", () => {
       global.fetch = original;
     }
   });
+
+  it("preferences migration: tables, kind check and idempotent seed", () => {
+    const sqlite = new Database(":memory:");
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+    for (const [table, extra] of [
+      ["payment_app_prefs", ["app_key", "sort_order"]],
+      ["money_sources", ["name", "kind", "is_default"]],
+    ] as const) {
+      const names = (sqlite.pragma(`table_info(${table})`) as { name: string }[]).map((c) => c.name);
+      for (const c of ["id", "created_at", "updated_at", "deleted_at", "owner_id", ...extra]) {
+        expect(names).toContain(c);
+      }
+    }
+    const now = "2026-01-01T00:00:00.000Z";
+    expect(() =>
+      sqlite
+        .prepare("insert into money_sources (id, created_at, updated_at, name, kind) values ('x', ?, ?, 'X', 'crypto')")
+        .run(now, now),
+    ).toThrow();
+    const count = () =>
+      (sqlite.prepare("select count(*) as n from money_sources where is_default = 1").get() as { n: number }).n;
+    expect(count()).toBe(4);
+    const seed = sqlite.prepare("select id, name, kind from money_sources where is_default = 1").all() as {
+      id: string;
+      name: string;
+      kind: string;
+    }[];
+    const ins = sqlite.prepare(
+      "insert or ignore into money_sources (id, created_at, updated_at, name, kind, is_default) values (?, ?, ?, ?, ?, 1)",
+    );
+    for (const r of seed) ins.run(r.id, now, now, r.name, r.kind);
+    expect(count()).toBe(4);
+  });
 });

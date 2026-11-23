@@ -7,6 +7,9 @@ import {
   createCategoryRepository,
   createGroupExpenseRepository,
   createGroupRepository,
+  createMoneySourceRepository,
+  createPaymentAppPrefsRepository,
+  createPreferencesRepository,
   createProfileRepository,
   createSettlementRepository,
   createTransactionRepository,
@@ -15,6 +18,9 @@ import {
   type CategoryRepository,
   type GroupExpenseRepository,
   type GroupRepository,
+  type MoneySourceRepository,
+  type PaymentAppPrefsRepository,
+  type PreferencesRepository,
   type ProfileRepository,
   type SettlementRepository,
   type TransactionRepository,
@@ -30,6 +36,9 @@ export type Repositories = {
   groupExpenses: GroupExpenseRepository;
   settlements: SettlementRepository;
   appSettings: AppSettingRepository;
+  paymentAppPrefs: PaymentAppPrefsRepository;
+  moneySources: MoneySourceRepository;
+  preferences: PreferencesRepository;
 };
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -47,6 +56,9 @@ export function RepositoriesProvider({ children, db }: { children: ReactNode; db
       groupExpenses: createGroupExpenseRepository(target),
       settlements: createSettlementRepository(target),
       appSettings: createAppSettingRepository(target),
+      paymentAppPrefs: createPaymentAppPrefsRepository(target),
+      moneySources: createMoneySourceRepository(target),
+      preferences: createPreferencesRepository(target),
     };
   }, [db]);
   return <RepositoriesContext.Provider value={value}>{children}</RepositoriesContext.Provider>;
