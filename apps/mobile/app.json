@@ -20,6 +20,10 @@
       "expo-router",
       "expo-font",
       "expo-sqlite",
+      [
+        "expo-camera",
+        { "cameraPermission": "MoneyMates cần camera để quét mã QR thanh toán.", "recordAudioAndroid": false }
+      ],
       ["expo-image-picker", { "photosPermission": "MoneyMates cần truy cập thư viện ảnh để bạn chọn ảnh đại diện." }]
     ]
   }

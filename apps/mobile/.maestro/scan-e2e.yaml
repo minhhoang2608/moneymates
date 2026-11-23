@@ -1,0 +1,19 @@
+# Scan flow in E2E mode: no camera, the hidden control feeds the dynamic TPBank fixture.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-qr"
+- assertVisible:
+    id: "screen-scan"
+- tapOn:
+    id: "scan-e2e-feed"
+- assertVisible:
+    id: "screen-pay-confirm"
+- assertVisible: "TPBank"
+- assertVisible: "55.000"
+- assertVisible: "PHO 24"

@@ -29,6 +29,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="scan" options={{ presentation: "modal" }} />
+            <Stack.Screen name="pay-confirm" />
             <Stack.Screen name="bank-accounts" />
             <Stack.Screen name="categories" />
             <Stack.Screen name="settings" />
