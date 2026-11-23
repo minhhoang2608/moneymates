@@ -35,3 +35,11 @@ export type {
   ShareInput,
   ExpenseShareRow,
 } from "./groupExpenseRepository";
+export { createSettlementRepository } from "./settlementRepository";
+export type {
+  GroupSettlementRow,
+  GroupSettlementSummary,
+  MemberExpense,
+  SettlementPaymentRow,
+  SettlementRepository,
+} from "./settlementRepository";

@@ -8,6 +8,7 @@ import {
   createGroupExpenseRepository,
   createGroupRepository,
   createProfileRepository,
+  createSettlementRepository,
   createTransactionRepository,
   type AppSettingRepository,
   type BankAccountRepository,
@@ -15,6 +16,7 @@ import {
   type GroupExpenseRepository,
   type GroupRepository,
   type ProfileRepository,
+  type SettlementRepository,
   type TransactionRepository,
 } from "./repositories";
 import type { AnyDb } from "./seed";
@@ -26,6 +28,7 @@ export type Repositories = {
   transactions: TransactionRepository;
   groups: GroupRepository;
   groupExpenses: GroupExpenseRepository;
+  settlements: SettlementRepository;
   appSettings: AppSettingRepository;
 };
 
@@ -42,6 +45,7 @@ export function RepositoriesProvider({ children, db }: { children: ReactNode; db
       transactions: createTransactionRepository(target),
       groups: createGroupRepository(target),
       groupExpenses: createGroupExpenseRepository(target),
+      settlements: createSettlementRepository(target),
       appSettings: createAppSettingRepository(target),
     };
   }, [db]);

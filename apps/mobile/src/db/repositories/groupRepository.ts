@@ -3,7 +3,7 @@ import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { GroupError } from "../../lib/group/types";
 import { nowUtc } from "../columns";
 import { newId } from "../ids";
-import { bankAccount, expenseShares, groupMembers, groups, profile, transactions } from "../schema";
+import { bankAccount, expenseShares, groupMembers, groups, profile, settlementPayments, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 
 export type GroupRow = typeof groups.$inferSelect;
@@ -275,7 +275,12 @@ export function createGroupRepository(db: AnyDb) {
         .from(expenseShares)
         .where(and(eq(expenseShares.member_id, memberId), isNull(expenseShares.deleted_at)))
         .limit(1);
-      if (used.length > 0 || shared.length > 0) throw new GroupError("member_has_transactions");
+      const paid = await db
+        .select({ id: settlementPayments.id })
+        .from(settlementPayments)
+        .where(and(eq(settlementPayments.member_id, memberId), isNull(settlementPayments.deleted_at)))
+        .limit(1);
+      if (used.length > 0 || shared.length > 0 || paid.length > 0) throw new GroupError("member_has_transactions");
       const now = nowUtc();
       await db.update(groupMembers).set({ deleted_at: now, updated_at: now }).where(eq(groupMembers.id, memberId));
     },
