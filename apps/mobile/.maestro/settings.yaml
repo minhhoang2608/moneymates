@@ -1,0 +1,33 @@
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "row-settings"
+- assertVisible:
+    id: "screen-settings"
+- assertVisible:
+    id: "settings-app-list"
+- tapOn:
+    id: "settings-app-up-momo"
+- tapOn:
+    id: "settings-app-up-momo"
+- tapOn:
+    id: "settings-sources-row"
+- tapOn:
+    id: "settings-source-name"
+- inputText: "Visa"
+- hideKeyboard
+- tapOn:
+    id: "settings-source-kind-card"
+- tapOn:
+    id: "settings-source-add"
+- assertVisible: "Visa"
+- tapOn:
+    id: "settings-alert-toggle"
+- scrollUntilVisible:
+    element:
+      id: "settings-footer"
+- assertVisible: "Dữ liệu chỉ lưu trên máy này.*"
