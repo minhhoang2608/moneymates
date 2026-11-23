@@ -33,6 +33,7 @@ export default function RootLayout() {
             <Stack.Screen name="bank-accounts" />
             <Stack.Screen name="categories" />
             <Stack.Screen name="settings" />
+            <Stack.Screen name="transaction/[id]" />
             <Stack.Screen name="transaction/new" options={{ presentation: "modal" }} />
           </Stack>
         </RepositoriesProvider>
