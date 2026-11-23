@@ -120,7 +120,8 @@ jobs:
       - name: Prepare review context
         run: |
           git fetch --no-tags origin "pull/$PR/head:pr-head"
-          gh pr view "$PR" --comments >.factory/pr-conversation.md
+          source "$FACTORY_BIN/lib.sh"
+          pr_conversation "$PR" >.factory/pr-conversation.md
           gh pr diff "$PR" >.factory/pr.diff
           gh issue view "$ISSUE" --comments >.factory/issue.md
           "$FACTORY_BIN/review.sh" pending

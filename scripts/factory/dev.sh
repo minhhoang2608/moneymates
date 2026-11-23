@@ -153,7 +153,7 @@ context() {
   pr="$(pr_for_issue "$ISSUE")"
   set_output pr "$pr"
   [[ -z "$pr" ]] && return 0
-  gh pr view "$pr" --comments >.factory/pr-conversation.md || true
+  pr_conversation "$pr" >.factory/pr-conversation.md
   if [[ "${REASON:-}" == ci-failed ]]; then
     branch="$(gh pr view "$pr" --json headRefName --jq .headRefName)"
     run_id="$(gh run list --workflow ci.yml --branch "$branch" --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
