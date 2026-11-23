@@ -1,0 +1,65 @@
+# Nightly APK: builds an installable Android APK of `dev` (real API, no E2E mock mode) at 17:00 Vietnam time
+# (10:00 UTC) so a human can install it on a phone and check the day's work. Also runnable by hand.
+# The APK is an artifact (kept 7 days); scripts/download-latest-apk.ps1 fetches it to the local machine.
+name: Nightly APK
+run-name: Nightly APK from dev
+
+on:
+  schedule:
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: nightly-apk
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - id: check
+        run: |
+          if [[ -f apps/mobile/package.json ]]; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "run=false" >>"$GITHUB_OUTPUT"
+            echo "No apps/mobile yet - nothing to build." >>"$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/setup-node@v7
+        if: steps.check.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - uses: actions/setup-java@v6
+        if: steps.check.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Build release APK
+        if: steps.check.outputs.run == 'true'
+        working-directory: apps/mobile
+        env:
+          # Repository variable API_URL (Settings > Variables). Empty until the API is deployed.
+          EXPO_PUBLIC_API_URL: ${{ vars.API_URL }}
+        run: |
+          npm ci
+          npx expo prebuild --platform android --no-install --clean
+          cd android && ./gradlew assembleRelease --no-daemon
+          mkdir -p ../../apk
+          cp app/build/outputs/apk/release/*.apk "../../apk/moneymates-$(date -u +%Y%m%d)-${GITHUB_SHA::7}.apk"
+      - uses: actions/upload-artifact@v7
+        if: steps.check.outputs.run == 'true'
+        with:
+          name: moneymates-apk
+          path: apk/*.apk
+          retention-days: 7
