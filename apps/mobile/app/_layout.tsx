@@ -34,6 +34,7 @@ export default function RootLayout() {
             <Stack.Screen name="bank-accounts" />
             <Stack.Screen name="categories" />
             <Stack.Screen name="settings" />
+            <Stack.Screen name="stats" />
             <Stack.Screen name="group/[id]" />
             <Stack.Screen name="group/summary" />
             <Stack.Screen name="group/edit" options={{ presentation: "modal" }} />
