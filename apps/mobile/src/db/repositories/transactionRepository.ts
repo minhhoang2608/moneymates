@@ -1,9 +1,10 @@
-import { and, desc, eq, gte, isNull, lt } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, lt, max, sql } from "drizzle-orm";
 
 import { TransactionError } from "../../lib/transaction/types";
 import { nowUtc } from "../columns";
 import { newId } from "../ids";
-import { category, transactions } from "../schema";
+import type { LastUsed } from "../../lib/target/types";
+import { category, groups, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 
 export type TransactionRow = typeof transactions.$inferSelect;
@@ -150,6 +151,33 @@ export function createTransactionRepository(db: AnyDb) {
       if (rows.length === 0 || rows[0].deleted_at === null) throw new TransactionError("not_found");
       await db.update(transactions).set({ deleted_at: null, updated_at: nowUtc() }).where(eq(transactions.id, id));
       return requireLive(id);
+    },
+
+    /** group id → newest `created_at` (when recorded, not the editable `occurred_at`) of its live transactions. */
+    async lastRecordedAtByGroup(): Promise<Map<string, string>> {
+      const rows = await db
+        .select({ group_id: transactions.group_id, last: max(transactions.created_at) })
+        .from(transactions)
+        .innerJoin(groups, and(eq(groups.id, transactions.group_id), isNull(groups.deleted_at)))
+        .where(and(live, isNotNull(transactions.group_id)))
+        .groupBy(transactions.group_id);
+      const map = new Map<string, string>();
+      for (const r of rows) if (r.group_id && r.last) map.set(r.group_id, r.last);
+      return map;
+    },
+
+    /** Where the newest live transaction went (rows of soft-deleted groups are ignored). Null on an empty DB. */
+    async lastUsedTarget(): Promise<LastUsed> {
+      const rows = await db
+        .select({ group_id: transactions.group_id, at: transactions.created_at })
+        .from(transactions)
+        .leftJoin(groups, eq(groups.id, transactions.group_id))
+        .where(and(live, sql`(${transactions.group_id} is null or ${groups.deleted_at} is null)`))
+        .orderBy(desc(transactions.created_at), sql`${transactions}.rowid desc`)
+        .limit(1);
+      if (rows.length === 0) return null;
+      const { group_id, at } = rows[0];
+      return { target: group_id === null ? "personal" : { groupId: group_id }, at };
     },
 
     async list(filter: TransactionFilter = {}): Promise<TransactionRow[]> {
