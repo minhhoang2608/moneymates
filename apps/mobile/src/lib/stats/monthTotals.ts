@@ -7,7 +7,7 @@ export type StatTxn = {
   groupId?: string | null;
 };
 
-export type MyShare = { amount: number; occurredAt: string };
+export type MyShare = { amount: number; occurredAt: string; categoryId?: string | null };
 
 export type MonthTotals = { expenseTotal: number; incomeTotal: number };
 

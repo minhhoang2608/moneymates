@@ -151,7 +151,11 @@ export function createGroupExpenseRepository(db: AnyDb) {
   async function mySharesInMonth(month: string): Promise<MyShare[]> {
     const { from, to } = monthBounds(month);
     const rows = await db
-      .select({ amount: expenseShares.amount, occurredAt: transactions.occurred_at })
+      .select({
+        amount: expenseShares.amount,
+        occurredAt: transactions.occurred_at,
+        categoryId: transactions.category_id,
+      })
       .from(expenseShares)
       .innerJoin(transactions, eq(transactions.id, expenseShares.transaction_id))
       .innerJoin(groupMembers, eq(groupMembers.id, expenseShares.member_id))
@@ -166,7 +170,7 @@ export function createGroupExpenseRepository(db: AnyDb) {
         ),
       )
       .orderBy(asc(transactions.occurred_at));
-    return rows.map((r) => ({ amount: Number(r.amount), occurredAt: r.occurredAt }));
+    return rows.map((r) => ({ amount: Number(r.amount), occurredAt: r.occurredAt, categoryId: r.categoryId }));
   }
 
   return {

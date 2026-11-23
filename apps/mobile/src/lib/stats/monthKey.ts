@@ -8,3 +8,11 @@ export function monthKeyOf(isoUtc: string): string {
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
   return `${d.getUTCFullYear()}-${mm}`;
 }
+
+/** "YYYY-MM" shifted by `delta` months (negative = earlier), across year boundaries. */
+export function shiftMonthKey(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const idx = y * 12 + (m - 1) + delta;
+  const ny = Math.floor(idx / 12);
+  return `${ny}-${String((idx % 12) + 1).padStart(2, "0")}`;
+}
