@@ -48,13 +48,25 @@ collect() {
     --jq "[.[] | select([.labels[].name] | any(. as \$l | \"$ACTIVE_DEV_STATUSES\" | split(\" \") | index(\$l)))
               | {number, title, body: (.body[0:800]), labels: [.labels[].name]}]")"
 
-  jq -n --arg idle "$idle" --argjson eligible "$eligible" --argjson inflight "$inflight" \
-    '{idle_roles: ($idle | split(" ") | map(select(. != ""))), eligible: $eligible, in_flight: $inflight}' >"$INPUT"
+  # Only roles with at least one compatible eligible ticket count as usable. FE takes mobile-only,
+  # BE takes api-only, Fullstack takes anything (infra, both areas, or overflow). This keeps the
+  # event-driven runs (see kick_assign) from calling Claude when nothing can be assigned.
+  jq -n --arg idle "$idle" --argjson eligible "$eligible" --argjson inflight "$inflight" '
+    def mobile: .labels | index("area:mobile");
+    def api: .labels | index("area:api");
+    ($idle | split(" ") | map(select(. != ""))) as $idle_all
+    | {idle_roles: ($idle_all | map(select(
+          . as $r
+          | if $r == "dev-fe" then any($eligible[]; mobile and (api | not))
+            elif $r == "dev-be" then any($eligible[]; api and (mobile | not))
+            else ($eligible | length) > 0 end))),
+       eligible: $eligible, in_flight: $inflight}' >"$INPUT"
 
-  local n_eligible
+  local usable n_eligible
+  usable="$(jq -r '.idle_roles | join(" ")' "$INPUT")"
   n_eligible="$(jq '.eligible | length' "$INPUT")"
-  summary "Idle Devs: ${idle:-none} · eligible tickets: $n_eligible"
-  if [[ -n "$idle" && "$n_eligible" -gt 0 ]]; then set_output needed true; else set_output needed false; fi
+  summary "Idle Devs: ${idle:-none} · with a compatible ticket: ${usable:-none} · eligible tickets: $n_eligible"
+  if [[ -n "$usable" ]]; then set_output needed true; else set_output needed false; fi
 }
 
 apply() {

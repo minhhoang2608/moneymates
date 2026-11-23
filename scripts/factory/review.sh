@@ -120,6 +120,9 @@ merge() {
   # The merge was made with GITHUB_TOKEN, so its push to dev starts no workflow. Hand off explicitly.
   dispatch tester.yml
   dispatch conflict-check.yml
+  # The Dev is free as soon as its PR is merged (testing is not an active Dev status), and the merge may
+  # have unblocked dependent tickets: assign the next ticket now instead of waiting for the 30-minute sweep.
+  kick_assign
 }
 
 apply() {

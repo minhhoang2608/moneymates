@@ -105,6 +105,11 @@ $reason"
   if ((${REMAINING:-0} > 0)); then
     dispatch tech-lead-triage.yml
   fi
+
+  # New sub-tickets may now be ready: hand them to idle Devs right away.
+  if gh issue list --state open --label status:ready --limit 1 --json number --jq 'length > 0' | grep -q true; then
+    kick_assign
+  fi
 }
 
 case "$cmd" in

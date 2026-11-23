@@ -42,6 +42,7 @@ Input: `.factory/input.json` with `idle_roles`, `eligible` (dependencies already
 - Order: priority, then bugs before features, then the oldest ticket.
 - **Never** assign two tickets touching the same module in the same round (same tables/schema, same screen, same package, same endpoint). Never assign one that overlaps an in-flight ticket either. Skip it; it goes in a later round.
 - At most one ticket per idle role. No tool calls are needed. Read the file and write the result.
+- **Keep every Dev busy.** This runs whenever a Dev is freed or new tickets become ready (not only every 30 minutes), so assign each idle role the best compatible ticket. Leave a role idle only when nothing compatible exists or a module conflict forbids it.
 
 ## Review (tech-lead-review.yml)
 
