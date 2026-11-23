@@ -41,11 +41,12 @@ describe("EntryMenu", () => {
     expect(screen.getByTestId("entry-menu-bill")).toBeDisabled();
   });
 
-  it("stay disabled when AI is unavailable even with handlers", async () => {
+  it("Voice stays enabled offline with a hint; Chụp bill is disabled when AI is unavailable", async () => {
     setAi("offline");
     await renderMenu({ onVoice: jest.fn(), onBill: jest.fn() });
     await new Promise((r) => setTimeout(r, 20));
-    expect(screen.getByTestId("entry-menu-voice")).toBeDisabled();
+    expect(screen.getByTestId("entry-menu-voice")).not.toBeDisabled();
+    expect(screen.getByText("Chỉ dùng quy tắc offline")).toBeTruthy();
     expect(screen.getByTestId("entry-menu-bill")).toBeDisabled();
   });
 

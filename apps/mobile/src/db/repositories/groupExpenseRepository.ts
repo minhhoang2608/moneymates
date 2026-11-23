@@ -29,7 +29,7 @@ export type NewGroupExpense = {
   categoryId?: string;
   note?: string;
   /** Defaults to "manual". */
-  source?: "manual" | "qr";
+  source?: "manual" | "qr" | "voice";
   /** Raw QR payload for `source: "qr"`; defaults to null. */
   qrData?: string | null;
 };

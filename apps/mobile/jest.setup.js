@@ -48,6 +48,14 @@ jest.mock("expo-media-library/legacy", () => ({
   requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
   saveToLibraryAsync: jest.fn(async () => undefined),
 }));
+jest.mock("expo-speech-recognition", () => ({
+  ExpoSpeechRecognitionModule: {
+    requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+    addListener: jest.fn(() => ({ remove: jest.fn() })),
+    start: jest.fn(),
+    stop: jest.fn(),
+  },
+}));
 jest.mock("react-native-qrcode-svg", () => {
   const React = require("react");
   const { View } = require("react-native");
