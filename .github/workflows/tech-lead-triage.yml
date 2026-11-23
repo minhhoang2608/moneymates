@@ -46,7 +46,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           model: ${{ env.MODEL_TECH_LEAD }}
-          max_turns: ${{ env.TURNS_TECH_LEAD }}
+          max_turns: ${{ env.TURNS_TRIAGE }}
           allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue create:*),Bash(gh issue comment:*),Bash(gh label list:*)"
           prompt: |
             You are the **Tech Lead** of the MoneyMates AI software factory, in TRIAGE mode.
@@ -54,6 +54,9 @@ jobs:
 
             Issues to triage: `.factory/input.json`. The open backlog (for duplicates and dependencies) is in `.factory/context.json`.
             The product source of truth is in `docs/`.
+
+            Budget your turns: write `.factory/result.json` as soon as the first issue is decided and update it
+            after each further issue, so the work is never lost if you run out of turns.
 
             For each issue in input.json, and only those:
             - BA feature tickets (no `area:*`) are user-facing. Design the technical breakdown and split each one into
@@ -72,4 +75,5 @@ jobs:
         if: steps.agent.outcome == 'success'
         env:
           OUTCOME: ${{ steps.agent.outputs.outcome }}
+          REMAINING: ${{ steps.collect.outputs.remaining }}
         run: '"$FACTORY_BIN/triage.sh" apply'

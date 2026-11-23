@@ -11,15 +11,22 @@ INPUT=.factory/input.json
 
 collect() {
   mkdir -p .factory
-  gh issue list --state open --label status:triage --limit 50 --json number,title,body,labels \
+  local all="$RUNNER_TEMP/triage-all.json"
+  # Highest priority first (p0 < p1 < … ; no priority last), then oldest.
+  gh issue list --state open --label status:triage --limit 100 --json number,title,body,labels \
     --jq '[.[] | select([.labels[].name] | index("needs-human") | not)
-           | {number, title, body, labels: [.labels[].name]}]' >"$INPUT"
+           | {number, title, body, labels: [.labels[].name]}
+           | . + {prio: ([.labels[] | select(startswith("priority:p")) | ltrimstr("priority:p") | tonumber] | min // 9)}]
+          | sort_by(.prio, .number) | map(del(.prio))' >"$all"
+  jq --argjson n "${MAX_TRIAGE_PER_RUN:-3}" '.[:$n]' "$all" >"$INPUT"
   gh issue list --state open --limit 200 --json number,title,labels \
     --jq '[.[] | {number, title, labels: [.labels[].name]}]' >.factory/context.json
-  local count
+  local count total
   count="$(jq length "$INPUT")"
+  total="$(jq length "$all")"
   set_output count "$count"
-  summary "Issues to triage: $count"
+  set_output remaining "$((total - count))"
+  summary "Issues to triage: $count this run (#$(jq -r '[.[].number] | join(", #")' "$INPUT")), $((total - count)) left for the next run"
 }
 
 apply() {
@@ -93,6 +100,11 @@ $reason"
         ;;
     esac
   done < <(jq -c '.issues[]?' "$RESULT_FILE")
+
+  # More issues waiting: chain the next batch (dispatch, since GITHUB_TOKEN label events start nothing).
+  if ((${REMAINING:-0} > 0)); then
+    dispatch tech-lead-triage.yml
+  fi
 }
 
 case "$cmd" in
