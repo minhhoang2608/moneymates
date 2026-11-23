@@ -1,22 +1,20 @@
 # E2E: Android emulator on the Linux runner + Maestro flows against a release build with mock data.
 # Separate from the Tester on purpose: a cold Android build takes 20+ minutes, and in one workflow it blocked
-# every ticket verification behind it. Here it runs in parallel, only when apps/mobile changed, and a newer push
-# cancels the older run (only the latest dev matters). The Tester and BA read the latest completed result.
+# every ticket verification behind it. It is expensive (the repo is on the 2,000 minute Free plan), so it only
+# runs on demand: when the Tester or BA reports it needs E2E evidence (kick_e2e), or by hand. A run is never
+# cancelled by newer merges (that starved it before); extra requests collapse into one pending run. When it
+# finishes it starts the Tester again, which reads the result.
 name: E2E
 run-name: E2E on dev
 
 on:
-  push:
-    branches: [dev]
-    paths:
-      - "apps/mobile/**"
   workflow_dispatch:
 
 permissions: {}
 
 concurrency:
   group: e2e
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   e2e:
@@ -26,6 +24,7 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -89,3 +88,8 @@ jobs:
           name: e2e-results
           path: maestro-results/
           if-no-files-found: ignore
+      - name: Verify again with the new result
+        if: always() && vars.FACTORY_ENABLED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run tester.yml --ref dev --repo "$GITHUB_REPOSITORY"

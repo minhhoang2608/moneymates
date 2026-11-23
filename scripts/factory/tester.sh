@@ -19,7 +19,7 @@ collect() {
   local mode="${1:-tickets}" ba_verifies="${BA_VERIFIES_FEATURES:-true}"
   mkdir -p .factory
   [[ "$mode" == parents ]] && INPUT=.factory/input-ba.json
-  local list='[]' n row is_parent
+  local list='[]' n row is_parent mc rc
   for n in $(testing_candidates); do
     row="$(gh issue view "$n" --json number,title,body,labels --jq '{number, title, body, labels: [.labels[].name]}')"
     is_parent=false
@@ -29,6 +29,17 @@ collect() {
       [[ "$is_parent" == true && "$ba_verifies" == true ]] || continue
     else
       [[ "$is_parent" == true && "$ba_verifies" == true ]] && continue
+    fi
+    # A ticket merged after the commit the tests ran on has no evidence in this run: its own run
+    # (dispatched by its merge) verifies it. Without this the Tester judged it against older test results.
+    if [[ "$is_parent" == false && -n "${GITHUB_SHA:-}" ]]; then
+      mc="$(merge_commit_of_issue "$n")"
+      rc=0
+      if [[ -n "$mc" ]]; then git merge-base --is-ancestor "$mc" "$GITHUB_SHA" 2>/dev/null || rc=$?; fi
+      if ((rc == 1)); then
+        log "#$n was merged after the tested commit (${GITHUB_SHA:0:7}); left for its own run"
+        continue
+      fi
     fi
     if [[ "$is_parent" == true ]]; then
       row="$(jq -c --arg kids "$(children_of "$n" | tr '\n' ' ')" \
@@ -144,6 +155,12 @@ $notes"
         gh issue edit "$n" --add-label test:real-device >/dev/null
         set_status "$n" status:done
         gh issue close "$n" --reason completed >/dev/null
+        ;;
+      pending)
+        # Evidence is missing for a reason that is not a product defect (no E2E result yet, tests older than the
+        # merge). No bug, no counter: the ticket stays in testing and is verified again by a later run.
+        log "#$n pending: $notes"
+        if [[ "$(jq -r '.needs_e2e // false' <<<"$row")" == true ]]; then kick_e2e; fi
         ;;
       *) log "unknown verdict '$verdict' for #$n" ;;
     esac

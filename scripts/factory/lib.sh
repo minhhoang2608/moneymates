@@ -186,7 +186,8 @@ completed_parents() {
     for c in $kids; do
       if [[ "$(issue_state "$c" 2>/dev/null || echo CLOSED)" == OPEN ]]; then open=true; break; fi
     done
-    [[ "$open" == false ]] && echo "$p"
+    # if, not "[[ ]] && echo": a false last test would make the function (and, under set -e, the caller) fail.
+    if [[ "$open" == false ]]; then echo "$p"; fi
   done
 }
 
@@ -202,12 +203,28 @@ testing_candidates() {
     for b in $bugs; do
       if [[ "$(issue_state "$b" 2>/dev/null || echo CLOSED)" == OPEN ]]; then blocked=true; fi
     done
-    [[ "$blocked" == false ]] && echo "$n"
+    if [[ "$blocked" == false ]]; then echo "$n"; fi
   done < <(
     gh issue list --state open --label status:testing --limit 100 --json number,labels \
       --jq '.[] | select([.labels[].name] | index("needs-human") | not) | .number'
     completed_parents
   )
+}
+
+# Merge commit (on dev) of the merged PR of ticket <n>; empty when none is found.
+merge_commit_of_issue() {
+  gh pr list --state merged --base dev --limit 100 --json mergeCommit,headRefName     --jq ".[] | select(.headRefName | test(\"^(feat|fix)/$1(-|$)\")) | .mergeCommit.oid" | head -n1
+}
+
+# Start an E2E run unless one is already queued or running (it re-triggers the Tester when it finishes).
+kick_e2e() {
+  local active
+  active="$(gh run list --workflow e2e.yml --limit 20 --json status --jq '[.[] | select(.status != "completed")] | length')"
+  if [[ "$active" == 0 ]]; then
+    dispatch e2e.yml || log "could not dispatch e2e.yml"
+  else
+    log "E2E already queued or running"
+  fi
 }
 
 # Read a field from the agent result file.

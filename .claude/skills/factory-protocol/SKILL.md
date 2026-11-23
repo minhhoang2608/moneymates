@@ -20,16 +20,16 @@ GitHub doesn't start workflows for events made with `GITHUB_TOKEN`, so scripts h
 
 Always write valid JSON to `.factory/result.json` as the **last** step. A missing or invalid file counts as a failed run.
 
-| Run           | Shape                                                                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| BA            | `{"created":[N],"commented":[N],"more":true,"notes":"..."}` (`more: true` starts another BA run)                                   |
-| Triage        | `{"issues":[{"number":N,"decision":"ready\|split\|epic\|duplicate\|needs_human","reason":"...","children":[N],"duplicate_of":N}]}` |
-| Assign        | `{"assignments":[{"issue":N,"role":"dev-fe\|dev-be\|dev-fullstack","reason":"..."}]}`                                              |
-| Dev plan      | `{"outcome":"planned"}` or `{"outcome":"blocked","reason":"..."}`, plus `.factory/plan.md`                                         |
-| Dev implement | `{"outcome":"pr_opened\|pushed\|no_changes\|blocked","pr":N,"summary":"...","reason":"..."}`                                       |
-| Review        | `{"verdict":"approve\|changes_requested\|needs_human","body":"markdown"}`                                                          |
-| BA verify     | same shape as Tester (`results`), written for parent features; the BA verifies them end to end                                     |
-| Tester        | `{"results":[{"issue":N,"verdict":"pass\|fail\|real_device","notes":"...","bug":{...}}]}`                                          |
+| Run           | Shape                                                                                                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BA            | `{"created":[N],"commented":[N],"more":true,"notes":"..."}` (`more: true` starts another BA run)                                                                          |
+| Triage        | `{"issues":[{"number":N,"decision":"ready\|split\|epic\|duplicate\|needs_human","reason":"...","children":[N],"duplicate_of":N}]}`                                        |
+| Assign        | `{"assignments":[{"issue":N,"role":"dev-fe\|dev-be\|dev-fullstack","reason":"..."}]}`                                                                                     |
+| Dev plan      | `{"outcome":"planned"}` or `{"outcome":"blocked","reason":"..."}`, plus `.factory/plan.md`                                                                                |
+| Dev implement | `{"outcome":"pr_opened\|pushed\|no_changes\|blocked","pr":N,"summary":"...","reason":"..."}`                                                                              |
+| Review        | `{"verdict":"approve\|changes_requested\|needs_human","body":"markdown"}`                                                                                                 |
+| BA verify     | same shape as Tester (`results`), written for parent features; the BA verifies them end to end                                                                            |
+| Tester        | `{"results":[{"issue":N,"verdict":"pass\|fail\|real_device\|pending","needs_e2e":false,"notes":"...","bug":{...}}]}` (`pending` = evidence missing, not a defect: no bug) |
 
 ## State machine (one `status:*` per issue)
 
