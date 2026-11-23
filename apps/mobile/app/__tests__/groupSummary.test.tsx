@@ -6,7 +6,11 @@ import { Alert } from "react-native";
 
 import { fireEvent, renderRouter, screen, waitFor, within } from "expo-router/testing-library";
 
+import * as MediaLibrary from "expo-media-library/legacy";
+import * as Sharing from "expo-sharing";
+
 import {
+  createBankAccountRepository,
   createCategoryRepository,
   createGroupExpenseRepository,
   createGroupRepository,
@@ -16,6 +20,7 @@ import {
 } from "@/db/repositories";
 import { loadOverview } from "@/lib/stats/loadOverview";
 import type { AnyDb } from "@/db/seed";
+import { generateVietQr } from "@/lib/vietqr";
 import { openTestDb } from "@/db/testing/testDb";
 
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
@@ -44,8 +49,15 @@ afterEach(() => {
 
 const d = () => openTestDb(file).db as unknown as AnyDb;
 
-async function setup(names = ["An", "Bình"]) {
+async function setup(names = ["An", "Bình"], withAccount = false) {
   await createProfileRepository(d()).setDisplayName("Hoàng");
+  if (withAccount) {
+    await createBankAccountRepository(d()).addAccount({
+      bank_bin: "970423",
+      account_no: "0123456789",
+      account_name: "HOANG LE",
+    });
+  }
   const g = await createGroupRepository(d()).createGroup({ name: "Đà Lạt", members: names });
   return { g, me: g.members[0].id, an: g.members[1].id, binh: g.members[2]?.id };
 }
@@ -171,7 +183,7 @@ describe("Tổng kết nhóm", () => {
     await fireEvent.press(screen.getByTestId("member-expenses-close"));
   });
 
-  it("AC6: works offline without fetch; QR buttons show the placeholder", async () => {
+  it("AC6: works offline without fetch; QR buttons open the popup", async () => {
     const fetchSpy = jest.fn();
     (global as { fetch?: unknown }).fetch = fetchSpy;
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
@@ -179,8 +191,11 @@ describe("Tổng kết nhóm", () => {
     await expense(g.id, me, 900000, [me, an, binh], "Khách sạn");
     await open(g.id);
     await fireEvent.press(await screen.findByTestId(`qr-${an}`));
+    expect(await screen.findByTestId("qr-popup")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("qr-popup-close"));
     await fireEvent.press(screen.getByTestId("qr-group"));
-    expect(alertSpy).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText("QR chung")).toBeTruthy();
+    expect(alertSpy).not.toHaveBeenCalled();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -188,5 +203,74 @@ describe("Tổng kết nhóm", () => {
     await setup();
     await open("missing");
     expect(await screen.findByTestId("group-not-found")).toBeTruthy();
+  });
+
+  describe("QR popup", () => {
+    const expected = (amount?: number, message?: string) =>
+      generateVietQr({ bankBin: "970423", account: "0123456789", name: "HOANG LE", amount, message });
+
+    it("opens a member QR with the amount, message and fetch never called", async () => {
+      const fetchSpy = jest.fn();
+      global.fetch = fetchSpy as never;
+      const { g, me, an, binh } = await setup(["An", "Bình"], true);
+      await expense(g.id, me, 900000, [me, an, binh], "Khách sạn");
+      await open(g.id);
+      await fireEvent.press(await screen.findByTestId(`qr-${an}`));
+      const code = await screen.findByTestId("qr-popup-code");
+      expect(code.props.accessibilityLabel).toBe(expected(300000, "Đà Lạt An"));
+      expect(screen.getByText("Đòi tiền An")).toBeTruthy();
+      expect(within(screen.getByTestId("qr-popup")).getByText("300.000đ")).toBeTruthy();
+      expect(screen.getByText("Nội dung: Da Lat An")).toBeTruthy();
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("download and share use the QR image", async () => {
+      const { g, me, an, binh } = await setup(["An", "Bình"], true);
+      await expense(g.id, me, 900000, [me, an, binh], "Khách sạn");
+      await open(g.id);
+      await fireEvent.press(await screen.findByTestId(`qr-${an}`));
+      await fireEvent.press(await screen.findByTestId("qr-download"));
+      await waitFor(() => expect(MediaLibrary.saveToLibraryAsync).toHaveBeenCalled());
+      await fireEvent.press(screen.getByTestId("qr-share"));
+      await waitFor(() => expect(Sharing.shareAsync).toHaveBeenCalled());
+    });
+
+    it("QR chung from the footer has no amount; the tab switches the payload", async () => {
+      const { g, me, an, binh } = await setup(["An", "Bình"], true);
+      await expense(g.id, me, 900000, [me, an, binh], "Khách sạn");
+      await open(g.id);
+      await fireEvent.press(await screen.findByTestId("qr-group"));
+      const code = await screen.findByTestId("qr-popup-code");
+      expect(code.props.accessibilityLabel).toBe(expected(undefined, "Đà Lạt"));
+      expect(screen.queryByTestId("qr-tab-member")).toBeNull();
+      expect(screen.getByTestId("qr-download")).toBeTruthy();
+      expect(screen.getByTestId("qr-share")).toBeTruthy();
+      await fireEvent.press(screen.getByTestId("qr-popup-close"));
+      await fireEvent.press(screen.getByTestId(`qr-${an}`));
+      await fireEvent.press(await screen.findByTestId("qr-tab-group"));
+      expect(screen.getByTestId("qr-popup-code").props.accessibilityLabel).toBe(expected(undefined, "Đà Lạt"));
+    });
+
+    it("without a receiving account it prompts to add one", async () => {
+      const { g, me, an, binh } = await setup(["An", "Bình"], false);
+      await expense(g.id, me, 900000, [me, an, binh], "Khách sạn");
+      await open(g.id);
+      await fireEvent.press(await screen.findByTestId(`qr-${an}`));
+      expect(await screen.findByTestId("qr-add-account")).toBeTruthy();
+      expect(screen.queryByTestId("qr-popup-code")).toBeNull();
+      await fireEvent.press(screen.getByTestId("qr-add-account"));
+      await waitFor(() => expect(screen.getByTestId("screen-bank-accounts")).toBeTruthy());
+    });
+
+    it("a soft-deleted receiving account also prompts", async () => {
+      const { g, me, an, binh } = await setup(["An", "Bình"], true);
+      await expense(g.id, me, 900000, [me, an, binh], "Khách sạn");
+      const acc = await createBankAccountRepository(d()).getDefaultAccount();
+      await createBankAccountRepository(d()).deleteAccount(acc!.id);
+      await open(g.id);
+      await fireEvent.press(await screen.findByTestId("qr-group"));
+      expect(await screen.findByTestId("qr-add-account")).toBeTruthy();
+      expect(screen.queryByTestId("qr-popup-code")).toBeNull();
+    });
   });
 });
