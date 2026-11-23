@@ -1,4 +1,4 @@
-import { formatBillDate, toBillCard, toFormParams } from "../billResult";
+import { billDateToLocal, formatBillDate, toBillCard, toFormParams } from "../billResult";
 import { resizeTarget } from "../resizeTarget";
 
 const full = { amount: 345000, currency: "VND", shop: "Bánh căn Nhà Chung", date: "2026-11-22", category: "Ăn uống" };
@@ -27,9 +27,18 @@ describe("billResult", () => {
       amount: "345000",
       note: "Bánh căn Nhà Chung",
       categoryId: "cat1",
+      date: "2026-11-22",
       attachmentUri: "file:///b.jpg",
     });
     expect(toFormParams(null, null, null)).toEqual({ source: "bill" });
+    expect(toFormParams({ ...full, date: "garbage" }, null, null)).not.toHaveProperty("date");
+  });
+  it("maps the bill date to that local day with the current time of day", () => {
+    const now = new Date(2026, 10, 25, 14, 30, 5);
+    expect(billDateToLocal("2026-11-22", now)).toEqual(new Date(2026, 10, 22, 14, 30, 5));
+    expect(billDateToLocal(null, now)).toBe(now);
+    expect(billDateToLocal("garbage", now)).toBe(now);
+    expect(billDateToLocal("2026-02-31", now)).toBe(now);
   });
 });
 

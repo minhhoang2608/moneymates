@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { TransactionForm } from "@/components/transaction/TransactionForm";
 import { vi } from "@/i18n/vi";
+import { billDateToLocal } from "@/lib/bill/billResult";
 
 type Params = {
   transactionId?: string;
@@ -12,12 +13,15 @@ type Params = {
   payerMemberId?: string;
   source?: string;
   aiError?: string;
+  date?: string;
+  attachmentUri?: string;
 };
 
 export default function NewTransactionScreen() {
   const router = useRouter();
   const p = useLocalSearchParams<Params>();
   const voice = p.source === "voice";
+  const bill = p.source === "bill";
   const amount = /^\d+$/.test(p.amount ?? "") ? Number(p.amount) : null;
   const aiError = p.aiError && p.aiError in vi.apiErrors ? (p.aiError as keyof typeof vi.apiErrors) : null;
   return (
@@ -25,14 +29,15 @@ export default function NewTransactionScreen() {
       transactionId={p.transactionId}
       groupId={p.groupId}
       onClose={() => router.back()}
-      source={voice ? "voice" : "manual"}
+      source={voice ? "voice" : bill ? "bill" : "manual"}
       initial={
-        voice
+        voice || bill
           ? {
               amountVnd: amount,
               note: p.note ?? "",
               categoryId: p.categoryId || null,
               payerMemberId: p.payerMemberId || null,
+              ...(bill ? { occurredAt: billDateToLocal(p.date, new Date()), photoUri: p.attachmentUri || null } : {}),
             }
           : undefined
       }

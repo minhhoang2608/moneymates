@@ -136,6 +136,21 @@ describe("transaction repository", () => {
     b.sqlite.close();
   });
 
+  it("bill source: sync-ready row with attachment; soft delete keeps the row and photo", async () => {
+    const { repo, db } = setup();
+    const row = await repo.create({ ...base, source: "bill", photo_uri: "file:///doc/attachments/b.jpg" });
+    expect(row.id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(row).toMatchObject({ source: "bill", photo_uri: "file:///doc/attachments/b.jpg", deleted_at: null });
+    expect(row.created_at).toBeTruthy();
+    await new Promise((r) => setTimeout(r, 5));
+    await repo.softDelete(row.id);
+    expect(await repo.list()).toHaveLength(0);
+    const [raw] = await db.select().from(transactions).where(eq(transactions.id, row.id));
+    expect(raw!.deleted_at).not.toBeNull();
+    expect(raw!.updated_at > row.updated_at).toBe(true);
+    expect(raw!.photo_uri).toBe("file:///doc/attachments/b.jpg");
+  });
+
   it("AC6: works offline on a local db only", async () => {
     const { repo } = setup();
     await repo.create(base);

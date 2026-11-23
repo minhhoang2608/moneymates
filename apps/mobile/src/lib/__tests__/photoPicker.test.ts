@@ -1,7 +1,7 @@
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
-import { photoPicker } from "../photoPicker";
+import { persistAttachment, photoPicker } from "../photoPicker";
 
 const launch = ImagePicker.launchImageLibraryAsync as jest.Mock;
 const permission = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
@@ -37,5 +37,24 @@ describe("photoPicker.pick", () => {
     launch.mockClear();
     expect(await photoPicker.pick()).toBeNull();
     expect(launch).not.toHaveBeenCalled();
+  });
+});
+
+describe("persistAttachment", () => {
+  afterEach(() => {
+    delete process.env.EXPO_PUBLIC_E2E;
+  });
+
+  it("copies the file into attachments/", () => {
+    const copy = jest.spyOn(FileSystem.File.prototype, "copy");
+    expect(persistAttachment("file:///cache/bill.jpg")).toMatch(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/);
+    expect(copy).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the uri unchanged in E2E mode", () => {
+    process.env.EXPO_PUBLIC_E2E = "1";
+    const copy = jest.spyOn(FileSystem.File.prototype, "copy");
+    expect(persistAttachment("file:///e2e/bill.jpg")).toBe("file:///e2e/bill.jpg");
+    expect(copy).not.toHaveBeenCalled();
   });
 });

@@ -7,7 +7,7 @@ import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-li
 import { setApiAdapter } from "@/api/adapter";
 import { ApiError } from "@/api/errors";
 import { queryClient } from "@/api/QueryProvider";
-import { createAppSettingRepository, createCategoryRepository } from "@/db/repositories";
+import { createAppSettingRepository, createCategoryRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { setBillImageSource } from "@/lib/bill/imageSource";
@@ -120,7 +120,8 @@ describe("bill scan screen", () => {
       amount: "345000",
       note: "Bánh căn Nhà Chung",
       categoryId: food.id,
-      attachmentUri: "file:///bill.jpg",
+      date: "2026-11-22",
+      attachmentUri: expect.stringMatching(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/),
     });
   });
 
@@ -139,7 +140,11 @@ describe("bill scan screen", () => {
     await fireEvent.press(screen.getByTestId("bill-manual"));
     await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
     const other = (await createCategoryRepository(d()).listByKind("expense")).find((c) => c.name === "Khác")!;
-    expect(screen).toHaveSearchParams({ source: "bill", categoryId: other.id });
+    expect(screen).toHaveSearchParams({
+      source: "bill",
+      categoryId: other.id,
+      attachmentUri: expect.stringMatching(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/),
+    });
   });
 
   it("AC4: opened while AI is unavailable → error state, no capture, no upload", async () => {
@@ -149,5 +154,33 @@ describe("bill scan screen", () => {
     expect(await screen.findByTestId("bill-error")).toBeTruthy();
     expect(source.capture).not.toHaveBeenCalled();
     expect(postMultipart).not.toHaveBeenCalled();
+  });
+
+  it("AC1/AC3: Điền vào form prefills the form and saving stores a bill transaction with the attachment", async () => {
+    await accept();
+    await renderRouter("./app", { initialUrl: "/bill" });
+    await screen.findByTestId("bill-result");
+    await fireEvent.press(screen.getByTestId("bill-fill-form"));
+    await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
+    expect(await screen.findByTestId("photo-thumbnail")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("save-button"));
+    await waitFor(async () => expect((await createTransactionRepository(d()).list()).length).toBe(1));
+    const [row] = await createTransactionRepository(d()).list();
+    expect(row).toMatchObject({ amount: 345000, currency: "VND", note: "Bánh căn Nhà Chung", source: "bill" });
+    expect(row!.photo_uri).toMatch(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/);
+    expect(row!.occurred_at.slice(0, 10) >= "2026-11-21").toBe(true);
+    expect(new Date(row!.occurred_at).getDate() === 22 || new Date(row!.occurred_at).getUTCDate() === 22).toBe(true);
+  });
+
+  it("AC2: after an AI error, Nhập tay keeps the image and saving stores it", async () => {
+    await accept();
+    postMultipart.mockImplementation(async () => {
+      throw new ApiError("ai_unavailable");
+    });
+    await renderRouter("./app", { initialUrl: "/bill" });
+    await screen.findByTestId("bill-error");
+    await fireEvent.press(screen.getByTestId("bill-manual"));
+    await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
+    expect(await screen.findByTestId("photo-thumbnail")).toBeTruthy();
   });
 });

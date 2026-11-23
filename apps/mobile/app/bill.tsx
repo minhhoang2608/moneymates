@@ -11,6 +11,7 @@ import { vi } from "@/i18n/vi";
 import { BILL_PRIVACY_KEY } from "@/lib/bill/constants";
 import { billErrorMessage, toBillCard, toFormParams } from "@/lib/bill/billResult";
 import { getBillImageSource } from "@/lib/bill/imageSource";
+import { persistAttachment } from "@/lib/photoPicker";
 import { colors, overlays, fontFamily, fontSize, radii } from "@/theme";
 
 type Phase = "init" | "consent" | "idle" | "uploading" | "result" | "error";
@@ -86,12 +87,24 @@ export default function BillScreen() {
     cats.current.find((c) => c.name === "Khác")?.id ??
     null;
 
+  const persisted = (uri: string | null): string | null => {
+    if (!uri) return null;
+    try {
+      return persistAttachment(uri);
+    } catch {
+      return null;
+    }
+  };
+
   const fill = () =>
-    router.replace({ pathname: "/transaction/new", params: toFormParams(result, imageUri, categoryId(result)) });
+    router.replace({
+      pathname: "/transaction/new",
+      params: toFormParams(result, persisted(imageUri), categoryId(result)),
+    });
   const manual = () =>
     router.replace({
       pathname: "/transaction/new",
-      params: toFormParams(null, null, categoryId(null)),
+      params: toFormParams(null, phase === "error" ? persisted(imageUri) : null, categoryId(null)),
     });
 
   const unavailable = ai.reason !== null && ai.reason !== "loading";
