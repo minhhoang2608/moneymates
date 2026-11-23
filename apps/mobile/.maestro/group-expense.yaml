@@ -38,6 +38,7 @@ appId: com.moneymates.app
 - tapOn:
     id: "group-save"
 - assertVisible: "Đà Lạt"
+- assertVisible: "3 thành viên.*"
 - assertVisible: "0đ"
 - tapOn:
     text: "Đà Lạt"
@@ -45,13 +46,27 @@ appId: com.moneymates.app
     id: "group-add-expense"
 - assertVisible:
     id: "payer-picker"
+- assertVisible: "An"
+- assertVisible: "Bình"
 - tapOn:
     id: "amount-input"
 - inputText: "1000000"
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "split-summary"
+- assertVisible:
+    id: "split-summary"
+    text: "Chia đều · 3 người.*333.334đ mỗi người"
+- scrollUntilVisible:
+    element:
+      id: "category-row"
 - tapOn:
     id: "category-row"
 - tapOn: "Ăn uống"
+- scrollUntilVisible:
+    element:
+      id: "save-button"
 - tapOn:
     id: "save-button"
 - assertVisible:
@@ -59,3 +74,4 @@ appId: com.moneymates.app
 - assertVisible:
     id: "group-total"
     text: "1.000.000đ"
+- assertVisible: "Tôi trả · chia đều 3"
