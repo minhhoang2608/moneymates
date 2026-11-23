@@ -106,9 +106,11 @@ export default function GroupEditScreen() {
 
   async function save() {
     if (!name.trim()) return setError(groupErrorMessage("name_required"));
+    const others = items.filter((m) => !m.isMe);
+    if (others.some((m) => !m.name.trim())) return setError(groupErrorMessage("member_name_required"));
+    if (start && end && end < start) return setError(groupErrorMessage("invalid_dates"));
     setError(null);
     try {
-      const others = items.filter((m) => !m.isMe);
       if (id) {
         await groups.updateGroup(id, {
           name,

@@ -194,3 +194,66 @@ describe("Tạo/sửa nhóm", () => {
     expect(await groupsRepo().listGroups()).toHaveLength(0);
   });
 });
+
+describe("Tạo/sửa nhóm: dates and validation", () => {
+  async function pickDate(testId: string, date: Date) {
+    await fireEvent.press(screen.getByTestId(testId));
+    const picker = await screen.findByTestId("datetime-picker");
+    await fireEvent(picker, "onChange", { type: "set" }, date);
+  }
+
+  it("AC1: picks start and end dates, stores YYYY-MM-DD; clear resets to null", async () => {
+    freshFile();
+    await renderEdit();
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Đà Lạt");
+    await pickDate("group-start-date", new Date(2026, 11, 1, 9));
+    await pickDate("group-end-date", new Date(2026, 11, 4, 9));
+    expect(screen.queryByTestId("datetime-picker")).toBeNull();
+    expect(screen.getByText("01/12/2026")).toBeTruthy();
+    expect(screen.getByText("04/12/2026")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("group-save"));
+    await waitFor(async () => expect(await groupsRepo().listGroups()).toHaveLength(1));
+    expect(await groupsRepo().listGroups()).toEqual([
+      expect.objectContaining({ start_date: "2026-12-01", end_date: "2026-12-04" }),
+    ]);
+  });
+
+  it("AC1: clear button resets a date to null", async () => {
+    freshFile();
+    await renderEdit();
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Đà Lạt");
+    await pickDate("group-start-date", new Date(2026, 11, 1, 9));
+    await fireEvent.press(screen.getByTestId("group-start-date-clear"));
+    expect(screen.queryByTestId("group-start-date-clear")).toBeNull();
+    await fireEvent.press(screen.getByTestId("group-save"));
+    await waitFor(async () => expect(await groupsRepo().listGroups()).toHaveLength(1));
+    expect((await groupsRepo().listGroups())[0].start_date).toBeNull();
+  });
+
+  it("end before start shows group-error and writes nothing", async () => {
+    freshFile();
+    const g = await groupsRepo().createGroup({ name: "Cũ", members: ["An"] });
+    await renderEdit(g.id);
+    await screen.findByTestId("member-rename-1");
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Mới");
+    await pickDate("group-start-date", new Date(2026, 11, 10, 9));
+    await pickDate("group-end-date", new Date(2026, 11, 4, 9));
+    await fireEvent.press(screen.getByTestId("group-save"));
+    expect((await screen.findByTestId("group-error")).props.children).toBe(vi.groups.errors.invalid_dates);
+    expect((await groupsRepo().getGroup(g.id)).name).toBe("Cũ");
+  });
+
+  it("blank member rename shows group-error and leaves the stored group unchanged", async () => {
+    freshFile();
+    const g = await groupsRepo().createGroup({ name: "Cũ", members: ["An"] });
+    await renderEdit(g.id);
+    await fireEvent.changeText(await screen.findByTestId("group-name"), "Mới");
+    await fireEvent.press(await screen.findByTestId("member-rename-1"));
+    await fireEvent.changeText(screen.getByTestId("member-rename-input-1"), "  ");
+    await fireEvent.press(screen.getByTestId("group-save"));
+    expect((await screen.findByTestId("group-error")).props.children).toBe(vi.groups.errors.member_name_required);
+    const stored = await groupsRepo().getGroup(g.id);
+    expect(stored.name).toBe("Cũ");
+    expect(stored.members.map((m) => m.displayName)).toEqual(["", "An"]);
+  });
+});
