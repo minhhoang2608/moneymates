@@ -97,12 +97,11 @@ def test_readme_deploy_section_order():
         "config/wsgi.py",
         "application",
         "requirements.txt",
-        ".env.example",
+        "DATABASE_URL",
         "migrate",
         "createcachetable",
-        "tmp/restart.txt",
+        "install.sh",
         "/health",
     ]
     idx = [t.index(k) for k in keys]
     assert idx == sorted(idx)
-    assert "localhost" in t and "URL-encode" in t

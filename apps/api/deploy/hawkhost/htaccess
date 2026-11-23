@@ -1,0 +1,8 @@
+# MONEYMATES CGI BEGIN (added by apps/api/deploy/hawkhost/install.sh)
+# LiteSpeed on this host ignores the CloudLinux Passenger block above, so every request is sent to
+# Django through cgi-bin/django.cgi. AutoSSL validation files keep working.
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{REQUEST_URI} !^/cgi-bin/
+RewriteRule ^ cgi-bin/django.cgi [L]
+# MONEYMATES CGI END
