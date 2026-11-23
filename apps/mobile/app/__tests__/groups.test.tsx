@@ -3,6 +3,8 @@ import os from "node:os";
 import path from "node:path";
 
 import { eq } from "drizzle-orm";
+import { act } from "react";
+import { Keyboard } from "react-native";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import {
@@ -114,6 +116,51 @@ describe("Tạo/sửa nhóm", () => {
     const [g] = await groupsRepo().listGroups();
     expect(g).toMatchObject({ name: "Đà Lạt", icon: "sea", total: 0 });
     expect(g.members.map((m) => m.displayName)).toEqual(["", "An", "Bình"]);
+  });
+
+  it("adds a member by submitting from the keyboard", async () => {
+    freshFile();
+    await renderEdit();
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Đà Lạt");
+    const input = screen.getByTestId("member-add-input");
+    await fireEvent.changeText(input, "An");
+    await fireEvent(input, "submitEditing");
+    expect(await screen.findByText("An")).toBeTruthy();
+    expect(screen.getByTestId("member-add-input").props.value).toBe("");
+    expect(screen.getByText(`${vi.groups.members} (2)`)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("group-save"));
+    await waitFor(async () => expect(await groupsRepo().listGroups()).toHaveLength(1));
+    const [g] = await groupsRepo().listGroups();
+    expect(g.members.map((m) => m.displayName)).toEqual(["", "An"]);
+  });
+
+  it("blank submit adds nothing", async () => {
+    freshFile();
+    await renderEdit();
+    const input = screen.getByTestId("member-add-input");
+    await fireEvent.changeText(input, "   ");
+    await fireEvent(input, "submitEditing");
+    expect(screen.getByText(`${vi.groups.members} (1)`)).toBeTruthy();
+  });
+
+  it("footer hides while the keyboard is open", async () => {
+    freshFile();
+    const handlers: Record<string, () => void> = {};
+    const spy = jest.spyOn(Keyboard, "addListener").mockImplementation(((event: string, cb: () => void) => {
+      handlers[event] = cb;
+      return { remove: jest.fn() };
+    }) as never);
+    await renderEdit();
+    expect(screen.getByTestId("group-save")).toBeTruthy();
+    await act(async () => {
+      handlers.keyboardDidShow();
+    });
+    expect(screen.queryByTestId("group-save")).toBeNull();
+    await act(async () => {
+      handlers.keyboardDidHide();
+    });
+    expect(screen.getByTestId("group-save")).toBeTruthy();
+    spy.mockRestore();
   });
 
   it("AC2: preselects the default account and switching saves receiving_account_id", async () => {

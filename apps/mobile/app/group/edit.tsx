@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState, type ComponentRef } from "react";
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { Avatar } from "@/components/group/Avatar";
 import { GroupGlyph } from "@/components/group/GroupIconTile";
@@ -51,6 +51,21 @@ export default function GroupEditScreen() {
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  function scrollToAddRow() {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+  }
 
   useEffect(() => {
     let alive = true;
@@ -93,6 +108,7 @@ export default function GroupEditScreen() {
     if (!n) return;
     setItems((cur) => [...cur, { key: nextKey(), name: n, isMe: false, hasTransactions: false }]);
     setNewName("");
+    scrollToAddRow();
   }
 
   function removeMember(item: Item) {
@@ -151,7 +167,7 @@ export default function GroupEditScreen() {
         <Text style={styles.title}>{id ? t.edit : t.create}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <View style={styles.field}>
             <Text style={styles.label}>{t.name}</Text>
@@ -287,6 +303,9 @@ export default function GroupEditScreen() {
               value={newName}
               onChangeText={setNewName}
               onSubmitEditing={addMember}
+              onFocus={scrollToAddRow}
+              returnKeyType="done"
+              submitBehavior="submit"
             />
             <Pressable testID="member-add" style={styles.addBtn} onPress={addMember}>
               <Text style={styles.addBtnText}>{t.add}</Text>
@@ -301,11 +320,13 @@ export default function GroupEditScreen() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Pressable testID="group-save" style={styles.primaryBtn} onPress={save}>
-          <Text style={styles.primaryText}>{t.save}</Text>
-        </Pressable>
-      </View>
+      {!keyboardOpen && (
+        <View style={styles.footer}>
+          <Pressable testID="group-save" style={styles.primaryBtn} onPress={save}>
+            <Text style={styles.primaryText}>{t.save}</Text>
+          </Pressable>
+        </View>
+      )}
 
       {picking && (
         <DateTimeField

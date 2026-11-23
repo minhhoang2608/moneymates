@@ -15,14 +15,16 @@ appId: com.moneymates.app
 - tapOn:
     id: "member-add-input"
 - inputText: "An"
-- tapOn:
-    id: "member-add"
+- pressKey: Enter
 - tapOn:
     id: "member-add-input"
 - inputText: "Bình"
-- tapOn:
-    id: "member-add"
+- pressKey: Enter
 - hideKeyboard
+- assertVisible: "Bình"
+- scrollUntilVisible:
+    element:
+      id: "group-save"
 - tapOn:
     id: "group-save"
 - assertVisible: "Đà Lạt"
