@@ -173,7 +173,9 @@ export default function GroupEditScreen() {
       <ScrollView ref={scrollRef} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <View style={styles.field}>
-            <Text style={styles.label}>{t.name}</Text>
+            <Text testID="group-name-label" style={styles.label}>
+              {t.name}
+            </Text>
             <TextInput
               testID="group-name"
               style={[styles.input, styles.inputText]}
