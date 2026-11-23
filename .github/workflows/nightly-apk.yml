@@ -51,6 +51,9 @@ jobs:
         env:
           # Repository variable API_URL (Settings > Variables). Empty until the API is deployed.
           EXPO_PUBLIC_API_URL: ${{ vars.API_URL }}
+          # Sent as X-App-Secret to the AI endpoints. It ships inside the APK, so it is only a soft deterrent
+          # against casual abuse, not a real secret (the per-device limits are the actual protection).
+          EXPO_PUBLIC_APP_SECRET: ${{ secrets.APP_SHARED_SECRET }}
         run: |
           npm ci
           npx expo prebuild --platform android --no-install --clean

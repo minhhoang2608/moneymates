@@ -72,6 +72,22 @@ jobs:
           fi
           echo "E2E_RESULT=$result" >>"$GITHUB_ENV"
           echo "E2E_SHA=$sha" >>"$GITHUB_ENV"
+      - name: Live dev API smoke
+        # The dev API on Hawk Host auto-deploys from dev (cron, about 5 minutes after a merge). Light checks only:
+        # no AI call, the free model quotas are small.
+        env:
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          mkdir -p .factory
+          if [[ -z "${API_URL:-}" ]]; then
+            echo '{"status":"not_configured"}' >.factory/live-api.json
+            exit 0
+          fi
+          health="$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$API_URL/health" || true)"
+          features="$(curl -s -m 30 "$API_URL/me/features" || true)"
+          unauth="$(curl -s -m 30 -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"text":"x"}' "$API_URL/ai/parse-text" || true)"
+          jq -n --arg url "$API_URL" --arg health "$health" --arg features "$features" --arg unauth "$unauth"             '{url: $url, health_status: $health, me_features_body: $features, parse_text_without_secret_status: $unauth}'             >.factory/live-api.json
+          { echo '### Live dev API'; echo '```json'; cat .factory/live-api.json; echo '```'; } >>"$GITHUB_STEP_SUMMARY"
       - name: Report regressions on dev
         run: '"$FACTORY_BIN/tester.sh" regression'
       - id: collect
@@ -93,6 +109,9 @@ jobs:
             test jobs on dev (`tests_job`; `e2e_job` is the result of the latest completed E2E run, `none` if it never ran,
             at commit `e2e_sha`: E2E only reruns when apps/mobile changes). Maestro JUnit results and screenshots, if any,
             are in `.factory/e2e/`.
+            The live dev API (deployed from dev about 5 minutes after each merge) was probed: `.factory/live-api.json`
+            (health status, `/me/features` body, `/ai/parse-text` status without the app secret, which must be 401).
+            Use it for `area:api` criteria about the deployed service; if the merge is newer than the deploy, use `pending`.
 
             Each entry has a `kind`:
             - `ticket`: a Dev sub-ticket merged into dev (find the PR via `gh pr list --state merged --search "<issue number>"`).
@@ -142,6 +161,7 @@ jobs:
             `.factory/input-ba.json` lists parent features whose sub-tickets are all closed (`sub_tickets`), the dev
             commit, and the results of the test jobs on dev (`tests_job`; `e2e_job` is the latest completed E2E run, `none` if it never ran, at commit `e2e_sha`).
             Maestro JUnit results and screenshots, if any, are in `.factory/e2e/`.
+            The live dev API probe (health, `/me/features`, auth check) is in `.factory/live-api.json`.
 
             For each feature, check every acceptance criterion of the feature ticket against the code on `dev` and the
             evidence (find the merged PRs of its sub-tickets via `gh pr list --state merged --search "<number>"`): a test
