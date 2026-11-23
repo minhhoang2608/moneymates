@@ -4,3 +4,13 @@ export { createProfileRepository } from "./profileRepository";
 export type { ProfileRepository, ProfileRow } from "./profileRepository";
 export { createBankAccountRepository } from "./bankAccountRepository";
 export type { BankAccountPatch, BankAccountRepository, BankAccountRow, NewBankAccount } from "./bankAccountRepository";
+export { createTransactionRepository } from "./transactionRepository";
+export type {
+  NewTransaction,
+  TransactionFilter,
+  TransactionPatch,
+  TransactionRepository,
+  TransactionRow,
+  TransactionSource,
+  TransactionType,
+} from "./transactionRepository";

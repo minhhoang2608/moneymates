@@ -27,7 +27,7 @@ describe("local migrations", () => {
         expect(cols).toContain(c);
       }
 
-      for (const table of ["profile", "bank_account"]) {
+      for (const table of ["profile", "bank_account", "transactions"]) {
         const names = (sqlite.pragma(`table_info(${table})`) as { name: string }[]).map((c) => c.name);
         for (const c of ["id", "created_at", "updated_at", "deleted_at", "owner_id"]) {
           expect(names).toContain(c);
