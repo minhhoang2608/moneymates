@@ -76,3 +76,32 @@ def post():
         return APIClient().post("/ai/parse-text", body, format="json", **headers)
 
     return _post
+
+
+JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 32
+BILL = {
+    "amount": 345000,
+    "shop": "Bánh căn Nhà Chung",
+    "date": "2026-11-22",
+    "category": "Ăn uống",
+}
+
+
+@pytest.fixture
+def post_bill():
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    def _post(image=JPEG, categories=None, device="dev-1", secret=SECRET, name="bill.jpg"):
+        data = {}
+        if image is not None:
+            data["image"] = SimpleUploadedFile(name, image, content_type="image/jpeg")
+        if categories is not None:
+            data["categories"] = categories
+        headers = {}
+        if device is not None:
+            headers["HTTP_X_DEVICE_ID"] = device
+        if secret is not None:
+            headers["HTTP_X_APP_SECRET"] = secret
+        return APIClient().post("/ai/parse-bill", data, format="multipart", **headers)
+
+    return _post
