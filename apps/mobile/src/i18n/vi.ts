@@ -204,6 +204,13 @@ export const vi = {
     splitSummary: (mode: string, count: number) => `${mode} · ${count} người`,
   },
   moneySources: ["Tiền mặt", "Ngân hàng", "Ví điện tử", "Thẻ"],
+  appLock: {
+    title: "MoneyMates đang khóa",
+    subtitle: "Xác thực để xem chi tiêu của bạn.",
+    retry: "Mở khóa",
+    prompt: "Mở khóa MoneyMates",
+    cancel: "Hủy",
+  },
   voice: {
     title: "Nói để nhập",
     close: "Đóng",
