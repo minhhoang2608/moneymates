@@ -1,12 +1,22 @@
-export type PayApp = { id: string; name: string; short: string };
+export type PayApp = {
+  id: string;
+  name: string;
+  short: string;
+  /** Custom URL scheme used to just open the app. */
+  scheme: string;
+  /** VietQR deeplink app code (dl.vietqr.io). */
+  deeplinkCode: string;
+  /** true: the app is opened with account, amount and message prefilled ("Tự điền"). */
+  supportsAutofill: boolean;
+};
 
-/** Minimal catalogue; the hand-off ticket adds schemes and autofill flags. */
+/** Flags are data: flip `supportsAutofill` after real-device deeplink tests. */
 export const PAY_APPS: PayApp[] = [
-  { id: "tpbank", name: "TPBank", short: "TP" },
-  { id: "tcb", name: "Techcombank", short: "TCB" },
-  { id: "vcb", name: "Vietcombank", short: "VCB" },
-  { id: "mb", name: "MBBank", short: "MB" },
-  { id: "momo", name: "MoMo", short: "MoMo" },
+  { id: "tpbank", name: "TPBank", short: "TP", scheme: "tpbank", deeplinkCode: "tpb", supportsAutofill: true },
+  { id: "tcb", name: "Techcombank", short: "TCB", scheme: "techcombank", deeplinkCode: "tcb", supportsAutofill: true },
+  { id: "vcb", name: "Vietcombank", short: "VCB", scheme: "vcbpay", deeplinkCode: "vcb", supportsAutofill: false },
+  { id: "mb", name: "MBBank", short: "MB", scheme: "mbbank", deeplinkCode: "mb", supportsAutofill: false },
+  { id: "momo", name: "MoMo", short: "MoMo", scheme: "momo", deeplinkCode: "momo", supportsAutofill: false },
 ];
 
 const BIN_TO_APP: Record<string, string> = { "970423": "tpbank", "970407": "tcb", "970436": "vcb", "970422": "mb" };

@@ -37,6 +37,12 @@ export const vi = {
     submitNoAmount: (app: string) => `Thanh toán qua ${app}`,
     saveNote: "Giao dịch được lưu ngay khi bấm. Không chuyển thì vào Lịch sử để xóa.",
     saveFailed: "Không lưu được giao dịch. Vui lòng thử lại.",
+    autofill: "Tự điền",
+    copyOpen: "Copy + mở app",
+  },
+  handOff: {
+    saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
+    delete: "Xóa",
   },
   db: {
     migrationError: "Không thể khởi tạo dữ liệu trên máy. Vui lòng khởi động lại ứng dụng.",
