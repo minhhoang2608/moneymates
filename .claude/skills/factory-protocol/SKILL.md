@@ -28,6 +28,7 @@ Always write valid JSON to `.factory/result.json` as the **last** step. A missin
 | Dev plan      | `{"outcome":"planned"}` or `{"outcome":"blocked","reason":"..."}`, plus `.factory/plan.md`                                         |
 | Dev implement | `{"outcome":"pr_opened\|pushed\|no_changes\|blocked","pr":N,"summary":"...","reason":"..."}`                                       |
 | Review        | `{"verdict":"approve\|changes_requested\|needs_human","body":"markdown"}`                                                          |
+| BA verify     | same shape as Tester (`results`), written for parent features; the BA verifies them end to end                                     |
 | Tester        | `{"results":[{"issue":N,"verdict":"pass\|fail\|real_device","notes":"...","bug":{...}}]}`                                          |
 
 ## State machine (one `status:*` per issue)
