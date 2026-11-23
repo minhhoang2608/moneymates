@@ -58,7 +58,7 @@ collect() {
     | {idle_roles: ($idle_all | map(select(
           . as $r
           | if $r == "dev-fe" then any($eligible[]; mobile and (api | not))
-            elif $r == "dev-be" then any($eligible[]; api and (mobile | not))
+            elif $r == "dev-be" then ($eligible | length) > 0
             else ($eligible | length) > 0 end))),
        eligible: $eligible, in_flight: $inflight}' >"$INPUT"
 

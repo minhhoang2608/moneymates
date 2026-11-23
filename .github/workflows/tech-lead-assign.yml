@@ -80,7 +80,8 @@ jobs:
             Goal: keep every idle Dev busy. Give each idle role a ticket whenever a compatible one is eligible;
             leave a role idle only when no compatible ticket exists or the only candidates touch the same module as
             a ticket you are already assigning or that is in flight. Choose at most one ticket per idle role:
-            - dev-fe: area:mobile only · dev-be: area:api only · dev-fullstack: tickets with both areas, area:infra,
+            - dev-fe: area:mobile only · dev-be: area:api first; when no area:api ticket is eligible it takes mobile overflow, preferring logic and
+              data layer tickets (repositories, parsers, queries) over screens · dev-fullstack: tickets with both areas, area:infra,
               or overflow from FE/BE when their queue is long.
             - Highest priority first (p0 > p3), then oldest (lowest number). Bugs before features at equal priority.
             - Never pick two tickets that touch the same module (for example the same DB tables or schema, the same screen,

@@ -39,7 +39,7 @@ Allowed: `gh issue view|list`, `gh issue edit` (body and non-status labels), `gh
 
 Input: `.factory/input.json` with `idle_roles`, `eligible` (dependencies already merged, not epics or needs-human) and `in_flight`.
 
-- dev-fe takes `area:mobile`. dev-be takes `area:api`. dev-fullstack takes tickets with both areas, `area:infra`, or overflow from FE/BE when their eligible queue has more than about 3 tickets.
+- dev-fe takes `area:mobile`. dev-be takes `area:api`; when no `area:api` ticket is eligible it takes `area:mobile` overflow, preferring logic and data layer tickets (repositories, parsers, queries) over screens. dev-fullstack takes tickets with both areas, `area:infra`, or overflow from FE/BE when their eligible queue has more than about 3 tickets.
 - Order: priority, then bugs before features, then the oldest ticket.
 - **Never** assign two tickets touching the same module in the same round (same tables/schema, same screen, same package, same endpoint). Never assign one that overlaps an in-flight ticket either. Skip it; it goes in a later round.
 - At most one ticket per idle role. No tool calls are needed. Read the file and write the result.
