@@ -2,11 +2,13 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { QrPopup, type QrMode } from "@/components/group/QrPopup";
 import { MemberExpensesSheet } from "@/components/group/MemberExpensesSheet";
 import { SettlementRow } from "@/components/group/SettlementRow";
 import { useRepositories } from "@/db/RepositoriesProvider";
-import type { GroupWithMembers, MemberExpense } from "@/db/repositories";
+import type { BankAccountRow, GroupWithMembers, MemberExpense } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
+import { buildPaybackQr } from "@/lib/group/paybackQr";
 import { toSummaryView, type SummaryView } from "@/lib/group/summaryView";
 import { formatVnd } from "@/lib/money";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
@@ -17,6 +19,7 @@ type Loaded = {
   group: GroupWithMembers | null;
   total: number;
   view: SummaryView;
+  account: BankAccountRow | null;
   accountLabel: string | null;
   categoryNames: Map<string, string>;
 };
@@ -38,7 +41,8 @@ export default function GroupSummaryScreen() {
     } catch {
       group = null;
     }
-    if (!group) return { group: null, total: 0, view: EMPTY_VIEW, accountLabel: null, categoryNames: new Map() };
+    if (!group)
+      return { group: null, total: 0, view: EMPTY_VIEW, account: null, accountLabel: null, categoryNames: new Map() };
     const [total, summary, accounts, cats] = await Promise.all([
       groupExpenses.groupTotal(groupId),
       settlements.getGroupSummary(groupId),
@@ -50,6 +54,7 @@ export default function GroupSummaryScreen() {
       group,
       total,
       view: toSummaryView(group.members, summary, vi.groups.me),
+      account: account ?? null,
       accountLabel: account ? `${account.bank_name} •••• ${account.account_no.slice(-4)}` : null,
       categoryNames: new Map(cats.map((c) => [c.id, c.name])),
     } satisfies Loaded;
@@ -85,7 +90,11 @@ export default function GroupSummaryScreen() {
     }
   };
 
-  const comingSoon = () => Alert.alert(t.comingSoon, t.comingSoonMessage);
+  const [qr, setQr] = useState<{ memberId: string | null; mode: QrMode } | null>(null);
+  const qrItem = qr?.memberId ? data?.view.items.find((i) => i.memberId === qr.memberId) : undefined;
+  const qrMember = qr?.memberId ? data?.group?.members.find((m) => m.id === qr.memberId) : undefined;
+  const qrGroupName = data?.group?.name ?? "";
+  const noQr = { kind: "no_account" } as const;
 
   const group = data?.group ?? null;
   const view = data?.view ?? EMPTY_VIEW;
@@ -176,7 +185,7 @@ export default function GroupSummaryScreen() {
                   key={it.memberId}
                   item={it}
                   last={i === view.items.length - 1}
-                  onQr={comingSoon}
+                  onQr={() => setQr({ memberId: it.memberId, mode: "member" })}
                   onMarkPaid={() => markPaid(it.memberId, it.amount)}
                 />
               ))}
@@ -190,7 +199,12 @@ export default function GroupSummaryScreen() {
             </View>
           </ScrollView>
           <View style={styles.footer}>
-            <Pressable testID="qr-group" accessibilityRole="button" style={styles.outlineBtn} onPress={comingSoon}>
+            <Pressable
+              testID="qr-group"
+              accessibilityRole="button"
+              style={styles.outlineBtn}
+              onPress={() => setQr({ memberId: null, mode: "group" })}
+            >
               <Text style={styles.outlineText}>{t.qrGroup}</Text>
             </Pressable>
             <Text style={styles.footerHint}>{t.qrGroupHint}</Text>
@@ -198,6 +212,27 @@ export default function GroupSummaryScreen() {
         </>
       ) : null}
 
+      <QrPopup
+        visible={qr !== null && group !== null}
+        memberName={qrMember && qrItem ? qrMember.displayName : null}
+        memberQr={
+          qrMember && qrItem
+            ? buildPaybackQr({
+                groupName: qrGroupName,
+                account: data?.account,
+                memberName: qrMember.displayName,
+                amount: qrItem.amount,
+              })
+            : noQr
+        }
+        groupQr={buildPaybackQr({ groupName: qrGroupName, account: data?.account })}
+        initialMode={qr?.mode ?? "group"}
+        onClose={() => setQr(null)}
+        onAddAccount={() => {
+          setQr(null);
+          router.push("/bank-accounts");
+        }}
+      />
       <MemberExpensesSheet
         visible={sheet !== null}
         name={sheet?.name ?? ""}

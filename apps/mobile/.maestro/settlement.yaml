@@ -1,0 +1,78 @@
+# Settlement QR: add account -> group with An and Bình -> 900.000 expense -> Tổng kết -> QR popup -> Đã trả.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "row-bank-accounts"
+- tapOn:
+    id: "account-add"
+- tapOn:
+    id: "account-bank"
+- tapOn:
+    id: "bank-option-TPB"
+- tapOn:
+    id: "account-no"
+- inputText: "0123456789"
+- hideKeyboard
+- tapOn:
+    id: "account-save"
+- assertVisible: "Mặc định"
+- tapOn:
+    id: "tab-groups"
+- tapOn:
+    id: "group-empty-create"
+- tapOn:
+    id: "group-name"
+- inputText: "Đà Lạt"
+- hideKeyboard
+- tapOn:
+    id: "member-add-input"
+- inputText: "An"
+- pressKey: Enter
+- tapOn:
+    id: "member-add-input"
+- inputText: "Bình"
+- pressKey: Enter
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "group-save"
+- tapOn:
+    id: "group-save"
+- tapOn:
+    text: "Đà Lạt"
+- tapOn:
+    id: "group-add-expense"
+- tapOn:
+    id: "amount-input"
+- inputText: "900000"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- tapOn:
+    id: "group-summary"
+- assertVisible:
+    id: "screen-group-summary"
+- tapOn:
+    text: "QR"
+    index: 0
+- assertVisible:
+    id: "qr-popup-code"
+- assertVisible: "300.000đ"
+- assertVisible: "Nội dung: Da Lat An"
+- tapOn:
+    id: "qr-tab-group"
+- assertVisible:
+    id: "qr-popup-code"
+- tapOn:
+    id: "qr-popup-close"
+- tapOn:
+    text: "Đã trả"
+    index: 0
+- assertNotVisible: "An trả Tôi 300.000đ"

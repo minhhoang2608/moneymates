@@ -29,6 +29,8 @@ jest.mock("expo-file-system", () => {
       this.uri = join(parts);
     }
     copy() {}
+    create() {}
+    write() {}
   }
   class Directory {
     constructor(...parts) {
@@ -36,7 +38,26 @@ jest.mock("expo-file-system", () => {
     }
     create() {}
   }
-  return { File, Directory, Paths: { document: "file:///doc" } };
+  return { File, Directory, Paths: { document: "file:///doc", cache: "file:///cache" } };
+});
+jest.mock("expo-sharing", () => ({
+  isAvailableAsync: jest.fn(async () => true),
+  shareAsync: jest.fn(async () => undefined),
+}));
+jest.mock("expo-media-library/legacy", () => ({
+  requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  saveToLibraryAsync: jest.fn(async () => undefined),
+}));
+jest.mock("react-native-qrcode-svg", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    default: ({ getRef }) => {
+      if (getRef) getRef({ toDataURL: (cb) => cb("BASE64PNG") });
+      return React.createElement(View, { testID: "qr-svg" });
+    },
+  };
 });
 jest.mock("@react-native-community/datetimepicker", () => {
   const { View } = require("react-native");
