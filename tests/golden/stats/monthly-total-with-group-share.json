@@ -1,0 +1,53 @@
+{
+  "name": "Tổng chi tháng = chi cá nhân + phần tôi phải chịu trong nhóm (không tính quyết toán)",
+  "input": {
+    "kind": "monthly_total",
+    "month": "2026-11",
+    "personal": [
+      {
+        "type": "expense",
+        "amount": 55000,
+        "occurred_at": "2026-11-03T05:00:00Z"
+      },
+      {
+        "type": "expense",
+        "amount": 87000,
+        "occurred_at": "2026-11-10T12:00:00Z"
+      },
+      {
+        "type": "income",
+        "amount": 25000000,
+        "occurred_at": "2026-11-05T02:00:00Z"
+      },
+      {
+        "type": "expense",
+        "amount": 999000,
+        "occurred_at": "2026-10-31T16:00:00Z"
+      }
+    ],
+    "group_expenses": [
+      {
+        "amount": 1000000,
+        "my_share": 250000,
+        "occurred_at": "2026-11-20T08:00:00Z",
+        "paid_by_me": true
+      },
+      {
+        "amount": 200000,
+        "my_share": 50000,
+        "occurred_at": "2026-11-21T08:00:00Z",
+        "paid_by_me": false
+      }
+    ],
+    "settlements": [
+      {
+        "amount": 300000,
+        "paid_at": "2026-11-22T08:00:00Z"
+      }
+    ]
+  },
+  "expected": {
+    "expense_total": 442000,
+    "income_total": 25000000
+  }
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Tổng kết nhóm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E7C66}a:hover{color:#0A5E4D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F7F9; font-family: Inter, sans-serif; color: #111827">
+  <header style="height: 64px; padding: 0 12px; display: flex; align-items: center; gap: 8px">
+    <a href="GroupDetail.dc.html" aria-label="Quay lại" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #111827"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <span style="flex: 1; display: flex; flex-direction: column"><h1 style="margin: 0; font-size: 17px; font-weight: 600">Tổng kết</h1><span style="font-size: 12px; color: #5B6472">Đà Lạt 12/2026 · 3.800.000đ</span></span>
+  </header>
+
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 14px">
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 6px 16px 10px">
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.1fr; gap: 6px; font-size: 12px; color: #5B6472; padding: 8px 0; border-bottom: 1px solid #EEF0F3"><span>Người</span><span style="text-align: right">Đã chi</span><span style="text-align: right">Phải chịu</span><span style="text-align: right">Chênh lệch</span></div>
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.1fr; gap: 6px; font-size: 13px; padding: 10px 0; border-bottom: 1px solid #EEF0F3"><span style="font-weight: 600">Tôi</span><span style="text-align: right">2.600.000</span><span style="text-align: right">950.000</span><span style="text-align: right; font-weight: 700; color: #0E7C66">+1.650.000</span></div>
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.1fr; gap: 6px; font-size: 13px; padding: 10px 0; border-bottom: 1px solid #EEF0F3"><span style="font-weight: 600">An</span><span style="text-align: right">800.000</span><span style="text-align: right">950.000</span><span style="text-align: right; font-weight: 700; color: #B42318">−150.000</span></div>
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.1fr; gap: 6px; font-size: 13px; padding: 10px 0; border-bottom: 1px solid #EEF0F3"><span style="font-weight: 600">Bình</span><span style="text-align: right">400.000</span><span style="text-align: right">950.000</span><span style="text-align: right; font-weight: 700; color: #B42318">−550.000</span></div>
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.1fr; gap: 6px; font-size: 13px; padding: 10px 0"><span style="font-weight: 600">Chi</span><span style="text-align: right">0</span><span style="text-align: right">950.000</span><span style="text-align: right; font-weight: 700; color: #B42318">−950.000</span></div>
+      <span style="font-size: 12px; color: #5B6472">Bấm vào một người để xem từng khoản của họ.</span>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 15px; font-weight: 600">Thu tiền về Tôi</h2><span style="font-size: 12px; color: #5B6472">Techcombank •••• 6789</span></div>
+      <div style="background: #FFFFFF; border-radius: 16px; padding: 4px 16px">
+        <div style="min-height: 60px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #EEF0F3">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600; color: #5B6472; text-decoration: line-through">An trả Tôi 150.000đ</span><span style="font-size: 12px; color: #0E7C66; font-weight: 600">Đã trả 22/11</span></span>
+          <button style="height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid #E6E8EC; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 12px; color: #5B6472">Hoàn tác</button>
+        </div>
+        <div style="min-height: 60px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #EEF0F3">
+          <span style="flex: 1; font-size: 14px; font-weight: 600">Bình trả Tôi 550.000đ</span>
+          <a href="QrPopup.dc.html" style="height: 36px; padding: 0 12px; border-radius: 10px; background: #E7F4F0; color: #0A5E4D; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2z"/></svg>QR</a>
+          <button style="height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid #E6E8EC; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 12px; font-weight: 600; color: #111827">Đã trả</button>
+        </div>
+        <div style="min-height: 60px; display: flex; align-items: center; gap: 8px">
+          <span style="flex: 1; font-size: 14px; font-weight: 600">Chi trả Tôi 950.000đ</span>
+          <a href="QrPopup.dc.html" style="height: 36px; padding: 0 12px; border-radius: 10px; background: #E7F4F0; color: #0A5E4D; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; text-decoration: none"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2z"/></svg>QR</a>
+          <button style="height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid #E6E8EC; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 12px; font-weight: 600; color: #111827">Đã trả</button>
+        </div>
+      </div>
+    </section>
+
+    <div style="background: #E7F4F0; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; color: #0A5E4D">Còn phải thu</span><span style="font-size: 16px; font-weight: 700; color: #0A5E4D">1.500.000đ</span></div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFFFFF; border-top: 1px solid #E6E8EC; padding: 12px 20px 28px; display: flex; flex-direction: column; gap: 6px">
+    <a href="QrPopup.dc.html" style="height: 52px; border-radius: 14px; background: #0E7C66; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Tạo QR chung cho cả nhóm</a>
+    <span style="font-size: 12px; color: #5B6472; text-align: center">QR chung không kèm số tiền, mỗi người tự nhập.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

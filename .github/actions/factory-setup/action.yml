@@ -1,0 +1,18 @@
+name: Factory setup
+description: >-
+  Copies scripts/factory to $RUNNER_TEMP (so later steps use the trusted copy even if an agent
+  switches branches), loads .github/factory.env into $GITHUB_ENV and exports FACTORY_BIN.
+runs:
+  using: composite
+  steps:
+    - name: Load factory settings
+      shell: bash
+      run: |
+        set -euo pipefail
+        dest="$RUNNER_TEMP/factory"
+        mkdir -p "$dest" .factory
+        cp scripts/factory/*.sh "$dest/"
+        chmod +x "$dest"/*.sh
+        echo "FACTORY_BIN=$dest" >>"$GITHUB_ENV"
+        echo "RESULT_FILE=$GITHUB_WORKSPACE/.factory/result.json" >>"$GITHUB_ENV"
+        grep -E '^[A-Z][A-Z0-9_]*=[^[:space:]]*$' .github/factory.env >>"$GITHUB_ENV"

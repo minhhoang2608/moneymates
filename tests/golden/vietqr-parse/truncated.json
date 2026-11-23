@@ -1,0 +1,9 @@
+{
+  "name": "Payload bị cắt cụt",
+  "input": {
+    "payload": "00020101021238540010A0000007270124000697"
+  },
+  "expected": {
+    "error": "malformed"
+  }
+}

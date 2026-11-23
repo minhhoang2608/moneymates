@@ -1,0 +1,11 @@
+{
+  "name": "Cảnh báo lệch >20%: 1200000 vs 1000000",
+  "input": {
+    "kind": "alert",
+    "this_month": 1200000,
+    "last_month": 1000000
+  },
+  "expected": {
+    "alert": false
+  }
+}

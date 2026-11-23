@@ -1,0 +1,25 @@
+{
+  "name": "Theo tỷ lệ 50/30/20 của 1.000.000đ",
+  "input": {
+    "amount": 1000000,
+    "currency": "VND",
+    "mode": "percent",
+    "participants": [
+      "Tôi",
+      "An",
+      "Bình"
+    ],
+    "values": {
+      "Tôi": 5000,
+      "An": 3000,
+      "Bình": 2000
+    }
+  },
+  "expected": {
+    "shares": {
+      "Tôi": 500000,
+      "An": 300000,
+      "Bình": 200000
+    }
+  }
+}

@@ -1,0 +1,34 @@
+# After every change to dev: open factory PRs that now conflict with dev get status:needs-rebase,
+# and the owning Dev is dispatched to rebase (counts toward MAX_REBASE_ATTEMPTS). No Claude call.
+name: Conflict check
+run-name: Conflict check
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: conflict-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - run: '"$FACTORY_BIN/conflict-check.sh"'

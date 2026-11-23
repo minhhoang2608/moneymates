@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Change requirements
+    url: https://github.com/minhhoang2608/moneymates/tree/dev/docs
+    about: To change what the product should do, edit docs/ and push to dev. The BA agent creates or updates tickets.
+  - name: Factory setup and operations
+    url: https://github.com/minhhoang2608/moneymates/blob/dev/docs/factory-setup.md
+    about: How the AI software factory is configured, started and stopped.

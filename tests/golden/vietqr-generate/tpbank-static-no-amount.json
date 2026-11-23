@@ -1,0 +1,11 @@
+{
+  "name": "QR chung của nhóm, không số tiền",
+  "input": {
+    "bank_bin": "970423",
+    "account_no": "00001234567"
+  },
+  "expected": {
+    "message": null,
+    "payload": "00020101021138550010A000000727012500069704230111000012345670208QRIBFTTA53037045802VN63042080"
+  }
+}

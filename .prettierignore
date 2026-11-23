@@ -1,0 +1,19 @@
+# Human-owned inputs: never reformatted by tools or agents
+docs/
+tests/golden/
+personal_docs/
+
+# Generated / vendored
+node_modules/
+package-lock.json
+**/package-lock.json
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/.expo/
+dist/
+build/
+coverage/
+.factory/
+
+# Python is formatted by ruff
+apps/api/

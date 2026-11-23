@@ -1,0 +1,15 @@
+{
+  "name": "Parse lại payload: mb-with-amount-message",
+  "input": {
+    "payload": "00020101021238540010A00000072701240006970422011001234567890208QRIBFTTA530370454062787505802VN62210817Da Lat 12 2026 An630469D1"
+  },
+  "expected": {
+    "kind": "vietqr_transfer",
+    "bank_bin": "970422",
+    "account_no": "0123456789",
+    "account_name": null,
+    "amount": 278750,
+    "message": "Da Lat 12 2026 An",
+    "is_dynamic": true
+  }
+}

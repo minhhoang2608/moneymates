@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Nhập bằng giọng nói</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E7C66}a:hover{color:#0A5E4D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F7F9; font-family: Inter, sans-serif; color: #111827">
+  <header style="height: 64px; padding: 0 12px; display: flex; align-items: center; gap: 8px">
+    <a href="AddTxn.dc.html" aria-label="Đóng" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #111827"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></a>
+    <h1 style="margin: 0; font-size: 17px; font-weight: 600">Nói để nhập</h1>
+  </header>
+
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 18px">
+    <span style="align-self: flex-start; font-size: 12px; font-weight: 600; color: #0A5E4D; background: #E7F4F0; padding: 5px 10px; border-radius: 8px">Ghi vào: Đà Lạt 12/2026</span>
+
+    <p style="margin: 0; font-size: 24px; line-height: 1.35; font-weight: 600">“Bình trả tiền xăng hai trăm nghìn”</p>
+
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 4px 16px">
+      <div style="display: flex; justify-content: space-between; align-items: center; min-height: 46px; border-bottom: 1px solid #EEF0F3"><span style="font-size: 14px; color: #5B6472">Số tiền</span><span style="font-size: 15px; font-weight: 700">200.000đ</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; min-height: 46px; border-bottom: 1px solid #EEF0F3"><span style="font-size: 14px; color: #5B6472">Danh mục</span><span style="font-size: 14px; font-weight: 600">Di chuyển</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; min-height: 46px; border-bottom: 1px solid #EEF0F3"><span style="font-size: 14px; color: #5B6472">Ghi chú</span><span style="font-size: 14px; font-weight: 600">Tiền xăng</span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; min-height: 46px"><span style="font-size: 14px; color: #5B6472">Người chi</span><span style="font-size: 14px; font-weight: 600">Bình <span style="font-size: 12px; font-weight: 500; color: #0E7C66">· khớp thành viên</span></span></div>
+    </section>
+    <span style="font-size: 12px; color: #5B6472; text-align: center">Nhận dạng giọng nói trên máy · AI tách thông tin</span>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 0 20px 32px; display: flex; flex-direction: column; align-items: center; gap: 18px">
+    <div aria-hidden="true" style="display: flex; align-items: center; gap: 4px; height: 40px">
+      <span style="width: 4px; height: 12px; border-radius: 2px; background: #9FD9C9"></span>
+      <span style="width: 4px; height: 22px; border-radius: 2px; background: #6CC4AC"></span>
+      <span style="width: 4px; height: 34px; border-radius: 2px; background: #0E7C66"></span>
+      <span style="width: 4px; height: 26px; border-radius: 2px; background: #0E7C66"></span>
+      <span style="width: 4px; height: 38px; border-radius: 2px; background: #0E7C66"></span>
+      <span style="width: 4px; height: 18px; border-radius: 2px; background: #6CC4AC"></span>
+      <span style="width: 4px; height: 28px; border-radius: 2px; background: #0E7C66"></span>
+      <span style="width: 4px; height: 14px; border-radius: 2px; background: #9FD9C9"></span>
+      <span style="width: 4px; height: 8px; border-radius: 2px; background: #9FD9C9"></span>
+    </div>
+    <button aria-label="Giữ để nói" style="width: 84px; height: 84px; border-radius: 42px; border: 0; background: #0E7C66; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 10px #D3EEE6"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <span style="font-size: 13px; color: #5B6472">Giữ để nói, thả ra để dừng</span>
+    <div style="width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <button style="height: 52px; border-radius: 14px; border: 1px solid #E6E8EC; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 15px; font-weight: 600; color: #111827">Nói lại</button>
+      <a href="AddTxn.dc.html" style="height: 52px; border-radius: 14px; background: #0E7C66; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Dùng kết quả</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

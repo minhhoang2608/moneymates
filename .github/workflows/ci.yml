@@ -1,0 +1,157 @@
+# CI: lint, typecheck and unit/API/golden tests for apps/mobile and apps/api, plus a lint of the
+# factory itself (actionlint + shellcheck). Jobs for apps that do not exist yet are skipped, and the
+# always-running `ci-gate` job is the single required check for the dev ruleset.
+# Not gated by FACTORY_ENABLED: CI always runs.
+name: CI
+
+on:
+  pull_request:
+    branches: [dev]
+  push:
+    branches: [dev]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  # github.workflow is the caller's name when reused (e.g. "Tester"), so Tester never cancels CI.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  detect:
+    name: Detect apps
+    runs-on: ubuntu-latest
+    outputs:
+      mobile: ${{ steps.detect.outputs.mobile }}
+      api: ${{ steps.detect.outputs.api }}
+      golden: ${{ steps.detect.outputs.golden }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: detect
+        run: |
+          has() { if [[ -e "$1" ]]; then echo true; else echo false; fi; }
+          golden=false
+          if [[ -d tests/golden ]] && [[ -n "$(find tests/golden -type f ! -name '.gitkeep' ! -name 'README.md' -print -quit)" ]]; then
+            golden=true
+          fi
+          {
+            echo "mobile=$(has apps/mobile/package.json)"
+            echo "api=$(has apps/api/manage.py)"
+            echo "golden=$golden"
+          } | tee -a "$GITHUB_OUTPUT"
+
+  factory-lint:
+    name: Factory lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: actionlint
+        run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
+      - name: shellcheck
+        run: shellcheck scripts/*.sh scripts/factory/*.sh
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Prettier (repo-wide, see .prettierrc.json / .prettierignore)
+        run: |
+          npm ci
+          npm run format:check
+      - name: Claude hooks parse
+        run: for f in .claude/hooks/*.mjs; do node --check "$f"; done
+
+  commit-messages:
+    name: No AI attribution
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Commit messages have no AI attribution
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git log --format='%B' "$BASE..$HEAD" | grep -qiE '^co-authored-by:|generated with \[?claude code'; then
+            echo "::error::Commit messages must not contain Co-Authored-By: or 'Generated with Claude Code' (see CLAUDE.md)."
+            git log --format='%h %s' -i -E --grep='^co-authored-by:|generated with \[?claude code' "$BASE..$HEAD"
+            exit 1
+          fi
+          echo "OK: $(git rev-list --count "$BASE..$HEAD") commit(s) are clean."
+
+  mobile:
+    name: Mobile (lint, typecheck, test)
+    needs: detect
+    if: needs.detect.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --ci
+      - name: Golden tests (tests/golden, read-only fixtures)
+        if: needs.detect.outputs.golden == 'true'
+        run: |
+          if ! npm run | grep -qE '^  test:golden$'; then
+            echo "::error::tests/golden has fixtures but apps/mobile has no 'test:golden' script."
+            exit 1
+          fi
+          npm run test:golden
+
+  api:
+    name: API (lint, test)
+    needs: detect
+    if: needs.detect.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: apps/api/requirements*.txt
+      - name: Install
+        run: |
+          if [[ -f requirements-dev.txt ]]; then pip install -r requirements-dev.txt; else pip install -r requirements.txt; fi
+      - run: ruff check .
+      - run: ruff format --check .
+      - name: Typecheck (when configured)
+        run: |
+          if grep -qs '\[tool.mypy\]' pyproject.toml || [[ -f mypy.ini ]]; then mypy .; else echo "mypy not configured"; fi
+      - run: pytest -q
+        env:
+          DJANGO_SECRET_KEY: ci-only-not-a-secret
+          OPENROUTER_API_KEY: ci-mock
+
+  ci-gate:
+    name: ci-gate
+    if: always()
+    needs: [detect, factory-lint, commit-messages, mobile, api]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All required jobs passed or were skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for r in $RESULTS; do
+            if [[ "$r" == failure || "$r" == cancelled ]]; then exit 1; fi
+          done

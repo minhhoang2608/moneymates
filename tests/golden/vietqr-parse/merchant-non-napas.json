@@ -1,0 +1,10 @@
+{
+  "name": "QR merchant không phải VietQR chuyển khoản",
+  "input": {
+    "payload": "00020101021126280010A0000007750110MERCHANT0153037045802VN5909QUAN CAFE63041681"
+  },
+  "expected": {
+    "kind": "merchant",
+    "amount": null
+  }
+}

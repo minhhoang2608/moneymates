@@ -1,0 +1,22 @@
+{
+  "name": "Theo số tiền, tổng khớp",
+  "input": {
+    "amount": 500000,
+    "currency": "VND",
+    "mode": "amount",
+    "participants": [
+      "Tôi",
+      "An"
+    ],
+    "values": {
+      "Tôi": 300000,
+      "An": 200000
+    }
+  },
+  "expected": {
+    "shares": {
+      "Tôi": 300000,
+      "An": 200000
+    }
+  }
+}

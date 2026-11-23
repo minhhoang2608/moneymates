@@ -1,0 +1,79 @@
+{
+  "name": "Chuyến Đà Lạt: 3 khoản, 3 người chi",
+  "input": {
+    "members": [
+      {
+        "name": "Tôi",
+        "is_me": true
+      },
+      {
+        "name": "An"
+      },
+      {
+        "name": "Bình"
+      },
+      {
+        "name": "Chi"
+      }
+    ],
+    "expenses": [
+      {
+        "paid_by": "Tôi",
+        "amount": 1000000,
+        "splits": {
+          "Tôi": 250000,
+          "An": 250000,
+          "Bình": 250000,
+          "Chi": 250000
+        },
+        "note": "Khách sạn"
+      },
+      {
+        "paid_by": "Bình",
+        "amount": 200000,
+        "splits": {
+          "Tôi": 50000,
+          "An": 50000,
+          "Bình": 50000,
+          "Chi": 50000
+        },
+        "note": "Tiền xăng"
+      },
+      {
+        "paid_by": "An",
+        "amount": 345000,
+        "splits": {
+          "Tôi": 115000,
+          "An": 115000,
+          "Bình": 115000
+        },
+        "note": "Bánh căn"
+      }
+    ]
+  },
+  "expected": {
+    "balances": {
+      "Tôi": 585000,
+      "An": -70000,
+      "Bình": -215000,
+      "Chi": -300000
+    },
+    "transfers": [
+      {
+        "from": "An",
+        "to": "Tôi",
+        "amount": 70000
+      },
+      {
+        "from": "Bình",
+        "to": "Tôi",
+        "amount": 215000
+      },
+      {
+        "from": "Chi",
+        "to": "Tôi",
+        "amount": 300000
+      }
+    ]
+  }
+}

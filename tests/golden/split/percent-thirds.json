@@ -1,0 +1,25 @@
+{
+  "name": "Theo tỷ lệ 33,34/33,33/33,33 của 100.000đ",
+  "input": {
+    "amount": 100000,
+    "currency": "VND",
+    "mode": "percent",
+    "participants": [
+      "Tôi",
+      "An",
+      "Bình"
+    ],
+    "values": {
+      "Tôi": 3334,
+      "An": 3333,
+      "Bình": 3333
+    }
+  },
+  "expected": {
+    "shares": {
+      "Tôi": 33340,
+      "An": 33330,
+      "Bình": 33330
+    }
+  }
+}

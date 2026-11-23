@@ -1,0 +1,63 @@
+name: Feature / task
+description: A unit of work small enough for one Dev agent (about 1 day, one PR).
+title: "[Feature] "
+labels: ["type:feature", "status:triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tickets are written in English, from the user's point of view (what the user can do).
+        You don't need to decide frontend/backend: Tech Lead triage splits the feature into sub-tickets
+        per Dev area (mobile / api / infra), and the Tester closes the feature when all of them are verified.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What the user or system can do after this ticket, and why.
+      placeholder: As a user in a group, I can see the settlement list "Tôi thu hộ" so that...
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: In scope / out of scope. Reference the section of docs/ this comes from.
+      value: |
+        **In scope**
+        -
+
+        **Out of scope**
+        -
+
+        **Source:** docs/plan-chuc-nang-giao-dien.md §
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Testable, numbered checkboxes (Given / When / Then). Each one must map to a test.
+      value: |
+        - [ ] AC1: Given ..., when ..., then ...
+        - [ ] AC2:
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: [priority:p0, priority:p1, priority:p2, priority:p3]
+      default: 2
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: One per line, exactly as "Depends on #N". Leave empty if none.
+      placeholder: "Depends on #12"
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical notes
+      description: Data model fields, endpoints, test data, real-device checks needed.

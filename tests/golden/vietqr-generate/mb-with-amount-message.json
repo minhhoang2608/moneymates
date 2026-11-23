@@ -1,0 +1,14 @@
+{
+  "name": "QR đòi tiền: An trả Tôi 278.750đ (nhóm Đà Lạt 12/2026)",
+  "input": {
+    "bank_bin": "970422",
+    "account_no": "0123456789",
+    "amount": 278750,
+    "group_name": "Đà Lạt 12/2026",
+    "member_name": "An"
+  },
+  "expected": {
+    "message": "Da Lat 12 2026 An",
+    "payload": "00020101021238540010A00000072701240006970422011001234567890208QRIBFTTA530370454062787505802VN62210817Da Lat 12 2026 An630469D1"
+  }
+}

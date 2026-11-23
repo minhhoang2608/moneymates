@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Danh mục</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E7C66}a:hover{color:#0A5E4D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F7F9; font-family: Inter, sans-serif; color: #111827">
+  <header style="height: 64px; padding: 0 12px; display: flex; align-items: center; gap: 8px">
+    <a href="Profile.dc.html" aria-label="Quay lại" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #111827"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1 style="margin: 0; font-size: 17px; font-weight: 600; flex: 1">Danh mục</h1>
+    <button aria-label="Thêm danh mục" style="width: 44px; height: 44px; border: 0; background: transparent; color: #0E7C66; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  </header>
+
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 14px">
+    <div role="radiogroup" aria-label="Loại danh mục" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: #E9ECF0; border-radius: 12px; padding: 4px">
+      <button role="radio" aria-checked="true" style="height: 36px; border: 0; border-radius: 9px; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 14px; font-weight: 600; color: #111827; box-shadow: 0 1px 2px rgba(17,24,39,0.08)">Chi</button>
+      <button role="radio" aria-checked="false" style="height: 36px; border: 0; border-radius: 9px; background: transparent; font-family: Inter, sans-serif; font-size: 14px; color: #5B6472">Thu</button>
+    </div>
+
+    <h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #5B6472">Mặc định · đổi được icon, màu</h2>
+    <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #E7F4F0; color: #0E7C66; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">ĂU</span><span style="font-size: 12px">Ăn uống</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #FDF0E3; color: #A0561A; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">DC</span><span style="font-size: 12px">Di chuyển</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #EFEAFB; color: #5E3FA8; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">LT</span><span style="font-size: 12px">Lưu trú</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #E8F1FA; color: #245E94; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">MS</span><span style="font-size: 12px">Mua sắm</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #FCE7F3; color: #9D174D; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">DV</span><span style="font-size: 12px">Dịch vụ</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #FEF3E2; color: #7A4300; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">HĐ</span><span style="font-size: 12px">Hóa đơn</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #E0F2FE; color: #075985; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">GT</span><span style="font-size: 12px">Giải trí</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #FDE8E8; color: #A3161A; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">SK</span><span style="font-size: 12px">Sức khỏe</span></button>
+      <button style="height: 76px; border-radius: 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #111827"><span style="width: 32px; height: 32px; border-radius: 10px; background: #EEF0F3; color: #4B5563; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">K</span><span style="font-size: 12px">Khác</span></button>
+    </section>
+
+    <h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #5B6472">Của bạn</h2>
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 0 16px">
+      <div style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: #F5EDE4; color: #6B4423; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">CF</span>
+        <span style="flex: 1; font-size: 14px">Cà phê</span>
+        <button style="height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #E6E8EC; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 12px; color: #111827">Sửa</button>
+        <button style="height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #F1C4C0; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 12px; color: #B42318">Xóa</button>
+      </div>
+      <div style="min-height: 56px; display: flex; align-items: center; gap: 12px">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: #ECFCCB; color: #3F6212; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">TC</span>
+        <span style="flex: 1; font-size: 14px">Thú cưng</span>
+        <button style="height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #E6E8EC; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 12px; color: #111827">Sửa</button>
+        <button style="height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid #F1C4C0; background: #FFFFFF; font-family: Inter, sans-serif; font-size: 12px; color: #B42318">Xóa</button>
+      </div>
+    </section>
+    <span style="font-size: 12px; color: #5B6472">Xóa danh mục thì các giao dịch cũ chuyển sang “Khác”.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

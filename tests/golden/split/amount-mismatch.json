@@ -1,0 +1,20 @@
+{
+  "name": "Theo số tiền, còn thiếu 50.000đ",
+  "input": {
+    "amount": 500000,
+    "currency": "VND",
+    "mode": "amount",
+    "participants": [
+      "Tôi",
+      "An"
+    ],
+    "values": {
+      "Tôi": 250000,
+      "An": 200000
+    }
+  },
+  "expected": {
+    "error": "sum_mismatch",
+    "difference": 50000
+  }
+}

@@ -1,0 +1,166 @@
+# Tester: tests only the dev branch after each merge.
+#  - tests:  unit / API / golden tests (reuses ci.yml)
+#  - e2e:    Android emulator on the Linux runner + Maestro flows (only when apps/mobile/.maestro exists)
+#  - verify: Claude checks every status:testing ticket's acceptance criteria against dev and the test results.
+#            Pass -> status:done + close. Fail -> type:bug + status:triage (original re-verified when the bug closes).
+#            Needs a physical phone -> test:real-device + needs-human.
+# The Tester only runs tests and reports bugs; it never writes tests into the repo.
+name: Tester
+run-name: Tester on dev
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: tester
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    if: vars.FACTORY_ENABLED == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  e2e:
+    name: E2E (Android emulator + Maestro)
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - id: check
+        run: |
+          if [[ -f apps/mobile/package.json && -d apps/mobile/.maestro ]]; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "run=false" >>"$GITHUB_OUTPUT"
+            echo "No apps/mobile/.maestro yet – E2E skipped." >>"$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Enable KVM
+        if: steps.check.outputs.run == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-node@v7
+        if: steps.check.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - uses: actions/setup-java@v6
+        if: steps.check.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Build release APK (E2E mode, mock data)
+        if: steps.check.outputs.run == 'true'
+        working-directory: apps/mobile
+        env:
+          # The app reads this to load fixture QR payloads, voice transcripts and AI responses.
+          EXPO_PUBLIC_E2E: "1"
+        run: |
+          npm ci
+          npx expo prebuild --platform android --no-install --clean
+          cd android && ./gradlew assembleRelease --no-daemon
+      - name: Install Maestro
+        if: steps.check.outputs.run == 'true'
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >>"$GITHUB_PATH"
+      - name: Run Maestro flows on emulator
+        if: steps.check.outputs.run == 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: >-
+            adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk &&
+            maestro test apps/mobile/.maestro --format junit --output maestro-results/report.xml --test-output-dir maestro-results
+      - name: Upload E2E results and screenshots
+        if: always() && steps.check.outputs.run == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results
+          path: maestro-results/
+          if-no-files-found: ignore
+
+  verify:
+    name: Verify acceptance criteria
+    needs: [tests, e2e]
+    if: always() && vars.FACTORY_ENABLED == 'true' && needs.tests.result != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
+      actions: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TESTS_RESULT: ${{ needs.tests.result }}
+      E2E_RESULT: ${{ needs.e2e.result }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 50
+      - uses: ./.github/actions/factory-setup
+      - name: Download E2E results
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: e2e-results
+          path: .factory/e2e
+      - name: Report regressions on dev
+        run: '"$FACTORY_BIN/tester.sh" regression'
+      - id: collect
+        run: '"$FACTORY_BIN/tester.sh" collect'
+      - name: Verify (Sonnet)
+        id: agent
+        if: steps.collect.outputs.count != '0'
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_TESTER }}
+          max_turns: ${{ env.TURNS_TESTER }}
+          allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*)"
+          prompt: |
+            You are the **Tester** of the MoneyMates AI software factory.
+            Read `CLAUDE.md` and `.claude/agents/tester.md`, then load the `testing-strategy` skill.
+
+            `.factory/input.json` lists the tickets in status:testing, the dev commit, and the results of the
+            test jobs on dev (`tests_job`, `e2e_job`: success / failure / skipped). Maestro JUnit results and
+            screenshots, if any, are in `.factory/e2e/`.
+
+            Each entry has a `kind`:
+            - `ticket`: a Dev sub-ticket merged into dev (find the PR via `gh pr list --state merged --search "<issue number>"`).
+            - `parent_feature`: a BA feature whose `sub_tickets` are all closed. Verify the feature's user-facing,
+              end-to-end acceptance criteria across all sub-tickets together (E2E flows weigh most here).
+            For each one, check every acceptance criterion against the code on `dev` and the evidence: a test that covers
+            it and passed, or an E2E flow. Do not modify repository files and do not write tests.
+            - `pass`: every criterion is covered and green.
+            - `fail`: a criterion is missing, wrong, or its test failed. Describe the bug (steps, expected, actual).
+            - `real_device`: everything else passes, but a criterion can only be checked on a physical phone
+              (bank deeplink, camera scan, Vietnamese speech). List exactly what a human must check.
+
+            Write `.factory/result.json`:
+            `{"results":[{"issue":N,"verdict":"pass"|"fail"|"real_device","notes":"<markdown, per criterion>","bug":{"title":"...","body":"<markdown with acceptance criteria>","area":"area:mobile|area:api|area:infra","priority":"priority:p0..p3"}}]}`
+            (`bug` is only for `fail`.)
+      - name: Apply verification
+        if: steps.agent.outcome == 'success'
+        env:
+          OUTCOME: ${{ steps.agent.outputs.outcome }}
+        run: '"$FACTORY_BIN/tester.sh" apply'

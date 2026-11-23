@@ -1,0 +1,15 @@
+{
+  "name": "Parse lại payload: tpbank-static-no-amount",
+  "input": {
+    "payload": "00020101021138550010A000000727012500069704230111000012345670208QRIBFTTA53037045802VN63042080"
+  },
+  "expected": {
+    "kind": "vietqr_transfer",
+    "bank_bin": "970423",
+    "account_no": "00001234567",
+    "account_name": null,
+    "amount": null,
+    "message": null,
+    "is_dynamic": false
+  }
+}
