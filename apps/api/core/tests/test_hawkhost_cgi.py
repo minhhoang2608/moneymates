@@ -12,6 +12,12 @@ def _load():
     return module
 
 
+def test_entry_starts_with_a_shebang_that_install_sh_replaces():
+    # install.sh swaps line 1 for the virtualenv's Python; anything else there would be lost.
+    first_line = ENTRY.read_text(encoding="utf-8").splitlines()[0]
+    assert first_line.startswith("#!")
+
+
 def test_load_app_env_reads_the_app_env_vars(tmp_path):
     config = tmp_path / "python-selector.json"
     config.write_text(

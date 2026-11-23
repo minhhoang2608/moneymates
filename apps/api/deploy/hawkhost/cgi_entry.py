@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """CGI entry point for Hawk Host.
 
 LiteSpeed on Hawk Host ignores the CloudLinux Passenger directives that cPanel's "Setup Python App"
