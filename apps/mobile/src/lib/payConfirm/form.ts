@@ -1,3 +1,4 @@
+import type { NewGroupExpense } from "../../db/repositories/groupExpenseRepository";
 import type { NewTransaction } from "../../db/repositories/transactionRepository";
 import { parseAmount } from "../money";
 import type { PayConfirmModel } from "./params";
@@ -20,5 +21,28 @@ export function buildQrExpense(
     occurred_at: now.toISOString(),
     source: "qr",
     qr_data: model.payload || null,
+  };
+}
+
+/** QR payment into a group: "Tôi" paid, split equally between all members. */
+export function buildQrGroupExpense(
+  model: PayConfirmModel,
+  input: { amount: number; categoryId: string; note: string },
+  groupId: string,
+  members: { id: string; isMe: boolean }[],
+  now: Date,
+): NewGroupExpense {
+  const payer = members.find((m) => m.isMe) ?? members[0];
+  return {
+    groupId,
+    amount: input.amount,
+    payerMemberId: payer.id,
+    splitMode: "equal",
+    shares: members.map((m) => ({ memberId: m.id })),
+    occurredAt: now.toISOString(),
+    categoryId: input.categoryId,
+    note: input.note.trim(),
+    source: "qr",
+    qrData: model.payload || null,
   };
 }

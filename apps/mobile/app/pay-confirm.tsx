@@ -3,12 +3,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { TargetLine } from "@/components/target/TargetLine";
+import { useTargetDefault } from "@/components/target/useTargetDefault";
 import { CategoryPicker } from "@/components/transaction/CategoryPicker";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { CategoryRow } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
 import { PAY_APPS, defaultAppId, orderApps } from "@/lib/payConfirm/apps";
-import { buildQrExpense, canSubmit } from "@/lib/payConfirm/form";
+import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
 import { parsePayConfirmParams } from "@/lib/payConfirm/params";
 import { formatVnd, parseAmount } from "@/lib/money";
@@ -22,7 +24,9 @@ export default function PayConfirmScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<Record<string, string>>();
   const model = useMemo(() => parsePayConfirmParams(params), [params]);
-  const { transactions, categories, appSettings } = useRepositories();
+  const { transactions, categories, appSettings, groups: groupRepo, groupExpenses } = useRepositories();
+  const targetState = useTargetDefault();
+  const { target } = targetState;
 
   const [amountText, setAmountText] = useState(model.amount !== undefined ? String(model.amount) : "");
   const [note, setNote] = useState(model.message ?? "");
@@ -73,8 +77,16 @@ export default function PayConfirmScreen() {
     setFailed(false);
     let txId: string;
     try {
-      const tx = await transactions.create(buildQrExpense(model, { amount: parsed.vnd, categoryId, note }, new Date()));
-      txId = tx.id;
+      const input = { amount: parsed.vnd, categoryId, note };
+      if (target.kind === "group") {
+        const g = await groupRepo.getGroup(target.groupId);
+        const tx = await groupExpenses.createGroupExpense(
+          buildQrGroupExpense(model, input, g.id, g.members, new Date()),
+        );
+        txId = tx.id;
+      } else {
+        txId = (await transactions.create(buildQrExpense(model, input, new Date()))).id;
+      }
     } catch {
       busy.current = false;
       setFailed(true);
@@ -179,6 +191,20 @@ export default function PayConfirmScreen() {
             <Text style={styles.chipText}>{vi.payConfirm.categoryMore}</Text>
           </Pressable>
         </View>
+
+        <TargetLine
+          value={target}
+          onChange={targetState.setTarget}
+          groups={targetState.groups}
+          lastUsedByGroup={targetState.lastUsedByGroup}
+          memberCounts={targetState.memberCounts}
+          now={targetState.now}
+        />
+        {target.kind === "group" ? (
+          <Text testID="pay-group-hint" style={styles.hint}>
+            {vi.payConfirm.groupHint(targetState.memberCounts.get(target.groupId) ?? 0)}
+          </Text>
+        ) : null}
 
         <Text style={styles.section}>{vi.payConfirm.payWith}</Text>
         <View style={styles.appList}>

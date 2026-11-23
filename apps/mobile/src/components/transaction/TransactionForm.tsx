@@ -11,6 +11,10 @@ import { formatTxnDateLabel, validateForm, type FormErrors, type FormType } from
 import { photoPicker as defaultPhotoPicker, type PhotoPicker } from "@/lib/photoPicker";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
+import { TargetLine } from "@/components/target/TargetLine";
+import { useTargetDefault } from "@/components/target/useTargetDefault";
+import type { Clock, Target } from "@/lib/target";
+
 import { CategoryPicker } from "./CategoryPicker";
 import { DateTimeField } from "./DateTimeField";
 import { GroupSplitSection } from "./GroupSplitSection";
@@ -24,11 +28,23 @@ type Props = {
   onClose: () => void;
   onSaved?: () => void;
   photoPicker?: PhotoPicker;
+  /** Clock for the "Ghi vào" 24h default rule (tests inject a fixed one). */
+  clock?: Clock;
 };
 
-export function TransactionForm({ transactionId, groupId, onClose, onSaved, photoPicker = defaultPhotoPicker }: Props) {
+export function TransactionForm({
+  transactionId,
+  groupId,
+  onClose,
+  onSaved,
+  photoPicker = defaultPhotoPicker,
+  clock,
+}: Props) {
   const { transactions, categories, groups, groupExpenses } = useRepositories();
-  const isGroup = !!groupId && !transactionId;
+  const targetState = useTargetDefault({ fromGroupId: groupId, clock, enabled: !transactionId });
+  const { target } = targetState;
+  const targetGroupId = target.kind === "group" ? target.groupId : undefined;
+  const isGroup = !!targetGroupId && !transactionId;
   const [type, setType] = useState<FormType>("expense");
   const [amountText, setAmountText] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -52,18 +68,21 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
   const [percentInputs, setPercentInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!isGroup || !groupId) return;
+    if (!isGroup || !targetGroupId) return;
     let alive = true;
-    groups.getGroup(groupId).then((g) => {
+    groups.getGroup(targetGroupId).then((g) => {
       if (!alive) return;
       setMembers(g.members);
+      setSplitMode("equal");
+      setAmountInputs({});
+      setPercentInputs({});
       setPayerId((g.members.find((m) => m.isMe) ?? g.members[0])?.id ?? null);
       setTicked(new Set(g.members.map((m) => m.id)));
     });
     return () => {
       alive = false;
     };
-  }, [groups, groupId, isGroup]);
+  }, [groups, targetGroupId, isGroup]);
 
   useEffect(() => {
     let alive = true;
@@ -117,6 +136,14 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
   const saveDisabled = isGroup && (!draft.ok || !payerId);
   const categoryName = allCategories.find((c) => c.id === categoryId)?.name;
 
+  const changeTarget = (t: Target) => {
+    targetState.setTarget(t);
+    if (t.kind === "group") {
+      setType("expense");
+      setCategoryId(null);
+    }
+  };
+
   const changeType = (next: FormType) => {
     if (next === type || isGroupExpense) return;
     setType(next);
@@ -135,9 +162,9 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
     setSaveFailed(false);
     setSplitError(false);
     try {
-      if (isGroup && groupId && payerId) {
+      if (isGroup && targetGroupId && payerId) {
         await groupExpenses.createGroupExpense({
-          groupId,
+          groupId: targetGroupId,
           amount: result.input.amount,
           payerMemberId: payerId,
           splitMode,
@@ -169,7 +196,7 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
     if (uri) setPhotoUri(uri);
   };
 
-  if (!loaded) return null;
+  if (!loaded || !targetState.loaded) return null;
 
   return (
     <View style={styles.root} testID="transaction-form">
@@ -280,6 +307,16 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
         ) : null}
 
         <View style={[styles.card, styles.listCard]}>
+          {transactionId ? null : (
+            <TargetLine
+              value={target}
+              onChange={changeTarget}
+              groups={targetState.groups}
+              lastUsedByGroup={targetState.lastUsedByGroup}
+              memberCounts={targetState.memberCounts}
+              now={targetState.now}
+            />
+          )}
           <Pressable
             testID="category-row"
             accessibilityRole="button"

@@ -1,0 +1,66 @@
+# Ghi vào: create group Đà Lạt -> Tổng quan + -> pick Đà Lạt in the target sheet -> save -> group total; reopening defaults to Đà Lạt.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-groups"
+- assertVisible: "Chưa có nhóm nào"
+- tapOn:
+    id: "group-empty-create"
+- tapOn:
+    id: "group-name"
+- inputText: "Đà Lạt"
+- hideKeyboard
+- tapOn:
+    id: "member-add-input"
+- inputText: "An"
+- pressKey: Enter
+- tapOn:
+    id: "member-add-input"
+- inputText: "Bình"
+- pressKey: Enter
+- hideKeyboard
+- assertVisible: "Bình"
+- scrollUntilVisible:
+    element:
+      id: "group-save"
+- tapOn:
+    id: "group-save"
+- assertVisible: "Đà Lạt"
+- assertVisible: "0đ"
+- tapOn:
+    id: "tab-overview"
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- assertVisible: "Cá nhân ›"
+- tapOn:
+    id: "target-line"
+- tapOn: "Đà Lạt"
+- assertVisible:
+    id: "payer-picker"
+- tapOn:
+    id: "amount-input"
+- inputText: "300000"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- assertVisible: "Đà Lạt ›"
+- tapOn:
+    id: "close-button"
+- tapOn:
+    id: "tab-groups"
+- tapOn:
+    text: "Đà Lạt"
+- assertVisible:
+    id: "group-total"
+    text: "300.000đ"

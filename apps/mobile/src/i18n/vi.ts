@@ -51,6 +51,7 @@ export const vi = {
     payWith: "Thanh toán bằng",
     submit: (amount: string, app: string) => `Thanh toán ${amount} qua ${app}`,
     submitNoAmount: (app: string) => `Thanh toán qua ${app}`,
+    groupHint: (n: number) => `Trong nhóm: người chi là Tôi, chia đều ${n} người.`,
     saveNote: "Giao dịch được lưu ngay khi bấm. Không chuyển thì vào Lịch sử để xóa.",
     saveFailed: "Không lưu được giao dịch. Vui lòng thử lại.",
     autofill: "Tự điền",
