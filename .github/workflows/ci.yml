@@ -55,6 +55,27 @@ jobs:
       - name: Claude hooks parse
         run: for f in .claude/hooks/*.mjs; do node --check "$f"; done
 
+  commit-messages:
+    name: No AI attribution
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Commit messages have no AI attribution
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git log --format='%B' "$BASE..$HEAD" | grep -qiE '^co-authored-by:|generated with \[?claude code'; then
+            echo "::error::Commit messages must not contain Co-Authored-By: or 'Generated with Claude Code' (see CLAUDE.md)."
+            git log --format='%h %s' -i -E --grep='^co-authored-by:|generated with \[?claude code' "$BASE..$HEAD"
+            exit 1
+          fi
+          echo "OK: $(git rev-list --count "$BASE..$HEAD") commit(s) are clean."
+
   mobile:
     name: Mobile (lint, typecheck, test)
     needs: detect
@@ -114,7 +135,7 @@ jobs:
   ci-gate:
     name: ci-gate
     if: always()
-    needs: [detect, factory-lint, mobile, api]
+    needs: [detect, factory-lint, commit-messages, mobile, api]
     runs-on: ubuntu-latest
     steps:
       - name: All required jobs passed or were skipped

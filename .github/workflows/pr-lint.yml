@@ -1,0 +1,28 @@
+# PR description lint: no AI attribution ("Generated with Claude Code", Co-Authored-By) in PR bodies.
+# Separate from CI on purpose: editing a PR description must not re-run CI, which would trigger
+# another Tech Lead review and spend Claude quota. No Claude call; runs even when the factory is off.
+name: PR lint
+run-name: "PR lint #${{ github.event.pull_request.number }}"
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-description:
+    name: pr-description
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR description has no AI attribution
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$PR_BODY" | grep -qiE 'co-authored-by:|generated with \[?claude code'; then
+            echo "::error::The PR description must not contain AI attribution (see CLAUDE.md)."
+            exit 1
+          fi
+          echo "OK: PR description is clean."

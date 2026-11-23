@@ -92,7 +92,12 @@ pending() { set_commit_status "${SHA:?}" pending "Tech Lead is reviewing"; }
 
 merge() {
   : "${PR:?}" "${ISSUE:?}" "${SHA:?}" "${BRANCH:?}"
-  if ! gh api -X PUT "repos/$GH_REPO/pulls/$PR/merge" -f merge_method=squash -f sha="$SHA" >/dev/null; then
+  # Explicit squash message: the PR title plus the ticket reference. Never concatenated commit
+  # bodies, so no trailer (e.g. Co-Authored-By, which the repo forbids) can slip into dev.
+  local title
+  title="$(gh pr view "$PR" --json title --jq .title)"
+  if ! gh api -X PUT "repos/$GH_REPO/pulls/$PR/merge" -f merge_method=squash -f sha="$SHA" \
+    -f commit_title="$title (#$PR)" -f commit_message="Refs #$ISSUE" >/dev/null; then
     local mergeable
     mergeable="$(gh pr view "$PR" --json mergeable --jq .mergeable)"
     if [[ "$mergeable" == CONFLICTING ]]; then

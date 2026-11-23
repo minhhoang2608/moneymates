@@ -31,7 +31,7 @@ Shared setup: `git fetch origin`. If the branch exists on origin, `git checkout 
 
 | Reason | Do |
 | --- | --- |
-| `assigned` | Implement the plan **with tests**. Make small Conventional Commits (`feat(mobile): … (#n)`) and `git push -u origin <branch>` regularly. When local checks pass, open the PR (below). If the PR already exists, just push. |
+| `assigned` | Implement the plan **with tests**. Make small Conventional Commits (`feat(mobile): … (#n)`, **no `Co-Authored-By:` trailer**) and `git push -u origin <branch>` regularly. When local checks pass, open the PR (below). If the PR already exists, just push. |
 | `changes-requested` | Fix every numbered point of the latest review, then `gh pr comment <pr> --body-file <file>` with "Addressed: 1. …, 2. …". Push. If you disagree with a point, explain why in that comment and still report `pushed` (the reviewer decides). |
 | `ci-failed` | Read `.factory/ci-failure.log`, reproduce locally, fix the root cause (never skip or disable a test), push. |
 | `rebase` | Follow the `rebase-and-resolve-conflicts` skill. |

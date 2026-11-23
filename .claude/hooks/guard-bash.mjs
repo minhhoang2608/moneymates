@@ -5,6 +5,8 @@
 //  - reading .env files or secret variables through the shell
 //  - shell writes into docs/ or tests/golden/ (and .github/, .claude/ in CI)
 import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { readInput, block, inCI, humanOverride } from "./lib.mjs";
 
 const input = await readInput();
@@ -37,6 +39,24 @@ for (const dir of protectedDirs) {
     new RegExp(`\\bgit\\s+(rm|mv|checkout|restore)\\b[^;&|\\n]*${p}`),
   ];
   if (writers.some((re) => re.test(cmd))) block(`shell command modifies ${dir}/, which is protected.`);
+}
+
+// ---------- no AI attribution in commits / PRs (repo rule) ----------
+const ATTRIBUTION = /co-authored-by\s*:|generated with \[?claude code/i;
+const writesText = /\bgit\b[^;&|\n]*\bcommit\b|\bgh\s+(pr|issue)\s+(create|edit|comment|review)\b|\bgh\s+api\b/;
+if (writesText.test(cmd)) {
+  let text = cmd;
+  // Also inspect message/body files: git commit -F <file>, gh ... --body-file <file>
+  for (const m of cmd.matchAll(/(?:\s-F\s+|--file[=\s]+|--body-file[=\s]+)["']?([^\s"']+)/g)) {
+    try {
+      text += "\n" + readFileSync(path.resolve(input.cwd || process.cwd(), m[1]), "utf8");
+    } catch {
+      /* unreadable or stdin: nothing to inspect */
+    }
+  }
+  if (ATTRIBUTION.test(text)) {
+    block("commit messages and PR/issue text must not contain AI attribution (Co-Authored-By: / 'Generated with Claude Code').");
+  }
 }
 
 // ---------- gh ----------

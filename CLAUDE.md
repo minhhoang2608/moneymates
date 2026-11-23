@@ -92,6 +92,7 @@ All sub-tickets closed → Tester verifies the parent feature end to end → clo
 - Keep each PR to one ticket. Make no drive-by refactors. Follow the existing style. The lint and format hooks run automatically after edits.
 - Write tickets, PRs, commits, code and comments in English. User-facing UI strings are Vietnamese.
 - Use Conventional Commit messages that mention the issue, for example `feat(mobile): parse VietQR payload (#12)`.
+- **No AI attribution, anywhere.** Commit messages must not contain a `Co-Authored-By:` trailer, and PR descriptions and comments must not contain "Generated with Claude Code" (or similar). A hook blocks both, and CI fails the PR if a commit or the PR description has one.
 
 ## Definition of Done (a ticket can only reach `status:done` if)
 

@@ -29,6 +29,7 @@ Work through it in order. **Blocking** items mean `changes_requested`. Advisory 
 - [ ] The app never calls OpenRouter or a database directly. AI goes through `/ai/*`, and API endpoints enforce the request limit.
 - [ ] Tests mock external services. No real network calls in tests.
 - [ ] No edits to `docs/`, `tests/golden/`, `.github/workflows/` or `.claude/`.
+- [ ] No AI attribution: no `Co-Authored-By:` in commits, no "Generated with Claude Code" in the PR description.
 
 ## 5. Quality (advisory unless severe)
 - Readable names, small functions, pure logic separated from UI and IO.
