@@ -22,7 +22,7 @@ Always write valid JSON to `.factory/result.json` as the **last** step. A missin
 
 | Run           | Shape                                                                                                                              |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| BA            | `{"created":[N],"commented":[N],"notes":"..."}`                                                                                    |
+| BA            | `{"created":[N],"commented":[N],"more":true,"notes":"..."}` (`more: true` starts another BA run)                                   |
 | Triage        | `{"issues":[{"number":N,"decision":"ready\|split\|epic\|duplicate\|needs_human","reason":"...","children":[N],"duplicate_of":N}]}` |
 | Assign        | `{"assignments":[{"issue":N,"role":"dev-fe\|dev-be\|dev-fullstack","reason":"..."}]}`                                              |
 | Dev plan      | `{"outcome":"planned"}` or `{"outcome":"blocked","reason":"..."}`, plus `.factory/plan.md`                                         |

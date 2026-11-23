@@ -31,6 +31,13 @@ apply() {
     echo "::warning::BA created $created issues, above MAX_BA_ISSUES_PER_RUN=$MAX_BA_ISSUES_PER_RUN"
   fi
   if ((created > 0)); then dispatch tech-lead-triage.yml; fi
+
+  # The per-run cap can leave features uncreated. BA reports "more": true when it did, so chain
+  # another run until the backlog covers the docs. Requires progress (created > 0) to avoid loops.
+  if ((created > 0)) && [[ "$(jq -r '.more // false' "$RESULT_FILE")" == true ]]; then
+    summary "BA has more features to create: starting another run."
+    dispatch ba.yml
+  fi
 }
 
 case "$cmd" in
