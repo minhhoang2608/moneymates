@@ -18,7 +18,9 @@ appId: com.moneymates.app
     id: "pay-confirm-bank"
     text: "TPBank · 0123456789"
 - assertVisible: "Thanh toán 55\\.000đ qua TPBank"
-- assertVisible: "55.000"
+- assertVisible:
+    id: "pay-amount"
+    text: "55\\.?000"
 - assertVisible: "PHO 24"
 - assertVisible:
     id: "pay-submit"
