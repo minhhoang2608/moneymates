@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -6,6 +8,7 @@ import { DEFAULT_CATEGORIES } from "../../lib/category/defaults";
 import { TransactionError } from "../../lib/transaction/types";
 import { createTransactionRepository } from "../repositories";
 import type { NewTransaction } from "../repositories";
+import { groups, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 import { openTestDb } from "../testing/testDb";
 
@@ -161,5 +164,70 @@ describe("transaction repository", () => {
     expect(up.updated_at > row.updated_at).toBe(true);
     await repo.softDelete(row.id);
     expect(await code(repo.update(row.id, { amount: 1 }))).toBe("not_found");
+  });
+});
+
+describe("last used target", () => {
+  const seed = (
+    db: AnyDb,
+    rows: { id: string; group_id: string | null; created_at: string; deleted_at?: string }[],
+  ) => {
+    for (const g of ["g1", "g2"]) {
+      (db as any)
+        .insert(groups)
+        .values({ id: g, name: g, created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" })
+        .run();
+    }
+    for (const r of rows) {
+      (db as any)
+        .insert(transactions)
+        .values({
+          type: "expense",
+          amount: 1000,
+          category_id: food,
+          occurred_at: "2026-11-05T05:00:00Z",
+          updated_at: r.created_at,
+          deleted_at: null,
+          ...r,
+        })
+        .run();
+    }
+  };
+
+  it("lastRecordedAtByGroup returns max created_at per group, skipping deleted and personal rows", async () => {
+    const { db, repo } = setup();
+    const d = db as unknown as AnyDb;
+    seed(d, [
+      { id: "a", group_id: "g1", created_at: "2026-11-01T00:00:00Z" },
+      { id: "b", group_id: "g1", created_at: "2026-11-03T00:00:00Z" },
+      { id: "c", group_id: "g1", created_at: "2026-11-09T00:00:00Z", deleted_at: "2026-11-09T01:00:00Z" },
+      { id: "d", group_id: null, created_at: "2026-11-10T00:00:00Z" },
+      { id: "e", group_id: "g2", created_at: "2026-11-04T00:00:00Z" },
+    ]);
+    (d as any).update(groups).set({ deleted_at: "2026-11-11T00:00:00Z" }).where(eq(groups.id, "g2")).run();
+    expect(await repo.lastRecordedAtByGroup()).toEqual(new Map([["g1", "2026-11-03T00:00:00Z"]]));
+  });
+
+  it("lastUsedTarget returns the newest live row's target", async () => {
+    const { db, repo } = setup();
+    expect(await repo.lastUsedTarget()).toBeNull();
+    seed(db as unknown as AnyDb, [
+      { id: "a", group_id: "g1", created_at: "2026-11-01T00:00:00Z" },
+      { id: "b", group_id: null, created_at: "2026-11-02T00:00:00Z" },
+      { id: "c", group_id: "g1", created_at: "2026-11-03T00:00:00Z", deleted_at: "2026-11-03T01:00:00Z" },
+    ]);
+    expect(await repo.lastUsedTarget()).toEqual({ target: "personal", at: "2026-11-02T00:00:00Z" });
+    await repo.softDelete("b");
+    expect(await repo.lastUsedTarget()).toEqual({ target: { groupId: "g1" }, at: "2026-11-01T00:00:00Z" });
+  });
+
+  it("lastUsedTarget ignores rows of a soft-deleted group", async () => {
+    const { db, repo } = setup();
+    seed(db as unknown as AnyDb, [
+      { id: "a", group_id: null, created_at: "2026-11-01T00:00:00Z" },
+      { id: "b", group_id: "g2", created_at: "2026-11-05T00:00:00Z" },
+    ]);
+    (db as any).update(groups).set({ deleted_at: "2026-11-06T00:00:00Z" }).where(eq(groups.id, "g2")).run();
+    expect(await repo.lastUsedTarget()).toEqual({ target: "personal", at: "2026-11-01T00:00:00Z" });
   });
 });
