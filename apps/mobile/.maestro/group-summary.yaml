@@ -1,0 +1,53 @@
+# Group summary: create group with An and Bình -> add 900.000 expense -> Tổng kết -> mark An paid.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-groups"
+- tapOn:
+    id: "group-empty-create"
+- tapOn:
+    id: "group-name"
+- inputText: "Đà Lạt"
+- hideKeyboard
+- tapOn:
+    id: "member-add-input"
+- inputText: "An"
+- pressKey: Enter
+- tapOn:
+    id: "member-add-input"
+- inputText: "Bình"
+- pressKey: Enter
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "group-save"
+- tapOn:
+    id: "group-save"
+- tapOn:
+    text: "Đà Lạt"
+- tapOn:
+    id: "group-add-expense"
+- tapOn:
+    id: "amount-input"
+- inputText: "900000"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- tapOn:
+    id: "group-summary"
+- assertVisible:
+    id: "screen-group-summary"
+- assertVisible: "+600.000đ"
+- assertVisible: "An trả Tôi 300.000đ"
+- assertVisible: "Bình trả Tôi 300.000đ"
+- assertVisible: "Còn phải thu"
+- tapOn:
+    text: "Đã trả"
+    index: 0
+- assertNotVisible: "An trả Tôi 300.000đ"
+- assertVisible: "Bình trả Tôi 300.000đ"
