@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "rest_framework",
     "core",
+    "ai",
 ]
 
 MIDDLEWARE = [
@@ -59,3 +60,6 @@ REST_FRAMEWORK = {
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODELS = _csv("OPENROUTER_MODELS")
 APP_SHARED_SECRET = os.environ.get("APP_SHARED_SECRET", "")
+OPENROUTER_TIMEOUT_S = float(os.environ.get("OPENROUTER_TIMEOUT_S", "10"))
+AI_LIMIT_PER_MINUTE = int(os.environ.get("AI_LIMIT_PER_MINUTE", "20"))
+AI_LIMIT_PER_DAY = int(os.environ.get("AI_LIMIT_PER_DAY", "50"))
