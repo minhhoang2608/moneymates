@@ -90,7 +90,7 @@ describe("Tổng quan screen", () => {
     expect(screen.getByText(/cao hơn tháng trước 25%/)).toBeTruthy();
   });
 
-  it("AC4: the alert toggle hides the banner, and turning it on shows it again", async () => {
+  it("AC4: the alert toggle off hides the banner", async () => {
     const prefs = createPreferencesRepository(global.__OVERVIEW_TEST_DB__ as unknown as AnyDb);
     await add(1_000_000, "2026-10-05T03:00:00Z");
     await add(1_250_000, "2026-11-05T03:00:00Z");

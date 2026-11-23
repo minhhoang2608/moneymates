@@ -52,6 +52,16 @@ appId: com.moneymates.app
     id: "scan-e2e-feed"
 - assertVisible:
     id: "screen-pay-confirm"
+- scrollUntilVisible:
+    element:
+      id: "app-momo"
+- scrollUntilVisible:
+    element:
+      id: "app-tpbank"
+- assertVisible:
+    id: "app-momo"
+    below:
+      id: "pay-confirm-bank"
 - assertVisible:
     id: "app-tpbank"
     below:
