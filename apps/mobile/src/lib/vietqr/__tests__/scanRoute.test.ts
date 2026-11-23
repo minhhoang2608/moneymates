@@ -17,6 +17,7 @@ describe("scanResultToRoute", () => {
           amount: "55000",
           message: "PHO 24",
           isDynamic: "1",
+          payload: qr.dynamic,
         },
       },
     });

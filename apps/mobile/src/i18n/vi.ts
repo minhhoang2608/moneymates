@@ -23,6 +23,17 @@ export const vi = {
   },
   payConfirm: {
     title: "Xác nhận thanh toán",
+    back: "Quay lại",
+    amount: "Số tiền",
+    amountHint: "Lấy từ mã QR · có thể sửa",
+    note: "Nội dung",
+    category: "Danh mục",
+    categoryMore: "Thêm…",
+    payWith: "Thanh toán bằng",
+    submit: (amount: string, app: string) => `Thanh toán ${amount} qua ${app}`,
+    submitNoAmount: (app: string) => `Thanh toán qua ${app}`,
+    saveNote: "Giao dịch được lưu ngay khi bấm. Không chuyển thì vào Lịch sử để xóa.",
+    saveFailed: "Không lưu được giao dịch. Vui lòng thử lại.",
   },
   db: {
     migrationError: "Không thể khởi tạo dữ liệu trên máy. Vui lòng khởi động lại ứng dụng.",

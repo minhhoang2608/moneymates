@@ -25,3 +25,5 @@ export type {
   GroupWithMembers,
   NewGroup,
 } from "./groupRepository";
+export { createAppSettingRepository } from "./appSettingRepository";
+export type { AppSettingRepository } from "./appSettingRepository";
