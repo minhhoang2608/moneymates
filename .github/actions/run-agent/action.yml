@@ -1,0 +1,55 @@
+name: Run factory agent
+description: >-
+  Runs one Claude Code agent via anthropics/claude-code-action@v1 (Claude Pro OAuth token),
+  then classifies the run as ok / paused (usage limit) / failed. Never fails the job by itself:
+  callers decide what to do with the outcome.
+inputs:
+  claude_code_oauth_token:
+    description: secrets.CLAUDE_CODE_OAUTH_TOKEN
+    required: true
+  prompt:
+    description: Task prompt for the agent
+    required: true
+  model:
+    description: Claude model id
+    required: true
+  max_turns:
+    description: Max agentic turns
+    required: true
+  allowed_tools:
+    description: Comma-separated --allowedTools list
+    required: true
+outputs:
+  outcome:
+    description: ok | paused | failed
+    value: ${{ steps.classify.outputs.outcome }}
+runs:
+  using: composite
+  steps:
+    - name: Reset result file
+      shell: bash
+      run: |
+        mkdir -p "$(dirname "$RESULT_FILE")"
+        rm -f "$RESULT_FILE"
+
+    - name: Run Claude
+      id: claude
+      continue-on-error: true
+      uses: anthropics/claude-code-action@v1
+      with:
+        claude_code_oauth_token: ${{ inputs.claude_code_oauth_token }}
+        prompt: ${{ inputs.prompt }}
+        # Dispatches come from github-actions[bot]; label events from the Claude App.
+        allowed_bots: github-actions,claude
+        claude_args: >-
+          --model ${{ inputs.model }}
+          --max-turns ${{ inputs.max_turns }}
+          --allowedTools "${{ inputs.allowed_tools }}"
+
+    - name: Classify outcome
+      id: classify
+      shell: bash
+      env:
+        STEP_OUTCOME: ${{ steps.claude.outcome }}
+        EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+      run: '"$FACTORY_BIN/classify-run.sh"'

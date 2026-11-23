@@ -1,0 +1,177 @@
+# Tech Lead review. Runs after CI completes on a factory PR (feat/* or fix/*) into dev.
+# All agents share one GitHub identity, so instead of the "Approve" button the Tech Lead sets the
+# commit status `tech-lead-review` (required by the dev ruleset): red with comments, or green and merge.
+#   CI red   -> status red, status:changes-requested, Dev dispatched (counts toward MAX_CI_FIX_ATTEMPTS)
+#   CI green -> Claude reviews the diff -> approve: green + squash merge + status:testing + Tester/conflict-check
+#                                       -> changes: red + comments + Dev dispatched (counts toward MAX_REVIEW_ROUNDS)
+name: Tech Lead review
+run-name: "Tech Lead review ${{ github.event.workflow_run.head_branch || format('PR #{0}', inputs.pr) }}"
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: ["feat/**", "fix/**"]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: tech-lead-review-${{ github.event.workflow_run.head_branch || inputs.pr }}
+  cancel-in-progress: true
+
+jobs:
+  route:
+    name: Route
+    if: >-
+      vars.FACTORY_ENABLED == 'true' && (
+        github.event_name == 'workflow_dispatch' ||
+        github.event.workflow_run.event == 'pull_request' ||
+        github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      actions: write
+    outputs:
+      run: ${{ steps.route.outputs.run }}
+      pr: ${{ steps.route.outputs.pr }}
+      issue: ${{ steps.route.outputs.issue }}
+      sha: ${{ steps.route.outputs.sha }}
+      branch: ${{ steps.route.outputs.branch }}
+      role: ${{ steps.route.outputs.role }}
+      mode: ${{ steps.route.outputs.mode }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - id: route
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WR_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WR_SHA: ${{ github.event.workflow_run.head_sha }}
+          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          IN_PR: ${{ inputs.pr }}
+        run: '"$FACTORY_BIN/review.sh" route'
+
+  ci-failed:
+    name: CI failed – send back
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.mode == 'ci-failed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+      issues: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ needs.route.outputs.pr }}
+      ISSUE: ${{ needs.route.outputs.issue }}
+      SHA: ${{ needs.route.outputs.sha }}
+      ROLE: ${{ needs.route.outputs.role }}
+      CI_RUN_URL: ${{ github.event.workflow_run.html_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - run: '"$FACTORY_BIN/review.sh" ci-failed'
+
+  review:
+    name: Review
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.mode == 'review'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      statuses: write
+      pull-requests: write
+      issues: write
+      actions: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ needs.route.outputs.pr }}
+      ISSUE: ${{ needs.route.outputs.issue }}
+      SHA: ${{ needs.route.outputs.sha }}
+      BRANCH: ${{ needs.route.outputs.branch }}
+      ROLE: ${{ needs.route.outputs.role }}
+    steps:
+      # Trusted checkout of dev. PR code is never executed here; it is only read as a diff and via `git show`.
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 0
+      - uses: ./.github/actions/factory-setup
+      - name: Prepare review context
+        run: |
+          git fetch --no-tags origin "pull/$PR/head:pr-head"
+          gh pr view "$PR" --comments >.factory/pr-conversation.md
+          gh pr diff "$PR" >.factory/pr.diff
+          gh issue view "$ISSUE" --comments >.factory/issue.md
+          "$FACTORY_BIN/review.sh" pending
+      - name: Review (Sonnet)
+        id: agent
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_TECH_LEAD }}
+          max_turns: ${{ env.TURNS_TECH_LEAD }}
+          allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(git show:*),Bash(git diff:*),Bash(git log:*),Bash(gh pr view:*),Bash(gh issue view:*)"
+          prompt: |
+            You are the **Tech Lead** of the MoneyMates AI software factory, in REVIEW mode.
+            Read `CLAUDE.md` and `.claude/agents/tech-lead.md`, then load the `pr-review-checklist` skill.
+
+            PR #${{ needs.route.outputs.pr }} (branch `${{ needs.route.outputs.branch }}`) implements ticket #${{ needs.route.outputs.issue }}. CI is green.
+            - Ticket with acceptance criteria and plan: `.factory/issue.md`
+            - PR description and earlier review rounds: `.factory/pr-conversation.md`
+            - Full diff: `.factory/pr.diff`. The PR head is the local ref `pr-head` (`git show pr-head:<path>`,
+              `git diff origin/dev...pr-head`). The working tree is `dev`.
+
+            Do not modify any repository file. Write `.factory/result.json`:
+            `{"verdict":"approve"|"changes_requested"|"needs_human","body":"<markdown review: what is good; numbered required changes with file:line>"}`
+            Approve only when every acceptance criterion is implemented and tested and no blocking checklist item fails.
+            Use `needs_human` only for product or spec decisions an agent cannot make.
+      - name: Apply verdict
+        env:
+          OUTCOME: ${{ steps.agent.outputs.outcome }}
+        run: '"$FACTORY_BIN/review.sh" apply'
+
+  merge:
+    name: Merge (already approved)
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.mode == 'merge'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ needs.route.outputs.pr }}
+      ISSUE: ${{ needs.route.outputs.issue }}
+      SHA: ${{ needs.route.outputs.sha }}
+      BRANCH: ${{ needs.route.outputs.branch }}
+      ROLE: ${{ needs.route.outputs.role }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - run: '"$FACTORY_BIN/review.sh" merge'

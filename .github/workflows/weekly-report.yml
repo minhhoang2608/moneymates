@@ -1,0 +1,30 @@
+# Weekly factory report (Monday 08:00 Vietnam time): an issue labelled report:weekly listing done,
+# blocked (needs-human), in progress, and agent runs / Actions minutes. No Claude call, so it uses
+# no Pro quota and runs even when the factory is disabled.
+name: Weekly report
+run-name: Weekly factory report
+
+on:
+  schedule:
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      FACTORY_ENABLED: ${{ vars.FACTORY_ENABLED }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - run: '"$FACTORY_BIN/weekly-report.sh"'

@@ -1,0 +1,81 @@
+# BA: reads the requirements in docs/, compares them with existing issues and creates missing tickets
+# (with acceptance criteria, grouped under epics) as status:triage. Never creates duplicates.
+name: BA
+run-name: BA – sync tickets from docs
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "docs/**"
+      - "!docs/factory-setup.md"
+  workflow_dispatch:
+    inputs:
+      focus:
+        description: Optional focus (for example "group settlement" or "v1 – AI")
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ba
+  cancel-in-progress: false
+
+jobs:
+  ba:
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+      actions: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 0
+      - uses: ./.github/actions/factory-setup
+      - name: Collect existing issues and docs changes
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          "$FACTORY_BIN/ba.sh" collect
+          if [[ -n "${BEFORE:-}" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            git diff "$BEFORE" HEAD -- docs/ >.factory/docs.diff || true
+          fi
+      - name: BA (Opus)
+        id: agent
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_BA }}
+          max_turns: ${{ env.TURNS_BA }}
+          allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(gh issue list:*),Bash(gh issue view:*),Bash(gh issue create:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh label list:*),Bash(git log:*),Bash(git diff:*)"
+          prompt: |
+            You are the **BA** agent of the MoneyMates AI software factory.
+            Read `CLAUDE.md` and `.claude/agents/ba.md`, then load the `writing-tickets` skill.
+
+            Inputs:
+            - Requirements: every file in `docs/` (product plan, tech stack, factory process).
+            - What changed in docs in this push (may be missing on a manual run): `.factory/docs.diff`
+            - All existing issues (open and closed): `.factory/existing.json`
+            - Optional focus from the human: "${{ inputs.focus }}"
+
+            Create the user-facing **feature tickets** that are missing for v1 scope (core flows first).
+            Do not split work into FE/BE and do not set `area:*`: Tech Lead triage splits each feature into sub-tickets.
+            Create **at most ${{ env.MAX_BA_ISSUES_PER_RUN }} issues** in this run; the rest will come in later runs.
+            Never create a ticket that duplicates an existing issue (open or closed). If the docs changed a
+            requirement of an existing open ticket, comment on it instead of creating a new one.
+            Labels: exactly `status:triage`, `type:feature` and one `priority:*`.
+
+            Write `.factory/result.json`: `{"created":[N,...],"commented":[N,...],"notes":"<what is still left to create>"}`
+      - name: Apply
+        env:
+          OUTCOME: ${{ steps.agent.outputs.outcome }}
+        run: '"$FACTORY_BIN/ba.sh" apply'

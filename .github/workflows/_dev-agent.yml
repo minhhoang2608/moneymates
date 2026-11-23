@@ -1,0 +1,145 @@
+# Reusable Dev agent run (called by dev.yml once per role, so each role has its own concurrency group).
+# Flow: start marker -> (new ticket) Opus plan -> Sonnet implementation -> apply result.
+name: Dev agent (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      issue:
+        type: string
+        required: true
+      role:
+        type: string
+        required: true
+      reason:
+        type: string
+        required: true
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        required: true
+
+permissions: {}
+
+jobs:
+  dev:
+    name: ${{ inputs.role }} #${{ inputs.issue }} (${{ inputs.reason }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ISSUE: ${{ inputs.issue }}
+      ROLE: ${{ inputs.role }}
+      REASON: ${{ inputs.reason }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 0
+          # Pushes must use the Claude App token (which triggers CI), not GITHUB_TOKEN.
+          persist-credentials: false
+
+      - uses: ./.github/actions/factory-setup
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Start
+        run: '"$FACTORY_BIN/dev.sh" start'
+
+      - name: Gather PR context
+        id: ctx
+        run: '"$FACTORY_BIN/dev.sh" context'
+
+      # ---------- Planning (Opus), only for newly assigned work without an existing plan ----------
+      - name: Look for an existing plan
+        id: plan
+        if: inputs.reason == 'assigned'
+        run: '"$FACTORY_BIN/dev.sh" plan-fetch'
+
+      - name: Plan (Opus)
+        id: planner
+        if: inputs.reason == 'assigned' && steps.plan.outputs.has_plan != 'true'
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_DEV_PLAN }}
+          max_turns: ${{ env.TURNS_DEV_PLAN }}
+          allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(gh issue view:*),Bash(gh issue list:*),Bash(git log:*),Bash(git show:*),Bash(git ls-files:*),Bash(ls:*)"
+          prompt: |
+            You are the **${{ inputs.role }}** agent of the MoneyMates AI software factory, in PLANNING mode.
+            Read `CLAUDE.md` and `.claude/agents/${{ inputs.role }}.md` first and follow them.
+
+            Ticket: #${{ inputs.issue }}. Read it with `gh issue view ${{ inputs.issue }} --comments`.
+            Explore the repository read-only and load the relevant skills (money-logic, vietqr, testing-strategy,
+            mobile-conventions, api-conventions) when the ticket touches those topics.
+
+            Write the implementation plan to `.factory/plan.md` (markdown, at most ~60 lines):
+            branch name, files to add or change, data or schema changes, the test cases you will write (mapped to
+            each acceptance criterion), risks and open questions. Do not change any other file.
+
+            Finally write `.factory/result.json`:
+            `{"outcome":"planned"}`, or `{"outcome":"blocked","reason":"<why a human is needed>"}` when the ticket
+            is ambiguous, contradicts docs/, is too big, or needs secrets or workflow changes.
+
+      - name: Apply plan
+        id: plan_apply
+        if: steps.planner.outcome == 'success'
+        env:
+          OUTCOME: ${{ steps.planner.outputs.outcome }}
+        run: '"$FACTORY_BIN/dev.sh" plan-apply'
+
+      # ---------- Implementation (Sonnet) ----------
+      - name: Implement (Sonnet)
+        id: impl
+        if: >-
+          steps.planner.outcome == 'skipped' ||
+          (steps.planner.outputs.outcome == 'ok' && steps.plan_apply.outputs.proceed == 'true')
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_DEV_IMPLEMENT }}
+          max_turns: ${{ env.TURNS_DEV_IMPLEMENT }}
+          allowed_tools: "Bash,Read,Write,Edit,MultiEdit,Glob,Grep,TodoWrite,Skill"
+          prompt: |
+            You are the **${{ inputs.role }}** agent of the MoneyMates AI software factory.
+            Read `CLAUDE.md` and `.claude/agents/${{ inputs.role }}.md` first and follow them exactly.
+            Load the `factory-protocol` skill for the result-file format.
+
+            Ticket: #${{ inputs.issue }} · Reason for this run: **${{ inputs.reason }}** · Existing PR: ${{ steps.ctx.outputs.pr || 'none' }}
+
+            Context files (they may be missing):
+            - `.factory/plan.md` – the approved implementation plan (for `assigned`)
+            - `.factory/pr-conversation.md` – PR description and review comments (read the latest Tech Lead review)
+            - `.factory/ci-failure.log` – failed CI log (for `ci-failed`)
+
+            What to do for each reason:
+            - `assigned`: follow the plan. Use branch `feat/${{ inputs.issue }}-<slug>` (`fix/...` for type:bug);
+              if it already exists on origin, check it out and continue. Commit and push the branch regularly
+              (no PR yet) so work survives a paused run. When done and all local checks pass, open the PR into
+              `dev` using `.github/pull_request_template.md`, with `Refs #${{ inputs.issue }}`.
+            - `changes-requested`: address every point of the latest Tech Lead review on the existing PR branch, push.
+            - `ci-failed`: fix the CI failure on the existing PR branch, push.
+            - `rebase`: load the `rebase-and-resolve-conflicts` skill and rebase the PR branch onto the latest `origin/dev`.
+
+            Before pushing, run lint, typecheck and tests for every app you touched. Never edit `docs/`, `tests/golden/`
+            or `.github/workflows/`. Never push to dev/main, and never merge.
+
+            Finally write `.factory/result.json`:
+            `{"outcome":"pr_opened"|"pushed"|"no_changes"|"blocked","pr":<number or null>,"summary":"<one line>","reason":"<only when blocked>"}`
+
+      - name: Apply result
+        if: steps.impl.outcome == 'success'
+        env:
+          OUTCOME: ${{ steps.impl.outputs.outcome }}
+        run: '"$FACTORY_BIN/dev.sh" apply'

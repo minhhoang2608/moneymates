@@ -1,0 +1,126 @@
+# Dev agents (FE / BE / Fullstack). One job per role, each with its own concurrency group, so each Dev
+# works on one ticket at a time and at most three run in parallel.
+# Triggers:
+#   - workflow_dispatch from factory scripts (assignment, changes requested, CI failed, rebase, resume)
+#   - issues:labeled when a HUMAN adds agent:dev-*, status:changes-requested or status:needs-rebase
+#     (labels set by workflows use GITHUB_TOKEN and start no runs; those hand-offs use workflow_dispatch)
+name: Dev
+run-name: "Dev #${{ inputs.issue || github.event.issue.number }} (${{ inputs.role || github.event.label.name }} ${{ inputs.reason }})"
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Issue number
+        required: true
+        type: string
+      role:
+        description: "Dev role: dev-fe, dev-be or dev-fullstack (empty = from the issue's agent:* label)"
+        required: false
+        type: string
+      reason:
+        description: Why the Dev runs
+        required: true
+        type: choice
+        default: assigned
+        options: [assigned, changes-requested, ci-failed, rebase]
+
+permissions: {}
+
+jobs:
+  route:
+    name: Route
+    if: >-
+      vars.FACTORY_ENABLED == 'true' && (
+        github.event_name == 'workflow_dispatch' ||
+        startsWith(github.event.label.name, 'agent:dev-') ||
+        github.event.label.name == 'status:changes-requested' ||
+        github.event.label.name == 'status:needs-rebase')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    outputs:
+      run: ${{ steps.route.outputs.run }}
+      issue: ${{ steps.route.outputs.issue }}
+      role: ${{ steps.route.outputs.role }}
+      reason: ${{ steps.route.outputs.reason }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - id: route
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          LABEL: ${{ github.event.label.name }}
+          EVENT_ISSUE: ${{ github.event.issue.number }}
+          IN_ISSUE: ${{ inputs.issue }}
+          IN_ROLE: ${{ inputs.role }}
+          IN_REASON: ${{ inputs.reason }}
+        run: '"$FACTORY_BIN/dev.sh" route'
+
+  dev-fe:
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.role == 'dev-fe'
+    concurrency:
+      group: dev-fe
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      id-token: write
+    uses: ./.github/workflows/_dev-agent.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+      role: dev-fe
+      reason: ${{ needs.route.outputs.reason }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+  dev-be:
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.role == 'dev-be'
+    concurrency:
+      group: dev-be
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      id-token: write
+    uses: ./.github/workflows/_dev-agent.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+      role: dev-be
+      reason: ${{ needs.route.outputs.reason }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+  dev-fullstack:
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.role == 'dev-fullstack'
+    concurrency:
+      group: dev-fullstack
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      id-token: write
+    uses: ./.github/workflows/_dev-agent.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+      role: dev-fullstack
+      reason: ${{ needs.route.outputs.reason }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

@@ -1,0 +1,59 @@
+name: Bug
+description: Something on dev does not behave as specified.
+title: "[Bug] "
+labels: ["type:bug", "status:triage"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is wrong, in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      value: |
+        **Expected:**
+        **Actual:**
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria for the fix
+      value: |
+        - [ ] AC1: ... and a regression test covers it
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options: [area:mobile, area:api, area:infra]
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: [priority:p0, priority:p1, priority:p2, priority:p3]
+      default: 1
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Commit SHA on dev, failing test, logs, screenshots (E2E artifacts), related ticket.

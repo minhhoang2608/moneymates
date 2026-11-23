@@ -1,0 +1,90 @@
+# Every 30 minutes (GitHub may start scheduled runs a few minutes late):
+#  1. resume – re-dispatch tickets/PRs that are mid-flow with no agent run queued or running
+#     (for example after a Claude usage-limit pause has reset). No Claude call.
+#  2. assign – give each idle Dev (FE = area:mobile, BE = area:api, Fullstack = both / infra / overflow)
+#     the highest-priority eligible ticket (dependencies merged, no module overlap with work in flight).
+#     Claude is called only when there is at least one idle Dev and one eligible ticket.
+name: Tech Lead assign
+run-name: Tech Lead assign + resume
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: tech-lead-assign
+  cancel-in-progress: false
+
+jobs:
+  resume:
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+      statuses: read
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - run: '"$FACTORY_BIN/resume.sh"'
+
+  assign:
+    needs: resume
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+      actions: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - id: collect
+        run: '"$FACTORY_BIN/assign.sh" collect'
+      - name: Assign (Sonnet)
+        id: agent
+        if: steps.collect.outputs.needed == 'true'
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_TECH_LEAD }}
+          max_turns: "15"
+          allowed_tools: "Read,Write,Glob,Grep"
+          prompt: |
+            You are the **Tech Lead** of the MoneyMates AI software factory, in ASSIGN mode.
+            Read `CLAUDE.md` and the "Assign" section of `.claude/agents/tech-lead.md`.
+
+            `.factory/input.json` contains `idle_roles`, `eligible` tickets (dependencies already merged) and
+            `in_flight` tickets (being worked on right now).
+            Choose at most one ticket per idle role:
+            - dev-fe: area:mobile only · dev-be: area:api only · dev-fullstack: tickets with both areas, area:infra,
+              or overflow from FE/BE when their queue is long.
+            - Highest priority first (p0 > p3), then oldest (lowest number). Bugs before features at equal priority.
+            - Never pick two tickets that touch the same module (for example the same DB tables or schema, the same screen,
+              or the same package), and never one that overlaps a ticket in `in_flight`. Leave it for a later round.
+
+            Write `.factory/result.json`: `{"assignments":[{"issue":N,"role":"dev-fe|dev-be|dev-fullstack","reason":"<short>"}]}`
+            (an empty list is fine).
+      - name: Apply assignments
+        if: steps.agent.outcome == 'success'
+        env:
+          OUTCOME: ${{ steps.agent.outputs.outcome }}
+        run: '"$FACTORY_BIN/assign.sh" apply'

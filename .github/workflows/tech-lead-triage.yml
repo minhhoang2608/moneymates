@@ -1,0 +1,73 @@
+# Tech Lead triage: every open status:triage issue (from BA or Tester bugs) is checked in one batch:
+# clear acceptance criteria, small enough, dependencies, type/priority/area labels. The Tech Lead may
+# rewrite or split tickets; scripts then move them to status:ready (or needs-human / duplicate / epic).
+name: Tech Lead triage
+run-name: Tech Lead triage
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: tech-lead-triage
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    if: >-
+      vars.FACTORY_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.event.label.name == 'status:triage')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
+      actions: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - id: collect
+        run: '"$FACTORY_BIN/triage.sh" collect'
+      - name: Triage (Sonnet)
+        id: agent
+        if: steps.collect.outputs.count != '0'
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_TECH_LEAD }}
+          max_turns: ${{ env.TURNS_TECH_LEAD }}
+          allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue create:*),Bash(gh issue comment:*),Bash(gh label list:*)"
+          prompt: |
+            You are the **Tech Lead** of the MoneyMates AI software factory, in TRIAGE mode.
+            Read `CLAUDE.md` and `.claude/agents/tech-lead.md`, then load the `writing-tickets` skill.
+
+            Issues to triage: `.factory/input.json`. The open backlog (for duplicates and dependencies) is in `.factory/context.json`.
+            The product source of truth is in `docs/`.
+
+            For each issue in input.json, and only those:
+            - BA feature tickets (no `area:*`) are user-facing. Design the technical breakdown and split each one into
+              sub-tickets per Dev area with `gh issue create`: `area:mobile` for Dev FE, `area:api` for Dev BE, `area:infra`
+              for scaffolding and tooling, or one sub-ticket with both areas for Dev Fullstack when a split makes no sense.
+              Each sub-ticket uses the sub-ticket template, has `Parent: #<feature>`, `Depends on #N` lines (API/schema before
+              FE wiring), type + the parent's priority + area labels, and NO status label. Together they must cover every
+              feature acceptance criterion. Return `split` with `children`.
+            - Small single-area tickets (bugs, chores): add `area:*` (and type/priority if missing) and return `ready`.
+            - Before creating sub-tickets, check for existing ones (`gh issue list --search "Parent: #N"`); a resumed run must not duplicate them.
+            - Never add or remove `status:*`, `agent:*` or `needs-human` labels yourself.
+
+            Write `.factory/result.json`:
+            `{"issues":[{"number":N,"decision":"ready"|"split"|"epic"|"duplicate"|"needs_human","reason":"...","children":[N,...],"duplicate_of":N}]}`
+      - name: Apply decisions
+        if: steps.agent.outcome == 'success'
+        env:
+          OUTCOME: ${{ steps.agent.outputs.outcome }}
+        run: '"$FACTORY_BIN/triage.sh" apply'
