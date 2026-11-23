@@ -129,6 +129,22 @@ describe("Tổng kết nhóm", () => {
     expect(await overviewTotals()).toEqual(before);
   });
 
+  it("Maestro scenario: 900.000đ split equally, no receiving account, mark An paid", async () => {
+    const { g, me, an, binh } = await setup();
+    await expense(g.id, me, 900000, [me, an, binh], "Ăn uống");
+    await open(g.id);
+    await screen.findByText("An trả Tôi 300.000đ");
+    expect(rowTexts(`summary-row-${me}`)[3]).toBe("+600.000đ");
+    expect(screen.getByText("Bình trả Tôi 300.000đ")).toBeTruthy();
+    expect(text("summary-remaining")).toBe("600.000đ");
+    expect(screen.getByText("Còn phải thu")).toBeTruthy();
+    expect(screen.getByTestId(`mark-paid-${an}`)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId(`mark-paid-${an}`));
+    await waitFor(() => expect(screen.queryByText("An trả Tôi 300.000đ")).toBeNull());
+    expect(screen.getByText("Bình trả Tôi 300.000đ")).toBeTruthy();
+    expect(text("summary-remaining")).toBe("300.000đ");
+  });
+
   it("markPaid failure shows an alert and reloads", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     const { g, me, an, binh } = await setup();
