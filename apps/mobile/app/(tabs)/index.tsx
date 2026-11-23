@@ -8,6 +8,7 @@ import { useRepositories } from "@/db/RepositoriesProvider";
 import { vi } from "@/i18n/vi";
 import { formatVnd } from "@/lib/money";
 import { loadOverview, type OverviewData } from "@/lib/stats/loadOverview";
+import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { chartColors, colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function OverviewScreen() {
@@ -18,9 +19,12 @@ export default function OverviewScreen() {
   const [data, setData] = useState<OverviewData | null>(null);
   const [name, setName] = useState("");
 
+  const deletedVersion = usePendingHandOff((s) => s.deletedVersion);
+
   useFocusEffect(
     useCallback(() => {
       let alive = true;
+      void deletedVersion; // reload after the return banner deletes a payment
       Promise.all([loadOverview(repos), profile.getProfile()]).then(([d, p]) => {
         if (!alive) return;
         setData(d);
@@ -29,7 +33,7 @@ export default function OverviewScreen() {
       return () => {
         alive = false;
       };
-    }, [repos, profile]),
+    }, [repos, profile, deletedVersion]),
   );
 
   const o = data?.overview;

@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import QRCode from "react-native-qrcode-svg";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { CategoryPicker } from "@/components/transaction/CategoryPicker";
@@ -8,9 +9,10 @@ import type { CategoryRow } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
 import { PAY_APPS, defaultAppId, orderApps } from "@/lib/payConfirm/apps";
 import { buildQrExpense, canSubmit } from "@/lib/payConfirm/form";
-import { handOff } from "@/lib/payConfirm/handOff";
+import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
 import { parsePayConfirmParams } from "@/lib/payConfirm/params";
 import { formatVnd, parseAmount } from "@/lib/money";
+import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 const RECENT_KEY = "pay.recent_apps";
@@ -31,6 +33,7 @@ export default function PayConfirmScreen() {
   const [appId, setAppId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const busy = useRef(false);
+  const qrRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -68,8 +71,10 @@ export default function PayConfirmScreen() {
     if (busy.current || !parsed.ok || !categoryId) return;
     busy.current = true;
     setFailed(false);
+    let txId: string;
     try {
-      await transactions.create(buildQrExpense(model, { amount: parsed.vnd, categoryId, note }, new Date()));
+      const tx = await transactions.create(buildQrExpense(model, { amount: parsed.vnd, categoryId, note }, new Date()));
+      txId = tx.id;
     } catch {
       busy.current = false;
       setFailed(true);
@@ -77,7 +82,18 @@ export default function PayConfirmScreen() {
     }
     try {
       await appSettings.set(RECENT_KEY, [selected.id, ...recent.filter((id) => id !== selected.id)].slice(0, 10));
-      await handOff(selected, model.payload);
+      usePendingHandOff.getState().set({ txId, amount: parsed.vnd, label: note });
+      const handOff = makeHandOff(
+        () =>
+          new Promise<string | null>((resolve) => {
+            if (!qrRef.current) return resolve(null);
+            qrRef.current.toDataURL((data) => resolve(data || null));
+          }),
+      );
+      const { opened } = await handOff(selected, { model, amount: parsed.vnd, note });
+      if (!opened) usePendingHandOff.getState().reveal();
+    } catch {
+      usePendingHandOff.getState().reveal();
     } finally {
       router.back();
     }
@@ -181,6 +197,9 @@ export default function PayConfirmScreen() {
                   <Text style={styles.appBadgeText}>{a.short}</Text>
                 </View>
                 <Text style={[styles.appName, on && styles.appNameOn]}>{a.name}</Text>
+                <Text style={styles.appMode}>
+                  {a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.copyOpen}
+                </Text>
                 {on ? <Text style={styles.check}>✓</Text> : null}
               </Pressable>
             );
@@ -209,6 +228,10 @@ export default function PayConfirmScreen() {
           </Text>
         </Pressable>
         <Text style={styles.footNote}>{vi.payConfirm.saveNote}</Text>
+      </View>
+
+      <View style={styles.hiddenQr} pointerEvents="none" accessibilityElementsHidden>
+        <QRCode value={model.payload || " "} size={300} getRef={(r) => (qrRef.current = r)} />
       </View>
 
       <CategoryPicker
@@ -287,6 +310,8 @@ const styles = StyleSheet.create({
   appBadgeText: { fontFamily: fontFamily.bold, fontSize: fontSize.tab, color: colors.textMuted },
   appName: { flex: 1, fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.text },
   appNameOn: { fontFamily: fontFamily.semibold },
+  appMode: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
+  hiddenQr: { position: "absolute", left: -1000, top: -1000, opacity: 0 },
   check: { fontSize: 18, color: colors.primary },
   error: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.expense },
   footer: {

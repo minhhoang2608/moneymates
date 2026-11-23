@@ -8,10 +8,14 @@
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
     "ios": {
-      "bundleIdentifier": "com.moneymates.app"
+      "bundleIdentifier": "com.moneymates.app",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["tpbank", "techcombank", "vcbpay", "mbbank", "momo"]
+      }
     },
     "android": {
       "package": "com.moneymates.app",
+      "permissions": ["READ_MEDIA_IMAGES", "WRITE_EXTERNAL_STORAGE"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0E7C66"
@@ -30,6 +34,14 @@
         "expo-image-picker",
         {
           "photosPermission": "MoneyMates cần truy cập thư viện ảnh để bạn chọn ảnh đại diện và ảnh đính kèm giao dịch."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "MoneyMates cần truy cập ảnh để lưu mã QR trước khi mở app ngân hàng.",
+          "savePhotosPermission": "MoneyMates cần quyền lưu ảnh để lưu mã QR vào thư viện.",
+          "isAccessMediaLocationEnabled": false
         }
       ],
       "@react-native-community/datetimepicker"

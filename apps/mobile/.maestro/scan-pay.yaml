@@ -1,0 +1,26 @@
+# Scan → pay hand-off in E2E mode: the bank app is not opened (stub), the return banner appears.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- assertVisible:
+    id: "screen-pay-confirm"
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible:
+      id: "handoff-return-banner"
+    timeout: 10000
+- assertVisible: "Đã lưu 55.000đ"
+- tapOn:
+    id: "tab-history"
+- assertVisible:
+    id: "screen-history"
+- assertVisible: "55.000"

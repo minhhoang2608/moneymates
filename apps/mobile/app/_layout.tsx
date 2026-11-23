@@ -8,6 +8,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { Stack } from "expo-router";
 
+import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
@@ -39,6 +40,7 @@ export default function RootLayout() {
             <Stack.Screen name="transaction/[id]" />
             <Stack.Screen name="transaction/new" options={{ presentation: "modal" }} />
           </Stack>
+          <ReturnBanner />
         </RepositoriesProvider>
       </DatabaseProvider>
     </QueryProvider>

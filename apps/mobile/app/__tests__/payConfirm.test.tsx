@@ -8,7 +8,6 @@ import qr from "../../e2e/fixtures/qr.json";
 import { createAppSettingRepository, createCategoryRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
-import { handOff } from "@/lib/payConfirm/handOff";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
 
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
@@ -19,7 +18,14 @@ jest.mock("@/db/client", () => {
   const db = new Proxy({}, { get: (_t, key) => (global.__PAY_TEST_DB__ as never)[key] });
   return { db };
 });
-jest.mock("@/lib/payConfirm/handOff", () => ({ handOff: jest.fn(async () => {}) }));
+const mockHandOff = jest.fn();
+jest.mock("@/lib/payConfirm/handOffDeps", () => ({
+  makeHandOff: jest.fn(
+    () =>
+      (...args: unknown[]) =>
+        mockHandOff(...args),
+  ),
+}));
 
 declare global {
   var __PAY_TEST_DB__: object;
@@ -47,8 +53,8 @@ const urlFor = (text: string) => {
 
 describe("pay-confirm screen", () => {
   beforeEach(() => {
-    jest.mocked(handOff).mockReset();
-    jest.mocked(handOff).mockImplementation(async () => {});
+    mockHandOff.mockReset();
+    mockHandOff.mockImplementation(async () => ({ opened: true }));
     const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-pay-")), "test.db");
     global.__PAY_TEST_DB__ = openTestDb(file).db;
   });
@@ -78,7 +84,7 @@ describe("pay-confirm screen", () => {
     await renderRouter("./app", { initialUrl: urlFor(qr.merchant) });
     await fireEvent.changeText(await screen.findByTestId("pay-amount"), "55000");
     await fireEvent.press(screen.getByTestId("pay-submit"));
-    await waitFor(() => expect(handOff).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
     const rows = await createTransactionRepository(testDb()).list();
     expect(rows).toHaveLength(1);
     expect(rows[0].qr_data).toBe(qr.merchant);
@@ -90,8 +96,9 @@ describe("pay-confirm screen", () => {
     const txRepo = createTransactionRepository(testDb());
     const other = (await createCategoryRepository(testDb()).listByKind("expense")).find((c) => c.name === "Khác");
     let atHandOff: Awaited<ReturnType<typeof txRepo.list>> = [];
-    jest.mocked(handOff).mockImplementation(async () => {
+    mockHandOff.mockImplementation(async () => {
       atHandOff = await txRepo.list();
+      return { opened: true };
     });
 
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
@@ -99,9 +106,10 @@ describe("pay-confirm screen", () => {
     await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy());
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await fireEvent.press(screen.getByTestId("pay-submit"));
-    await waitFor(() => expect(handOff).toHaveBeenCalledTimes(1));
-    expect(jest.mocked(handOff).mock.calls[0][0].id).toBe("mb");
-    expect(jest.mocked(handOff).mock.calls[0][1]).toBe(qr.dynamic);
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect(jest.mocked(mockHandOff).mock.calls[0][0].id).toBe("mb");
+    expect(jest.mocked(mockHandOff).mock.calls[0][1].model.payload).toBe(qr.dynamic);
+    expect(jest.mocked(mockHandOff).mock.calls[0][1]).toMatchObject({ amount: 55000, note: "PHO 24" });
 
     // The row existed when the hand-off ran.
     expect(atHandOff).toHaveLength(1);
@@ -118,6 +126,23 @@ describe("pay-confirm screen", () => {
 
     // AC5: remembered, and listed first on the next visit.
     expect(await createAppSettingRepository(testDb()).get("pay.recent_apps")).toEqual(["mb"]);
+  });
+
+  it.each([
+    ["rejects", async () => Promise.reject(new Error("boom"))],
+    ["opened:false", async () => ({ opened: false })],
+  ])("AC5: hand-off %s → the transaction still exists", async (_n, impl) => {
+    const txRepo = createTransactionRepository(testDb());
+    let atHandOff = 0;
+    mockHandOff.mockImplementation(async (...a: unknown[]) => {
+      atHandOff = (await txRepo.list()).length;
+      return impl(...(a as []));
+    });
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect(atHandOff).toBe(1);
+    expect(await txRepo.list()).toHaveLength(1);
   });
 
   it("AC5: a remembered app is listed first and preselected", async () => {
