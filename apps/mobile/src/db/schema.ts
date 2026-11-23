@@ -153,3 +153,29 @@ export const expenseShares = sqliteTable(
     check("expense_shares_amount_check", sql`${t.amount} >= 0`),
   ],
 );
+
+/**
+ * Settlement payments of a group ("Tôi thu hộ"): `member_id` is the non-Tôi member.
+ * `pay_to_me`: the member paid me. `pay_from_me`: I paid the member. `amount` is integer VND.
+ */
+export const settlementPayments = sqliteTable(
+  "settlement_payments",
+  {
+    ...baseColumns(),
+    group_id: text("group_id")
+      .notNull()
+      .references(() => groups.id),
+    member_id: text("member_id")
+      .notNull()
+      .references(() => groupMembers.id),
+    amount: integer("amount").notNull(),
+    currency: text("currency").notNull().default("VND"),
+    direction: text("direction", { enum: ["pay_to_me", "pay_from_me"] }).notNull(),
+    paid_at: text("paid_at").notNull(),
+  },
+  (t) => [
+    index("settlement_payments_group_id_deleted_at_idx").on(t.group_id, t.deleted_at),
+    check("settlement_payments_amount_check", sql`${t.amount} > 0`),
+    check("settlement_payments_direction_check", sql`${t.direction} in ('pay_to_me', 'pay_from_me')`),
+  ],
+);

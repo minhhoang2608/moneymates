@@ -6,7 +6,7 @@ import {
   createProfileRepository,
   createTransactionRepository,
 } from "../repositories";
-import { groupMembers, groups, transactions } from "../schema";
+import { groupMembers, groups, settlementPayments, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 import { openTestDb } from "../testing/testDb";
 import { eq } from "drizzle-orm";
@@ -131,6 +131,28 @@ describe("group repository", () => {
     const added = await s.groups.addMember(g.id, "Chi");
     expect(added.displayName).toBe("Chi");
     expect(await code(s.groups.addMember(g.id, ""))).toBe("member_name_required");
+  });
+
+  it("removing a member with a settlement payment is blocked", async () => {
+    const s = setup();
+    const g = await s.groups.createGroup({ name: "G", members: ["An"] });
+    const [me, an] = g.members;
+    const now = "2026-11-20T00:00:00.000Z";
+    s.db
+      .insert(settlementPayments)
+      .values({
+        id: "p1",
+        created_at: now,
+        updated_at: now,
+        group_id: g.id,
+        member_id: an.id,
+        amount: 1000,
+        direction: "pay_to_me",
+        paid_at: now,
+      })
+      .run();
+    expect(me.is_me).toBe(true);
+    expect(await code(s.groups.removeMember(an.id))).toBe("member_has_transactions");
   });
 
   it("AC5: empty name rejected, nothing inserted", async () => {

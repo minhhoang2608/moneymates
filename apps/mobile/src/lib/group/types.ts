@@ -12,7 +12,8 @@ export type GroupErrorCode =
   | "invalid_payer"
   | "invalid_share_member"
   | "invalid_amount"
-  | "not_group_expense";
+  | "not_group_expense"
+  | "nothing_to_settle";
 
 export class GroupError extends Error {
   readonly code: GroupErrorCode;

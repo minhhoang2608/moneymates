@@ -51,6 +51,27 @@ describe("local migrations", () => {
       ]) {
         expect(shareCols).toContain(c);
       }
+      const payCols = (sqlite.pragma("table_info(settlement_payments)") as { name: string }[]).map((c) => c.name);
+      for (const c of [
+        "id",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+        "owner_id",
+        "group_id",
+        "member_id",
+        "amount",
+        "currency",
+        "direction",
+        "paid_at",
+      ]) {
+        expect(payCols).toContain(c);
+      }
+      const ddl = (
+        sqlite.prepare("select sql from sqlite_master where name = 'settlement_payments'").get() as { sql: string }
+      ).sql;
+      expect(ddl).toContain("settlement_payments_amount_check");
+      expect(ddl).toContain("settlement_payments_direction_check");
 
       db.insert(appSetting)
         .values({ ...newBaseRow(), key: "k", value: JSON.stringify({ a: 1 }) })

@@ -43,6 +43,13 @@
       "when": 1795430539909,
       "tag": "0005_expense_shares",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795431182642,
+      "tag": "0006_settlement_payments",
+      "breakpoints": true
     }
   ]
 }
