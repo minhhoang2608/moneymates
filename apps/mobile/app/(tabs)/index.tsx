@@ -52,7 +52,9 @@ export default function OverviewScreen() {
       <ScrollView testID="overview-recent-list" contentContainerStyle={styles.list}>
         {recent.length === 0 ? <Text style={styles.empty}>{vi.overview.empty}</Text> : null}
         {recent.map((t) => (
-          <TransactionListItem key={t.id} txn={t} categoryName={names[t.category_id] ?? ""} />
+          <Pressable key={t.id} testID={`overview-open-${t.id}`} onPress={() => router.push(`/transaction/${t.id}`)}>
+            <TransactionListItem txn={t} categoryName={names[t.category_id] ?? ""} />
+          </Pressable>
         ))}
       </ScrollView>
       <EntryMenu

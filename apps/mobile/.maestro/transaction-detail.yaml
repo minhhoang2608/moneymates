@@ -1,0 +1,49 @@
+# Detail flow: add via manual entry -> Lịch sử -> open row -> edit amount -> delete.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- tapOn:
+    id: "amount-input"
+- inputText: "50k"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- tapOn:
+    id: "tab-history"
+- tapOn:
+    id: "history-open-.*"
+- assertVisible:
+    id: "screen-transaction-detail"
+- assertVisible: "−50.000đ"
+- tapOn:
+    id: "detail-edit"
+- tapOn:
+    id: "amount-input"
+- eraseText: 10
+- inputText: "60k"
+- hideKeyboard
+- tapOn:
+    id: "save-button"
+- assertVisible: "−60.000đ"
+- tapOn:
+    id: "detail-back"
+- assertVisible: "−60.000đ"
+- tapOn:
+    id: "history-open-.*"
+- tapOn:
+    id: "detail-delete"
+- tapOn: "Xóa"
+- assertVisible:
+    id: "screen-history"
+- assertNotVisible: "−60.000đ"

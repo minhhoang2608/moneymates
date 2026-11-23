@@ -1,6 +1,6 @@
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { FilterChips, type Chip } from "@/components/history/FilterChips";
 import { HistoryRow } from "@/components/history/HistoryRow";
@@ -26,6 +26,7 @@ const ALL = "__all__";
 type Picker = "month" | "category" | "source" | null;
 
 export default function HistoryScreen() {
+  const router = useRouter();
   const { transactions, categories } = useRepositories();
   const [filters, setFilters] = useState<HistoryFilters>(() => defaultFilters());
   const [rows, setRows] = useState<TransactionRow[]>([]);
@@ -179,7 +180,9 @@ export default function HistoryScreen() {
             </View>
             {g.rows.map((t) => (
               <SwipeableRow key={t.id} id={t.id} onDelete={() => void remove(t.id)}>
-                <HistoryRow txn={t} categoryName={names[t.category_id] ?? ""} />
+                <Pressable testID={`history-open-${t.id}`} onPress={() => router.push(`/transaction/${t.id}`)}>
+                  <HistoryRow txn={t} categoryName={names[t.category_id] ?? ""} />
+                </Pressable>
               </SwipeableRow>
             ))}
           </View>
