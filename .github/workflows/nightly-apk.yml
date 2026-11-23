@@ -54,9 +54,9 @@ jobs:
         run: |
           npm ci
           npx expo prebuild --platform android --no-install --clean
-          cd android && ./gradlew assembleRelease --no-daemon
-          mkdir -p ../../apk
-          cp app/build/outputs/apk/release/*.apk "../../apk/moneymates-$(date -u +%Y%m%d)-${GITHUB_SHA::7}.apk"
+          cd android && ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+          mkdir -p ../../../apk
+          cp app/build/outputs/apk/release/*.apk "../../../apk/moneymates-$(date -u +%Y%m%d)-${GITHUB_SHA::7}.apk"
       - uses: actions/upload-artifact@v7
         if: steps.check.outputs.run == 'true'
         with:
