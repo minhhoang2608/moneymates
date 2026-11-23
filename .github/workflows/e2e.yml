@@ -21,7 +21,7 @@ jobs:
     name: E2E (Android emulator + Maestro)
     if: vars.FACTORY_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     permissions:
       contents: read
       actions: write
@@ -63,7 +63,7 @@ jobs:
         run: |
           npm ci
           npx expo prebuild --platform android --no-install --clean
-          cd android && ./gradlew assembleRelease --no-daemon
+          cd android && ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=x86_64
       - name: Install Maestro
         if: steps.check.outputs.run == 'true'
         run: |
