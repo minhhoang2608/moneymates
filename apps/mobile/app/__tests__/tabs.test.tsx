@@ -6,6 +6,10 @@ jest.mock("@expo-google-fonts/inter", () => ({
   useFonts: () => [true, null],
 }));
 
+jest.mock("@/db/DatabaseProvider", () => ({
+  DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 function renderApp() {
   // Render the real app directory (root layout, tabs layout, screens).
   return renderRouter("./app", { initialUrl: "/" });

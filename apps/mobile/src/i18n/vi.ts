@@ -10,5 +10,8 @@ export const vi = {
   scan: {
     title: "Quét QR",
   },
+  db: {
+    migrationError: "Không thể khởi tạo dữ liệu trên máy. Vui lòng khởi động lại ứng dụng.",
+  },
   comingSoon: "Màn hình đang được xây dựng",
 };
