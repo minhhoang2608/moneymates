@@ -20,18 +20,30 @@ BA không biết Dev sẽ làm thế nào, nên **BA chỉ viết ticket tính n
 | **Ticket tính năng** | BA | Người dùng làm được gì; tiêu chí chấp nhận từ đầu đến cuối; không có chi tiết kỹ thuật | Không ai code trực tiếp. Sau triage nó thành **ticket cha** (`type:epic`, không có status, không bao giờ được giao) |
 | **Sub-ticket** | Tech Lead | Một PR công việc kỹ thuật cho một khu vực (`area:mobile` / `area:api` / `area:infra`, hoặc cả hai nếu không nên tách), có `Parent: #N` và `Depends on #N` | Dev FE, BE hoặc Fullstack |
 
-Tech Lead bảo đảm các sub-ticket **cùng nhau phủ hết** tiêu chí chấp nhận của ticket cha, và sắp thứ tự phụ thuộc (nền tảng → schema/hợp đồng API → endpoint → màn hình gọi endpoint). Khi **mọi sub-ticket đã đóng**, Tester kiểm tra ticket cha từ đầu đến cuối rồi mới đóng nó.
+Tech Lead bảo đảm các sub-ticket **cùng nhau phủ hết** tiêu chí chấp nhận của ticket cha, và sắp thứ tự phụ thuộc (nền tảng → schema → màn hình). Khi **mọi sub-ticket đã đóng**, **BA kiểm tra ticket cha từ đầu đến cuối** (vì chính BA viết tiêu chí chấp nhận và rảnh giữa các lần tài liệu đổi) rồi mới đóng nó. Có thể giao lại việc này cho Tester bằng `BA_VERIFIES_FEATURES=false` trong `factory.env`.
+
+### FE làm trước với dữ liệu giả, ticket tích hợp làm sau
+
+Dev FE không phải chờ Dev BE. Với tính năng cần endpoint API mới, Tech Lead viết **hợp đồng API** (method, đường dẫn, JSON request/response, mã lỗi) vào các ticket và tách thành ba ticket:
+
+| Ticket | Khu vực | Phụ thuộc | Nội dung |
+| --- | --- | --- | --- |
+| **BE** | `area:api` | không | Endpoint + API test |
+| **FE** | `area:mobile` | **không phụ thuộc ticket BE** | Màn hình và logic chạy trên **mock** làm đúng hợp đồng (mock nằm trong `src/api/mock/`, dữ liệu mẫu trong `e2e/fixtures/`) |
+| **Tích hợp** | `area:mobile` + `area:api` (Dev Fullstack) | **cả FE và BE** | Chuyển endpoint từ `mock` sang `live`, thêm kiểm tra hợp đồng (dữ liệu mock phải khớp response thật), kiểm tra các đường lỗi (timeout, 429, 503 → form nhập tay) |
+
+Ticket tích hợp chỉ được giao sau khi cả ticket FE và BE đã merge (cơ chế phụ thuộc có sẵn). Tính năng không cần endpoint mới thì không cần ticket tích hợp.
 
 ## Vai trò từng agent
 
 | Agent | Kích hoạt khi | Việc làm | Kết quả |
 | --- | --- | --- | --- |
-| **BA** (Opus) | Push thay đổi yêu cầu trong `docs/` (không tính `factory-setup.md`, `ai-software-factory.md`, `design/`), hoặc chạy tay | Đọc plan/requirements, so với issue đã có (kể cả đã đóng), tạo ticket tính năng mới có tiêu chí chấp nhận; không tạo trùng; tối đa `MAX_BA_ISSUES_PER_RUN` ticket mỗi lần | Issue mới gắn `status:triage` + `type:feature` + `priority:*` |
-| **Tech Lead – Triage** (Sonnet) | Có issue `status:triage` (từ BA hoặc bug từ Tester) | Làm theo từng lô tối đa `MAX_TRIAGE_PER_RUN` ticket, ưu tiên cao trước; làm rõ ticket, **chia thành sub-ticket theo khu vực**, gắn phụ thuộc, loại, ưu tiên. Còn ticket thì tự gọi lô tiếp theo | Sub-ticket `status:ready`; ticket tính năng thành ticket cha |
+| **BA** (Opus) | Push thay đổi yêu cầu trong `docs/` (không tính `factory-setup.md`, `ai-software-factory.md`, `design/`), hoặc chạy tay. Kiểm tra tính năng: sau khi Tester xử lý xong các sub-ticket | Đọc plan/requirements, so với issue đã có (kể cả đã đóng), tạo ticket tính năng mới có tiêu chí chấp nhận; không tạo trùng; tối đa `MAX_BA_ISSUES_PER_RUN` ticket mỗi lần và **tự chạy tiếp** cho đến khi phủ hết tài liệu. **Kiểm tra từng tính năng từ đầu đến cuối** khi mọi sub-ticket đã đóng | Issue mới gắn `status:triage` + `type:feature` + `priority:*`; đóng ticket cha khi đạt |
+| **Tech Lead – Triage** (Sonnet) | Có issue `status:triage` (từ BA hoặc bug từ Tester) | Làm theo từng lô tối đa `MAX_TRIAGE_PER_RUN` ticket, ưu tiên cao trước; làm rõ ticket, **chia thành sub-ticket theo khu vực** (FE làm với mock, BE làm endpoint, ticket tích hợp phụ thuộc cả hai), gắn phụ thuộc, loại, ưu tiên. Còn ticket thì tự gọi lô tiếp theo | Sub-ticket `status:ready`; ticket tính năng thành ticket cha |
 | **Tech Lead – Phân công** (Sonnet) | **Ngay khi có Dev rảnh hoặc có ticket mới `ready`** (sau merge, sau khi một ticket bị kẹt `needs-human`, sau triage), và quét dự phòng mỗi 30 phút | Với từng Dev đang rảnh: chọn ticket ưu tiên cao nhất, đúng chuyên môn, đã đủ điều kiện phụ thuộc, không trùng module với việc đang làm | Gắn `agent:dev-fe` / `agent:dev-be` / `agent:dev-fullstack` + `status:in-progress` |
 | **Dev FE / BE / Fullstack** (plan Opus, code Sonnet) | Được giao ticket, Tech Lead yêu cầu sửa, CI đỏ, hoặc PR bị conflict | Lên plan (comment trên ticket), tạo nhánh `feat/<số>-<slug>`, code + test, mở PR vào `dev`; có góp ý thì sửa và push tiếp; bị conflict thì rebase lên `dev` mới nhất | PR + `status:review` |
 | **Tech Lead – Review** (Sonnet) | CI chạy xong trên PR | CI đỏ thì trả về Dev. CI xanh thì review theo từng tiêu chí chấp nhận và quy tắc repo; chưa ổn thì comment + check đỏ; ổn thì check xanh và **squash merge ngay** | Merge vào `dev`, `status:testing` |
-| **Tester** (Sonnet) | Có merge mới vào `dev` | Chỉ test trên nhánh `dev`: workflow chạy toàn bộ test (unit, API, golden, E2E); Tester đối chiếu từng tiêu chí chấp nhận với code và kết quả test; lỗi thì tạo ticket bug | Đóng ticket (`status:done`) hoặc tạo bug `status:triage` |
+| **Tester** (Sonnet) | Có merge mới vào `dev` | Chỉ test trên nhánh `dev`: workflow chạy toàn bộ test (unit, API, golden, E2E); Tester đối chiếu từng tiêu chí chấp nhận của **sub-ticket** với code và kết quả test; lỗi thì tạo ticket bug | Đóng sub-ticket (`status:done`) hoặc tạo bug `status:triage` |
 
 ## Flow một tính năng
 
@@ -40,6 +52,8 @@ flowchart TD
     D["Push docs/ hoặc chạy tay"] --> BA["BA: ticket tính năng<br/>status:triage, chưa có area"]
     BA --> TL1["Tech Lead triage: chia sub-ticket FE / BE / infra<br/>có Parent và Depends on"]
     TL1 -->|"sub-ticket status:ready"| TL2["Tech Lead phân công<br/>ngay khi có Dev rảnh<br/>(+ quét dự phòng mỗi 30 phút)"]
+    TL1 -.->|"cần endpoint mới"| INT["Ticket tích hợp<br/>phụ thuộc FE và BE<br/>giao sau khi cả hai merge"]
+    INT -.-> TL2
     TL1 -->|"ticket gốc"| PAR["Ticket cha type:epic<br/>không giao cho Dev"]
     TL2 --> DEV["Dev: plan (Opus) + code (Sonnet) + test<br/>mở PR vào dev, status:review"]
     DEV --> CI["CI: lint, typecheck, test, ci-gate"]
@@ -54,7 +68,7 @@ flowchart TD
     T -->|"lỗi"| BUG["Tạo bug<br/>status:triage"] --> TL1
     T -->|"cần điện thoại thật"| HUM["test:real-device + needs-human"]
     DONE --> ALL{"Mọi sub-ticket<br/>của ticket cha đã đóng?"}
-    ALL -->|"rồi"| TP["Tester kiểm tra ticket cha<br/>từ đầu đến cuối"] --> PD["Đóng ticket cha"]
+    ALL -->|"rồi"| TP["BA kiểm tra ticket cha<br/>từ đầu đến cuối"] --> PD["Đóng ticket cha"]
     ALL -->|"chưa"| TL2
 ```
 
@@ -186,5 +200,7 @@ Agent dùng hạn mức gói Claude Pro (không tính phí theo token). Ngoài r
 - [x] Có báo cáo tổng kết hằng tuần (issue: xong gì, kẹt gì, bao nhiêu lượt chạy).
 - [x] Phát hành `dev` → `main`: người tự làm.
 - [x] Giới hạn chi phí: dùng hạn mức gói Claude Pro, hết limit thì dừng, reset thì chạy tiếp (xem mục "Dùng gói Claude Pro").
+- [x] FE làm trước với mock; ticket tích hợp (phụ thuộc FE và BE) được giao sau khi BE xong.
+- [x] BA kiểm tra ticket cha từ đầu đến cuối khi mọi sub-ticket đã đóng (tắt bằng `BA_VERIFIES_FEATURES=false`).
 - [ ] Ruleset cho `dev`/`main`: chờ nâng cấp GitHub Pro (hiện repo private, gói Free).
 - [ ] Cho phép Dev làm tiếp ticket kế trong lúc PR chờ review (nhanh hơn nhưng tăng nguy cơ conflict): chưa làm, hiện mỗi Dev giữ một ticket đến khi PR được merge.
