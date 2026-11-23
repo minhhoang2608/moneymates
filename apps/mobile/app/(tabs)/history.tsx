@@ -28,11 +28,12 @@ type Picker = "month" | "category" | "source" | null;
 
 export default function HistoryScreen() {
   const router = useRouter();
-  const { transactions, categories } = useRepositories();
+  const { transactions, categories, groups: groupRepo } = useRepositories();
   const [filters, setFilters] = useState<HistoryFilters>(() => defaultFilters());
   const [rows, setRows] = useState<TransactionRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [names, setNames] = useState<Record<string, string>>({});
+  const [groupNames, setGroupNames] = useState<Record<string, string>>({});
   const [allCategories, setAllCategories] = useState<{ id: string; name: string }[]>([]);
   const [picker, setPicker] = useState<Picker>(null);
   const [deleted, setDeleted] = useState<string | null>(null);
@@ -48,10 +49,12 @@ export default function HistoryScreen() {
         transactions.list(toTransactionFilter(filters)),
         categories.listByKind("expense"),
         categories.listByKind("income"),
-      ]).then(([list, exp, inc]) => {
+        groupRepo.listGroups(),
+      ]).then(([list, exp, inc, gs]) => {
         if (!alive) return;
         const cats = [...exp, ...inc];
         setRows(list);
+        setGroupNames(Object.fromEntries(gs.map((g) => [g.id, g.name])));
         setAllCategories(cats);
         setNames(Object.fromEntries(cats.map((c) => [c.id, c.name])));
         setLoaded(true);
@@ -59,7 +62,7 @@ export default function HistoryScreen() {
       return () => {
         alive = false;
       };
-    }, [transactions, categories, filters, version, deletedVersion]),
+    }, [transactions, categories, groupRepo, filters, version, deletedVersion]),
   );
 
   const groups = useMemo(() => groupByDay(rows), [rows]);
@@ -184,7 +187,11 @@ export default function HistoryScreen() {
             {g.rows.map((t) => (
               <SwipeableRow key={t.id} id={t.id} onDelete={() => void remove(t.id)}>
                 <Pressable testID={`history-open-${t.id}`} onPress={() => router.push(`/transaction/${t.id}`)}>
-                  <HistoryRow txn={t} categoryName={names[t.category_id] ?? ""} />
+                  <HistoryRow
+                    txn={t}
+                    categoryName={names[t.category_id] ?? ""}
+                    groupName={t.group_id ? groupNames[t.group_id] : undefined}
+                  />
                 </Pressable>
               </SwipeableRow>
             ))}

@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
-import { createTransactionRepository } from "@/db/repositories";
+import { createGroupExpenseRepository, createGroupRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { catId } from "@/testing/repoTestUtils";
@@ -146,5 +146,25 @@ describe("Lịch sử screen", () => {
     expect(await screen.findByText("Chưa có giao dịch nào")).toBeTruthy();
     await fireEvent.changeText(screen.getByTestId("history-search"), "zzz");
     expect(await screen.findByText("Không có giao dịch phù hợp")).toBeTruthy();
+  });
+
+  it("AC5: a group row shows the group name and the full amount; personal rows don't", async () => {
+    const db = global.__HISTORY_TEST_DB__ as unknown as AnyDb;
+    const g = await createGroupRepository(db).createGroup({ name: "Đà Lạt", members: ["An"] });
+    const [me, an] = g.members.map((m) => m.id);
+    const t = await createGroupExpenseRepository(db).createGroupExpense({
+      groupId: g.id,
+      amount: 1_000_000,
+      payerMemberId: me,
+      splitMode: "equal",
+      shares: [{ memberId: me }, { memberId: an }],
+      occurredAt: "2026-11-22T03:00:00Z",
+      note: "khách sạn",
+    });
+    const p = await add(30_000, "2026-11-22T04:00:00Z", { note: "xăng" });
+    await renderHistory();
+    expect((await screen.findByTestId(`history-group-label-${t.id}`)).props.children).toContain("Nhóm Đà Lạt");
+    expect(screen.getByText("−1.000.000đ")).toBeTruthy();
+    expect(screen.queryByTestId(`history-group-label-${p.id}`)).toBeNull();
   });
 });

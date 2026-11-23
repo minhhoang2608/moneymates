@@ -10,7 +10,15 @@ function initials(s: string): string {
   return s.trim().slice(0, 1).toLocaleUpperCase("vi") || "?";
 }
 
-export function HistoryRow({ txn, categoryName }: { txn: TransactionRow; categoryName: string }) {
+export function HistoryRow({
+  txn,
+  categoryName,
+  groupName,
+}: {
+  txn: TransactionRow;
+  categoryName: string;
+  groupName?: string;
+}) {
   const title = txn.note || categoryName;
   const source = vi.history.sources[txn.source] ?? txn.money_source;
   return (
@@ -22,8 +30,10 @@ export function HistoryRow({ txn, categoryName }: { txn: TransactionRow; categor
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-        <Text style={styles.sub} numberOfLines={1}>
-          {`${categoryName} · ${source} · ${timeOf(txn.occurred_at)}`}
+        <Text style={styles.sub} numberOfLines={1} testID={groupName ? `history-group-label-${txn.id}` : undefined}>
+          {groupName
+            ? `${categoryName} · ${vi.history.groupLabel(groupName)} · ${timeOf(txn.occurred_at)}`
+            : `${categoryName} · ${source} · ${timeOf(txn.occurred_at)}`}
         </Text>
       </View>
       <Text style={[styles.amount, { color: txn.type === "expense" ? colors.expense : colors.primary }]}>

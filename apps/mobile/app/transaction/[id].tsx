@@ -5,11 +5,13 @@ import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "rea
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { TransactionRow } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
+import { formatVnd } from "@/lib/money";
 import { formatDetailDateTime, qrDetails } from "@/lib/transaction/detail";
+import { buildGroupSplitView, type GroupSplitView } from "@/lib/transaction/groupDetail";
 import { signedAmountLabel } from "@/lib/transaction/form";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
-type Loaded = { txn: TransactionRow | null; categoryName: string } | null;
+type Loaded = { txn: TransactionRow | null; categoryName: string; split: GroupSplitView | null } | null;
 
 function Row({ label, value, last, testID }: { label: string; value: string; last?: boolean; testID: string }) {
   return (
@@ -25,7 +27,7 @@ function Row({ label, value, last, testID }: { label: string; value: string; las
 export default function TransactionDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { transactions, categories } = useRepositories();
+  const { transactions, categories, groups, groupExpenses } = useRepositories();
   const [data, setData] = useState<Loaded>(null);
 
   useFocusEffect(
@@ -35,15 +37,24 @@ export default function TransactionDetailScreen() {
         transactions.getById(String(id)),
         categories.listByKind("expense"),
         categories.listByKind("income"),
-      ]).then(([txn, exp, inc]) => {
+      ]).then(async ([txn, exp, inc]) => {
+        let split: GroupSplitView | null = null;
+        if (txn?.group_id) {
+          try {
+            const [group, shares] = await Promise.all([groups.getGroup(txn.group_id), groupExpenses.getShares(txn.id)]);
+            split = buildGroupSplitView(txn, group, shares);
+          } catch {
+            split = null; // group removed: show the plain transaction
+          }
+        }
         if (!alive) return;
         const cat = [...exp, ...inc].find((c) => c.id === txn?.category_id);
-        setData({ txn, categoryName: cat?.name ?? "" });
+        setData({ txn, categoryName: cat?.name ?? "", split });
       });
       return () => {
         alive = false;
       };
-    }, [transactions, categories, id]),
+    }, [transactions, categories, groups, groupExpenses, id]),
   );
 
   const confirmDelete = (txn: TransactionRow) => {
@@ -61,6 +72,7 @@ export default function TransactionDetailScreen() {
   };
 
   const txn = data?.txn ?? null;
+  const split = data?.split ?? null;
   const qr = qrDetails(txn?.qr_data);
   const title = txn ? txn.note || data?.categoryName || "" : "";
   const sourceLabel = txn ? (vi.history.sources[txn.source] ?? txn.money_source) : "";
@@ -100,6 +112,13 @@ export default function TransactionDetailScreen() {
         <>
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.hero}>
+              {split ? (
+                <View style={styles.groupBadge}>
+                  <Text style={styles.groupBadgeText} testID="detail-group-badge">
+                    {vi.detail.groupBadge(split.groupName)}
+                  </Text>
+                </View>
+              ) : null}
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{title.trim().slice(0, 1).toLocaleUpperCase("vi") || "?"}</Text>
               </View>
@@ -127,6 +146,27 @@ export default function TransactionDetailScreen() {
               {qr ? <Row label={vi.detail.payee} value={qr.payee} last={!txn.note} testID="detail-payee" /> : null}
               {txn.note ? <Row label={vi.detail.note} value={txn.note} last testID="detail-note" /> : null}
             </View>
+
+            {split ? (
+              <View style={styles.card} testID="detail-split">
+                <Row label={vi.detail.payer} value={split.payerName} testID="detail-payer" />
+                <Row
+                  label={vi.detail.split}
+                  value={vi.detail.splitSummary(split.modeLabel, split.count)}
+                  testID="detail-split-mode"
+                  last={split.rows.length === 0}
+                />
+                {split.rows.map((r, i) => (
+                  <Row
+                    key={r.memberId}
+                    label={r.name}
+                    value={formatVnd(r.amount)}
+                    last={i === split.rows.length - 1}
+                    testID={`detail-share-${r.memberId}`}
+                  />
+                ))}
+              </View>
+            ) : null}
 
             {txn.photo_uri ? (
               <Image testID="detail-photo" source={{ uri: txn.photo_uri }} style={styles.photo} resizeMode="cover" />
@@ -166,6 +206,13 @@ const styles = StyleSheet.create({
   editText: { fontFamily: fontFamily.semibold, fontSize: fontSize.row, color: colors.primary },
   content: { paddingHorizontal: layout.screenPadding, paddingBottom: 120, gap: 14 },
   hero: { alignItems: "center", gap: 6, paddingVertical: 8 },
+  groupBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: radii.card,
+    backgroundColor: colors.primarySoft,
+  },
+  groupBadgeText: { fontFamily: fontFamily.semibold, fontSize: fontSize.caption, color: colors.primary },
   badge: {
     width: 56,
     height: 56,

@@ -1,6 +1,8 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { TransactionForm } from "../TransactionForm";
+import { createGroupExpenseRepository, createGroupRepository } from "@/db/repositories";
+import type { AnyDb } from "@/db/seed";
 import { catId, setup } from "@/testing/repoTestUtils";
 
 // The first render cold-loads the form tree; the default 5s is too tight on loaded CI runners.
@@ -154,5 +156,58 @@ describe("TransactionForm", () => {
     const rows = await repos.transactions.list();
     expect(rows).toHaveLength(1);
     expect(rows[0].amount).toBe(45000);
+  });
+
+  describe("group expense edit", () => {
+    async function seed(
+      db: unknown,
+      splitMode: "equal" | "amount",
+      onClose: () => void,
+      mount: (el: React.ReactElement) => Promise<unknown>,
+    ) {
+      const a = db as AnyDb;
+      const g = await createGroupRepository(a).createGroup({ name: "Đà Lạt", members: ["An", "Bình"] });
+      const ids = g.members.map((m) => m.id);
+      const exp = createGroupExpenseRepository(a);
+      const t = await exp.createGroupExpense({
+        groupId: g.id,
+        amount: 1_000_000,
+        payerMemberId: ids[1],
+        splitMode,
+        shares:
+          splitMode === "equal"
+            ? ids.map((memberId) => ({ memberId }))
+            : [
+                { memberId: ids[0], amount: 400_000 },
+                { memberId: ids[1], amount: 300_000 },
+                { memberId: ids[2], amount: 300_000 },
+              ],
+        occurredAt: NOW.toISOString(),
+      });
+      await mount(<TransactionForm transactionId={t.id} onClose={onClose} photoPicker={noPhoto} />);
+      return { exp, t, g };
+    }
+
+    it("AC2: equal split recomputes shares and group total", async () => {
+      const { db, mount, onClose } = form({ transactionId: "x" });
+      const { exp, t, g } = await seed(db, "equal", onClose, mount);
+      await screen.findByText("Sửa giao dịch");
+      await fireEvent.changeText(screen.getByTestId("amount-input"), "900000");
+      await fireEvent.press(screen.getByTestId("save-button"));
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect((await exp.getShares(t.id)).map((x) => x.amount)).toEqual([300_000, 300_000, 300_000]);
+      expect(await exp.groupTotal(g.id)).toBe(900_000);
+    });
+
+    it("amount-mode split with a changed amount shows an error and blocks the save", async () => {
+      const { db, mount, onClose } = form({ transactionId: "x" });
+      const { exp, t } = await seed(db, "amount", onClose, mount);
+      await screen.findByText("Sửa giao dịch");
+      await fireEvent.changeText(screen.getByTestId("amount-input"), "900000");
+      await fireEvent.press(screen.getByTestId("save-button"));
+      expect(await screen.findByTestId("split-error")).toBeTruthy();
+      expect(onClose).not.toHaveBeenCalled();
+      expect((await exp.getShares(t.id)).map((x) => x.amount)).toEqual([400_000, 300_000, 300_000]);
+    });
   });
 });

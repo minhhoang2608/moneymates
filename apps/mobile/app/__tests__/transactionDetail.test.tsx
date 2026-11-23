@@ -6,7 +6,7 @@ import { Alert } from "react-native";
 
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
-import { createTransactionRepository } from "@/db/repositories";
+import { createGroupExpenseRepository, createGroupRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { generateVietQr } from "@/lib/vietqr";
@@ -181,6 +181,71 @@ describe("Chi tiết giao dịch screen", () => {
       expect(spy).toHaveBeenCalled();
       expect(screen.getByTestId("screen-transaction-detail")).toBeTruthy();
       expect((await repo().getById(t.id))?.deleted_at).toBeNull();
+    });
+  });
+
+  describe("group expense", () => {
+    const db = () => global.__DETAIL_TEST_DB__ as unknown as AnyDb;
+    async function groupExpense(amount = 1_000_000) {
+      const groups = createGroupRepository(db());
+      const exp = createGroupExpenseRepository(db());
+      const g = await groups.createGroup({ name: "Đà Lạt", members: ["An", "Bình"] });
+      const [me, an, binh] = g.members.map((m) => m.id);
+      const t = await exp.createGroupExpense({
+        groupId: g.id,
+        amount,
+        payerMemberId: an,
+        splitMode: "equal",
+        shares: [{ memberId: me }, { memberId: an }, { memberId: binh }],
+        occurredAt: "2026-11-21T07:02:00Z",
+        note: "khách sạn",
+      });
+      return { exp, t, me, an, binh };
+    }
+
+    it("AC1: shows group badge, payer and every share", async () => {
+      const { t, me, an, binh } = await groupExpense();
+      await open(t.id);
+      expect((await screen.findByTestId("detail-group-badge")).props.children).toBe("Nhóm: Đà Lạt");
+      expect(screen.getByTestId("detail-payer").props.children).toBe("An");
+      expect(screen.getByTestId("detail-split-mode").props.children).toBe("Chia đều · 3 người");
+      // 1.000.000 / 3: remainder goes to the first share (Tôi)
+      expect(screen.getByTestId(`detail-share-${me}`).props.children).toBe("333.334đ");
+      expect(screen.getByTestId(`detail-share-${an}`).props.children).toBe("333.333đ");
+      expect(screen.getByTestId(`detail-share-${binh}`).props.children).toBe("333.333đ");
+    });
+
+    it("personal transactions have no split card", async () => {
+      const t = await add(50_000, "2026-11-21T07:02:00Z");
+      await open(t.id);
+      await screen.findByText("−50.000đ");
+      expect(screen.queryByTestId("detail-split")).toBeNull();
+    });
+
+    it("AC2: editing the amount recomputes the shares", async () => {
+      const { t, exp, me, an } = await groupExpense();
+      await open(t.id);
+      await screen.findByTestId("detail-split");
+      await fireEvent.press(screen.getByTestId("detail-edit"));
+      await fireEvent.changeText(await screen.findByTestId("amount-input"), "900000");
+      await fireEvent.press(screen.getByTestId("save-button"));
+      expect(await screen.findByText("−900.000đ")).toBeTruthy();
+      await waitFor(() => expect(screen.getByTestId(`detail-share-${me}`).props.children).toBe("300.000đ"));
+      expect(screen.getByTestId(`detail-share-${an}`).props.children).toBe("300.000đ");
+      expect((await exp.getShares(t.id)).map((x) => x.amount)).toEqual([300_000, 300_000, 300_000]);
+    });
+
+    it("AC4: delete soft-deletes the transaction", async () => {
+      const { t } = await groupExpense();
+      await open(t.id);
+      await screen.findByTestId("detail-split");
+      jest.spyOn(Alert, "alert").mockImplementation((_t, _m, buttons) => {
+        buttons?.find((b) => b.text === "Xóa")?.onPress?.();
+      });
+      await fireEvent.press(screen.getByTestId("detail-delete"));
+      await screen.findByTestId("screen-history");
+      expect(await repo().getById(t.id)).toBeNull();
+      jest.restoreAllMocks();
     });
   });
 });
