@@ -1,10 +1,8 @@
 # Smoke flow: the app launches, shows every tab and opens the QR screen.
-# Runs offline on purpose: the app must stay usable without the API (default feature flags).
+# Runs offline by construction: the E2E APK is built without EXPO_PUBLIC_API_URL, so the app
+# makes no API calls (covered by app/__tests__/smoke.test.tsx). No airplane-mode toggle is needed.
 appId: com.moneymates.app
-onFlowComplete:
-  - setAirplaneMode: disabled
 ---
-- setAirplaneMode: enabled
 - launchApp:
     clearState: true
 - extendedWaitUntil:
