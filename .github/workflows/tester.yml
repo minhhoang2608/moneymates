@@ -4,7 +4,10 @@
 #  - verify: Claude checks every status:testing ticket's acceptance criteria against dev and the test results.
 #            Pass -> status:done + close. Fail -> type:bug + status:triage (original re-verified when the bug closes).
 #            Needs a physical phone -> test:real-device + needs-human.
-# The Tester only runs tests and reports bugs; it never writes tests into the repo.
+#            Order: the Tester verifies sub-tickets first; then parent features whose sub-tickets are all closed
+#            (including the one just closed) are verified end to end by the BA (BA_VERIFIES_FEATURES in factory.env),
+#            who wrote their acceptance criteria and is otherwise idle between docs changes.
+# The Tester and BA only run tests and report bugs; they never write tests into the repo.
 name: Tester
 run-name: Tester on dev
 
@@ -127,8 +130,8 @@ jobs:
       - name: Report regressions on dev
         run: '"$FACTORY_BIN/tester.sh" regression'
       - id: collect
-        run: '"$FACTORY_BIN/tester.sh" collect'
-      - name: Verify (Sonnet)
+        run: '"$FACTORY_BIN/tester.sh" collect tickets'
+      - name: Verify sub-tickets (Tester, Sonnet)
         id: agent
         if: steps.collect.outputs.count != '0'
         uses: ./.github/actions/run-agent
@@ -159,8 +162,53 @@ jobs:
             Write `.factory/result.json`:
             `{"results":[{"issue":N,"verdict":"pass"|"fail"|"real_device","notes":"<markdown, per criterion>","bug":{"title":"...","body":"<markdown with acceptance criteria>","area":"area:mobile|area:api|area:infra","priority":"priority:p0..p3"}}]}`
             (`bug` is only for `fail`.)
-      - name: Apply verification
+      - name: Apply verification (Tester)
         if: steps.agent.outcome == 'success'
         env:
           OUTCOME: ${{ steps.agent.outputs.outcome }}
+        run: '"$FACTORY_BIN/tester.sh" apply'
+
+      # Parent features: recomputed after the Tester closed its sub-tickets, so a feature whose last
+      # sub-ticket was just verified is checked in the same run.
+      - id: collect_parents
+        if: ${{ !cancelled() }}
+        run: '"$FACTORY_BIN/tester.sh" collect parents'
+      - name: Verify features end to end (BA, Opus)
+        id: ba_agent
+        if: ${{ !cancelled() && steps.collect_parents.outputs.count != '0' }}
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_BA }}
+          max_turns: ${{ env.TURNS_BA }}
+          allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*)"
+          prompt: |
+            You are the **BA** of the MoneyMates AI software factory, in VERIFY mode. You wrote these feature tickets,
+            so you judge whether each finished feature delivers what the user was promised, end to end.
+            Read `CLAUDE.md`, `.claude/agents/ba.md` (section "Verify finished features") and `.claude/agents/tester.md`
+            (how evidence is judged), then load the `testing-strategy` skill.
+
+            `.factory/input-ba.json` lists parent features whose sub-tickets are all closed (`sub_tickets`), the dev
+            commit, and the results of the test jobs on dev (`tests_job`, `e2e_job`: success / failure / skipped).
+            Maestro JUnit results and screenshots, if any, are in `.factory/e2e/`.
+
+            For each feature, check every acceptance criterion of the feature ticket against the code on `dev` and the
+            evidence (find the merged PRs of its sub-tickets via `gh pr list --state merged --search "<number>"`): a test
+            that covers it and passed, or an E2E flow. The sub-tickets were verified one by one; you check that together
+            they deliver the user-facing behaviour, including the error and empty paths named in the criteria and
+            the Vietnamese UI strings in the plan. Do not modify repository files and do not write tests.
+            - `pass`: every criterion is covered and green.
+            - `fail`: a criterion is missing, wrong, or its test failed. Describe the bug (steps, expected, actual).
+            - `real_device`: everything else passes, but a criterion can only be checked on a physical phone
+              (bank deeplink, camera scan, Vietnamese speech). List exactly what a human must check.
+
+            Write `.factory/result.json`:
+            `{"results":[{"issue":N,"verdict":"pass"|"fail"|"real_device","notes":"<markdown, per criterion>","bug":{"title":"...","body":"<markdown with acceptance criteria>","area":"area:mobile|area:api|area:infra","priority":"priority:p0..p3"}}]}`
+            (`bug` is only for `fail`.)
+      - name: Apply verification (BA)
+        if: ${{ !cancelled() && steps.ba_agent.outcome == 'success' }}
+        env:
+          OUTCOME: ${{ steps.ba_agent.outputs.outcome }}
+          INPUT_FILE: .factory/input-ba.json
+          VERIFIER: BA
         run: '"$FACTORY_BIN/tester.sh" apply'

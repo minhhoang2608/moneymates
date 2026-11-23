@@ -1,20 +1,36 @@
 #!/usr/bin/env bash
 # Tester helpers (tester.yml).
-#   tester.sh collect - write .factory/input.json with tickets to verify (outputs: count)
+#   tester.sh collect [tickets|parents]
+#       tickets (default): write .factory/input.json with sub-tickets to verify (the Tester's work).
+#       parents: write .factory/input-ba.json with parent features whose sub-tickets are all closed.
+#       With BA_VERIFIES_FEATURES=true (factory.env) the BA verifies parent features end to end;
+#       otherwise the Tester gets them too and the parents list is empty. Output: count
 #   tester.sh apply   - close passed tickets, file bugs, flag real-device checks
-# Env for apply: OUTCOME, TESTS_RESULT, E2E_RESULT (job results), plus the result file.
+# Env for apply: OUTCOME, TESTS_RESULT, E2E_RESULT (job results), INPUT_FILE (default .factory/input.json),
+#   VERIFIER (Tester or BA, used in comments), plus the result file.
 # shellcheck source=scripts/factory/lib.sh
 source "$(dirname "$0")/lib.sh"
 
 cmd="${1:?command required}"
-INPUT=.factory/input.json
+INPUT="${INPUT_FILE:-.factory/input.json}"
+VERIFIER="${VERIFIER:-Tester}"
 
 collect() {
+  local mode="${1:-tickets}" ba_verifies="${BA_VERIFIES_FEATURES:-true}"
   mkdir -p .factory
-  local list='[]' n row
+  [[ "$mode" == parents ]] && INPUT=.factory/input-ba.json
+  local list='[]' n row is_parent
   for n in $(testing_candidates); do
     row="$(gh issue view "$n" --json number,title,body,labels --jq '{number, title, body, labels: [.labels[].name]}')"
-    if jq -e '.labels | index("type:epic")' <<<"$row" >/dev/null; then
+    is_parent=false
+    jq -e '.labels | index("type:epic")' <<<"$row" >/dev/null && is_parent=true
+    # Route: parents go to the BA when enabled; everything else to the Tester.
+    if [[ "$mode" == parents ]]; then
+      [[ "$is_parent" == true && "$ba_verifies" == true ]] || continue
+    else
+      [[ "$is_parent" == true && "$ba_verifies" == true ]] && continue
+    fi
+    if [[ "$is_parent" == true ]]; then
       row="$(jq -c --arg kids "$(children_of "$n" | tr '\n' ' ')" \
         '. + {kind: "parent_feature", sub_tickets: ($kids | split(" ") | map(select(. != "") | tonumber))}' <<<"$row")"
     else
@@ -28,7 +44,7 @@ collect() {
   local count
   count="$(jq '.issues | length' "$INPUT")"
   set_output count "$count"
-  summary "Tickets to verify on dev: $count (tests: ${TESTS_RESULT:-?}, e2e: ${E2E_RESULT:-?})"
+  summary "To verify on dev ($mode): $count (tests: ${TESTS_RESULT:-?}, e2e: ${E2E_RESULT:-?})"
 }
 
 open_bug() { # title body area priority -> prints new issue number
@@ -49,7 +65,7 @@ apply() {
   case "$OUTCOME" in
     paused) return 0 ;;
     failed)
-      for n in $allowed; do record_failure "$n" "Tester verification"; done
+      for n in $allowed; do record_failure "$n" "$VERIFIER verification"; done
       exit 1
       ;;
   esac
@@ -62,7 +78,7 @@ apply() {
     is_in_list "$n" "$allowed" || { log "ignoring #$n (not a candidate)"; continue; }
     case "$verdict" in
       pass)
-        comment "$n" ":white_check_mark: **Tester: verified on \`dev\`** (\`${GITHUB_SHA:0:7}\`).
+        comment "$n" ":white_check_mark: **$VERIFIER: verified on \`dev\`** (\`${GITHUB_SHA:0:7}\`).
 
 $notes"
         set_status "$n" status:done
@@ -74,17 +90,17 @@ $notes"
         body="$(jq -r '.bug.body // ""' <<<"$row")
 
 ---
-Found by Tester while verifying #$n on \`dev\` (\`${GITHUB_SHA:0:7}\`). [run]($RUN_URL)"
+Found by $VERIFIER while verifying #$n on \`dev\` (\`${GITHUB_SHA:0:7}\`). [run]($RUN_URL)"
         bug="$(open_bug "$title" "$body" "$(jq -r '.bug.area // ""' <<<"$row")" "$(jq -r '.bug.priority // ""' <<<"$row")")"
         comment "$n" "<!-- factory:blocking-bug $bug -->
-:x: **Tester:** acceptance criteria not met on \`dev\`; see bug #$bug. This ticket is re-verified once #$bug is closed.
+:x: **$VERIFIER:** acceptance criteria not met on \`dev\`; see bug #$bug. This ticket is re-verified once #$bug is closed.
 
 $notes"
         filed=$((filed + 1))
         ;;
       real_device)
         gh issue edit "$n" --add-label test:real-device >/dev/null
-        escalate "$n" "Tester verified everything possible on the emulator. Remaining checks need a real phone: $notes"
+        escalate "$n" "$VERIFIER verified everything possible on the emulator. Remaining checks need a real phone: $notes"
         ;;
       *) log "unknown verdict '$verdict' for #$n" ;;
     esac
@@ -126,7 +142,7 @@ Reproduce: re-run the failing job and inspect its log and artifacts (Maestro scr
 }
 
 case "$cmd" in
-  collect) collect ;;
+  collect) collect "${2:-tickets}" ;;
   apply) apply ;;
   regression) regression ;;
   *) echo "unknown command $cmd" >&2; exit 2 ;;

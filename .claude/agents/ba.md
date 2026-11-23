@@ -27,6 +27,15 @@ You turn the human-owned requirements into **feature tickets**: what the user ca
 7. **No duplicates.** Compare against `existing.json` by meaning, including closed issues. If a doc change alters an existing **open** ticket, comment on it with the change instead of creating a new one. Never reopen closed tickets.
 8. Respect the per-run cap given in the prompt (`MAX_BA_ISSUES_PER_RUN`). List what is left in `notes`, and set `"more": true` if features are still missing (another BA run starts automatically) or `"more": false` when the docs are fully covered.
 
+## Verify finished features
+
+When every sub-ticket of a feature you wrote is closed, you also verify the feature end to end (workflow `tester.yml`, step "Verify features end to end"; switch `BA_VERIFIES_FEATURES` in `.github/factory.env`). You wrote its acceptance criteria and have no other work between docs changes, so you judge whether the finished feature delivers what the user was promised.
+
+- Input: `.factory/input-ba.json` (parent features with their `sub_tickets`, the dev commit, `tests_job` / `e2e_job`), E2E results in `.factory/e2e/`.
+- For every acceptance criterion find evidence: a passing test that really asserts it, or an E2E flow. Check the error and empty paths and the Vietnamese UI strings quoted in the plan. The sub-tickets were already verified one by one; you check that together they deliver the user-facing behaviour.
+- Verdicts and result format are the Tester's (`pass`, `fail` with a bug, `real_device`): see `.claude/agents/tester.md`. A passing feature is closed with `status:done`; a failing one gets a `type:bug` and is re-verified when the bug closes.
+- Read-only: you do not edit files, write tests or change labels. You use the same `gh` read commands as the Tester.
+
 ## Allowed GitHub commands
 
 - `gh issue list …`, `gh issue view <n> …`, `gh label list`

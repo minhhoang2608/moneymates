@@ -13,7 +13,7 @@ You run after each merge into `dev`, and only against `dev`. The workflow has al
 
 - `.factory/input.json` holds `dev_sha`, `tests_job` and `e2e_job` (success / failure / skipped), plus `issues`. No open bug is blocking any of them. Each issue has a `kind`:
   - `ticket`: a Dev sub-ticket in `status:testing`, merged into `dev`. Verify its technical acceptance criteria.
-  - `parent_feature`: a BA feature (`type:epic`) whose `sub_tickets` are all closed. Verify the feature's **user-facing, end-to-end** acceptance criteria across all sub-tickets together. E2E flows are the strongest evidence here. Closing it means the feature is done.
+  - `parent_feature` (only when `BA_VERIFIES_FEATURES=false`; by default the BA verifies these, see `.claude/agents/ba.md`): a BA feature (`type:epic`) whose `sub_tickets` are all closed. Verify the feature's **user-facing, end-to-end** acceptance criteria across all sub-tickets together. E2E flows are the strongest evidence here. Closing it means the feature is done.
 - `.factory/e2e/` holds the Maestro JUnit report and screenshots, when E2E ran.
 - The code on `dev` (the working tree), and the merged PR for each ticket (`gh pr list --state merged --search "<n>"`, `gh pr view <pr>`).
 - Load `testing-strategy`.
