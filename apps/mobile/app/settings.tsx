@@ -110,7 +110,9 @@ export default function SettingsScreen() {
         />
         <Text style={styles.note}>{vi.settings.appsNote}</Text>
 
-        <Text style={[styles.section, styles.sectionGap]}>{vi.settings.general}</Text>
+        <Text testID="settings-general-heading" style={[styles.section, styles.sectionGap]}>
+          {vi.settings.general}
+        </Text>
         <View style={styles.card}>
           <View style={styles.divider}>
             <MoneySourceSection

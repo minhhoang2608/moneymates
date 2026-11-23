@@ -14,17 +14,37 @@ appId: com.moneymates.app
     id: "settings-app-up-momo"
 - tapOn:
     id: "settings-app-up-momo"
+- scrollUntilVisible:
+    element:
+      id: "settings-sources-row"
 - tapOn:
     id: "settings-sources-row"
+- scrollUntilVisible:
+    element:
+      id: "settings-source-add"
 - tapOn:
     id: "settings-source-name"
 - inputText: "Visa"
-- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "settings-general-heading"
+- tapOn:
+    id: "settings-general-heading"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "settings-source-kind-card"
 - tapOn:
     id: "settings-source-kind-card"
+- scrollUntilVisible:
+    element:
+      id: "settings-source-add"
 - tapOn:
     id: "settings-source-add"
 - assertVisible: "Visa"
+- scrollUntilVisible:
+    element:
+      id: "settings-alert-toggle"
 - tapOn:
     id: "settings-alert-toggle"
 - scrollUntilVisible:
