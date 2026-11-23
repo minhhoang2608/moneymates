@@ -123,6 +123,13 @@ describe("Tổng quan screen", () => {
     expect(screen.queryByTestId("overview-banner")).toBeNull();
   });
 
+  it("the Thống kê link opens the stats screen", async () => {
+    await add(50_000, "2026-11-05T03:00:00Z");
+    await renderOverview();
+    await fireEvent.press(await screen.findByTestId("overview-stats-link"));
+    await screen.findByTestId("screen-stats");
+  });
+
   it("the + button opens the menu and manual entry", async () => {
     await renderOverview();
     await fireEvent.press(screen.getByTestId("overview-add-button"));

@@ -1,0 +1,42 @@
+# Stats flow: add a 50k expense -> open Thống kê from the overview -> total + category row -> Thu/Chi -> previous month is empty.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- tapOn:
+    id: "amount-input"
+- inputText: "50k"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- assertVisible:
+    id: "overview-expense"
+    text: "50.000đ"
+- tapOn:
+    id: "overview-stats-link"
+- assertVisible: "Thống kê"
+- assertVisible:
+    id: "stats-total"
+    text: "50.000đ"
+- assertVisible: "Ăn uống"
+- tapOn:
+    id: "stats-kind-income"
+- tapOn:
+    id: "stats-kind-expense"
+- tapOn:
+    id: "stats-month-button"
+- tapOn:
+    id: "stats-pick-month-.*"
+    index: 1
+- assertVisible:
+    id: "stats-empty"

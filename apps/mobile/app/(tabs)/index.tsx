@@ -98,7 +98,12 @@ export default function OverviewScreen() {
 
         {o && o.top.length > 0 ? (
           <View style={styles.card} testID="overview-top">
-            <Text style={styles.cardTitle}>{vi.overview.topCategories}</Text>
+            <View style={styles.cardHead}>
+              <Text style={styles.cardTitle}>{vi.overview.topCategories}</Text>
+              <Pressable testID="overview-stats-link" onPress={() => router.push("/stats")}>
+                <Text style={styles.link}>{vi.overview.statsLink}</Text>
+              </Pressable>
+            </View>
             <View style={styles.stack}>
               {bar.map((amount, i) => (
                 <View
