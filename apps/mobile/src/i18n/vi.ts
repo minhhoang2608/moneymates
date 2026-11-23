@@ -100,6 +100,8 @@ export const vi = {
     currency: "Tiền tệ mặc định",
     alert: "Cảnh báo khi chi vượt tháng trước",
     alertHint: "Ngưỡng 20%",
+    appLock: "Khóa app bằng Face ID / vân tay",
+    appLockUnavailable: "Hãy cài đặt Face ID, vân tay hoặc mật khẩu cho điện thoại trước.",
     footer: "Dữ liệu chỉ lưu trên máy này · Phiên bản",
   },
   categories: {

@@ -8,6 +8,8 @@ import { PaymentAppList } from "@/components/settings/PaymentAppList";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { MoneySourceRow } from "@/db/repositories/moneySourceRepository";
 import { vi } from "@/i18n/vi";
+import { getAppLockAuth } from "@/lib/appLock/auth";
+import { useAppLock } from "@/stores/appLock";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function SettingsScreen() {
@@ -17,22 +19,63 @@ export default function SettingsScreen() {
   const [sources, setSources] = useState<MoneySourceRow[]>([]);
   const [currency, setCurrency] = useState("VND");
   const [alertOn, setAlertOn] = useState(true);
+  const [lockOn, setLockOn] = useState(false);
+  const [lockAvailable, setLockAvailable] = useState(true);
+  const [lockBusy, setLockBusy] = useState(false);
+
+  const onLockChange = async (v: boolean) => {
+    if (!v) {
+      setLockOn(false);
+      await preferences.setAppLockEnabled(false);
+      useAppLock.getState().setEnabled(false);
+      return;
+    }
+    setLockOn(true);
+    setLockBusy(true);
+    try {
+      let ok = false;
+      try {
+        const auth = getAppLockAuth();
+        if (await auth.isLockAvailable()) {
+          ok = await auth.authenticate();
+        } else {
+          setLockAvailable(false);
+        }
+      } catch {
+        ok = false;
+      }
+      if (ok) {
+        await preferences.setAppLockEnabled(true);
+        useAppLock.getState().setEnabled(true);
+      } else {
+        setLockOn(false);
+      }
+    } finally {
+      setLockBusy(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
       let alive = true;
       (async () => {
-        const [o, s, c, a] = await Promise.all([
+        const [o, s, c, a, l, avail] = await Promise.all([
           paymentAppPrefs.getAppOrder(),
           moneySources.listSources(),
           preferences.getDefaultCurrency(),
           preferences.getAlertOverLastMonth(),
+          preferences.getAppLockEnabled(),
+          getAppLockAuth()
+            .isLockAvailable()
+            .catch(() => false),
         ]);
         if (!alive) return;
         setOrder(o);
         setSources(s);
         setCurrency(c);
         setAlertOn(a);
+        setLockOn(l);
+        setLockAvailable(avail);
       })();
       return () => {
         alive = false;
@@ -86,7 +129,7 @@ export default function SettingsScreen() {
             <Text style={styles.label}>{vi.settings.currency}</Text>
             <Text style={styles.value}>{currency}</Text>
           </View>
-          <View style={styles.row}>
+          <View style={[styles.row, styles.divider]}>
             <View style={styles.flex}>
               <Text style={styles.label}>{vi.settings.alert}</Text>
               <Text style={styles.hint}>{vi.settings.alertHint}</Text>
@@ -100,6 +143,24 @@ export default function SettingsScreen() {
                 setAlertOn(v);
                 void preferences.setAlertOverLastMonth(v);
               }}
+            />
+          </View>
+          <View style={styles.row}>
+            <View style={styles.flex}>
+              <Text style={styles.label}>{vi.settings.appLock}</Text>
+              {!lockAvailable ? (
+                <Text style={styles.hint} testID="settings-applock-unavailable">
+                  {vi.settings.appLockUnavailable}
+                </Text>
+              ) : null}
+            </View>
+            <Switch
+              testID="settings-applock-toggle"
+              accessibilityLabel={vi.settings.appLock}
+              value={lockOn}
+              disabled={!lockAvailable || lockBusy}
+              trackColor={{ true: colors.primary }}
+              onValueChange={(v) => void onLockChange(v)}
             />
           </View>
         </View>

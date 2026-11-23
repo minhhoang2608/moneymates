@@ -29,5 +29,11 @@ appId: com.moneymates.app
     id: "settings-alert-toggle"
 - scrollUntilVisible:
     element:
+      id: "settings-applock-toggle"
+- assertVisible:
+    id: "settings-applock-toggle"
+    checked: false
+- scrollUntilVisible:
+    element:
       id: "settings-footer"
 - assertVisible: "Dữ liệu chỉ lưu trên máy này.*"
