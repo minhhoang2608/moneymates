@@ -78,7 +78,16 @@ def test_null_fields_pass_through(post, fake):
 
 @pytest.mark.parametrize(
     "raw,expected",
-    [(200000.0, 200000), ("200000", 200000), (200000.4, 200000), (-5, None), ("abc", None)],
+    [
+        (200000.0, 200000),
+        ("200000", 200000),
+        (200000.4, 200000),
+        ("1500.5", 1501),
+        (9007199254740993, 9007199254740993),
+        ("9007199254740993", 9007199254740993),
+        (-5, None),
+        ("abc", None),
+    ],
 )
 def test_amount_float_or_string_coerced_to_int(post, fake, raw, expected):
     fake.script["m1"] = reply({**GOOD, "amount": raw})

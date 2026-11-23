@@ -1,4 +1,7 @@
+import math
+import re
 import unicodedata
+from decimal import ROUND_HALF_UP, Decimal
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,14 +28,26 @@ def _pick(value, allowed):
     return None
 
 
+_NUMBER = re.compile(r"^\d+(\.\d+)?$")
+
+
 def _amount(value):
+    """Coerce a model-provided amount to integer VND without float math on ints/strings."""
     if isinstance(value, bool) or value is None:
         return None
-    try:
-        amount = int(round(float(str(value).replace(",", "").strip())))
-    except (TypeError, ValueError, OverflowError):
-        return None
-    return amount if amount >= 0 else None
+    if isinstance(value, int):
+        return value if value >= 0 else None
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            return None
+        amount = int(round(value))
+        return amount if amount >= 0 else None
+    if isinstance(value, str):
+        text = value.replace(",", "").strip()
+        if not _NUMBER.match(text):
+            return None
+        return int(Decimal(text).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+    return None
 
 
 def _note(value):
