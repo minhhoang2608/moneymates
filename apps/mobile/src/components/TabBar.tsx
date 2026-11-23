@@ -1,0 +1,98 @@
+import { useRouter } from "expo-router";
+import type { BottomTabBarProps } from "expo-router/build/layouts/Tabs";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import { vi } from "@/i18n/vi";
+import { colors, fontFamily, fontSize, layout } from "@/theme";
+
+import { HomeIcon, ListIcon, QrIcon, UserIcon, UsersIcon } from "./icons";
+
+type TabDef = {
+  route: string;
+  label: string;
+  testID: string;
+  Icon: (p: { color: string; size?: number }) => React.JSX.Element;
+};
+
+const LEFT: TabDef[] = [
+  { route: "index", label: vi.tabs.overview, testID: "tab-overview", Icon: HomeIcon },
+  { route: "history", label: vi.tabs.history, testID: "tab-history", Icon: ListIcon },
+];
+const RIGHT: TabDef[] = [
+  { route: "groups", label: vi.tabs.groups, testID: "tab-groups", Icon: UsersIcon },
+  { route: "profile", label: vi.tabs.profile, testID: "tab-profile", Icon: UserIcon },
+];
+
+export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
+  const router = useRouter();
+  const activeRoute = state.routes[state.index]?.name;
+
+  const renderTab = (t: TabDef) => {
+    const active = activeRoute === t.route;
+    const color = active ? colors.primary : colors.textMuted;
+    return (
+      <Pressable
+        key={t.route}
+        testID={t.testID}
+        accessibilityRole="button"
+        accessibilityLabel={t.label}
+        accessibilityState={{ selected: active }}
+        onPress={() => {
+          const target = state.routes.find((r) => r.name === t.route);
+          if (target) navigateToTab(target.key);
+        }}
+        style={styles.tab}
+      >
+        <t.Icon color={color} />
+        <Text style={[styles.label, { color, fontFamily: active ? fontFamily.semibold : fontFamily.medium }]}>
+          {t.label}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View style={styles.bar}>
+      {LEFT.map(renderTab)}
+      <Pressable
+        testID="tab-qr"
+        accessibilityRole="button"
+        accessibilityLabel={vi.scan.title}
+        onPress={() => router.push("/scan")}
+        style={styles.qr}
+      >
+        <QrIcon color={colors.onPrimary} size={26} />
+      </Pressable>
+      {RIGHT.map(renderTab)}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  bar: {
+    height: layout.tabBarHeight,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingBottom: 16,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  tab: { width: 64, minHeight: 44, alignItems: "center", gap: 4 },
+  label: { fontSize: fontSize.tab },
+  qr: {
+    width: layout.qrButtonSize,
+    height: layout.qrButtonSize,
+    marginTop: -26,
+    borderRadius: layout.qrButtonSize / 2,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+});
