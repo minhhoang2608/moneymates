@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "MoneyMates",
+    "slug": "moneymates",
+    "version": "0.1.0",
+    "scheme": "moneymates",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"]
+  }
+}
