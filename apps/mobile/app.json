@@ -49,6 +49,13 @@
           "isAccessMediaLocationEnabled": false
         }
       ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "MoneyMates cần micro để bạn nhập giao dịch bằng giọng nói.",
+          "speechRecognitionPermission": "MoneyMates cần nhận dạng giọng nói để chuyển lời bạn nói thành giao dịch."
+        }
+      ],
       "@react-native-community/datetimepicker",
       "expo-sharing"
     ]

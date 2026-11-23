@@ -10,8 +10,8 @@ export type ParseTextResponse = {
   payer: string | null;
 };
 
-export function parseText(text: string, categories: string[]): Promise<ParseTextResponse> {
-  return apiPost<ParseTextResponse>("/ai/parse-text", { text, categories });
+export function parseText(text: string, categories: string[], members?: string[]): Promise<ParseTextResponse> {
+  return apiPost<ParseTextResponse>("/ai/parse-text", members ? { text, categories, members } : { text, categories });
 }
 
 /** Never throws: any failure, or a category that is not in `categories`, becomes `null`. */

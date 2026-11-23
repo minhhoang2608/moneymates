@@ -20,9 +20,10 @@ export function EntryMenu({
 }) {
   const voiceAi = useAiAvailable("parse_text").available;
   const billAi = useAiAvailable("parse_bill").available;
-  const aiItems: [string, string, (() => void) | undefined, boolean][] = [
-    ["entry-menu-voice", vi.entryMenu.voice, onVoice, voiceAi],
-    ["entry-menu-bill", vi.entryMenu.bill, onBill, billAi],
+  // Voice also works offline (rules only), so it is never gated on AI; bill capture needs the AI.
+  const aiItems: [string, string, (() => void) | undefined, boolean, string | null][] = [
+    ["entry-menu-voice", vi.entryMenu.voice, onVoice, true, voiceAi ? null : vi.voice.offlineHint],
+    ["entry-menu-bill", vi.entryMenu.bill, onBill, billAi, null],
   ];
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -32,7 +33,7 @@ export function EntryMenu({
         <Pressable testID="entry-menu-manual" accessibilityRole="button" onPress={onManual} style={styles.item}>
           <Text style={styles.itemText}>{vi.entryMenu.manual}</Text>
         </Pressable>
-        {aiItems.map(([id, label, onPress, ai]) => {
+        {aiItems.map(([id, label, onPress, ai, hint]) => {
           const enabled = !!onPress && ai;
           return (
             <Pressable
@@ -44,6 +45,11 @@ export function EntryMenu({
               style={styles.item}
             >
               <Text style={[styles.itemText, enabled ? null : { color: colors.neutral }]}>{label}</Text>
+              {enabled && hint ? (
+                <Text testID={`${id}-hint`} style={styles.hint}>
+                  {hint}
+                </Text>
+              ) : null}
             </Pressable>
           );
         })}
@@ -69,5 +75,6 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text, marginBottom: 8 },
   item: { minHeight: 48, justifyContent: "center", borderBottomWidth: 1, borderBottomColor: colors.divider },
+  hint: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
   itemText: { fontFamily: fontFamily.regular, fontSize: fontSize.row, color: colors.text },
 });

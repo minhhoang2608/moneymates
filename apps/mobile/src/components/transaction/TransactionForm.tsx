@@ -30,6 +30,19 @@ type Props = {
   photoPicker?: PhotoPicker;
   /** Clock for the "Ghi vào" 24h default rule (tests inject a fixed one). */
   clock?: Clock;
+  /** Prefill (voice entry). Applied at mount; the payer only if that member exists in the group. */
+  initial?: FormInitial;
+  /** Stored on the new transaction. */
+  source?: "manual" | "voice";
+  /** Banner shown above the fields (e.g. the AI fallback message). */
+  notice?: string;
+};
+
+export type FormInitial = {
+  amountVnd: number | null;
+  note: string;
+  categoryId: string | null;
+  payerMemberId: string | null;
 };
 
 export function TransactionForm({
@@ -39,6 +52,9 @@ export function TransactionForm({
   onSaved,
   photoPicker = defaultPhotoPicker,
   clock,
+  initial,
+  source = "manual",
+  notice,
 }: Props) {
   const { transactions, categories, groups, groupExpenses } = useRepositories();
   const targetState = useTargetDefault({ fromGroupId: groupId, clock, enabled: !transactionId });
@@ -46,9 +62,9 @@ export function TransactionForm({
   const targetGroupId = target.kind === "group" ? target.groupId : undefined;
   const isGroup = !!targetGroupId && !transactionId;
   const [type, setType] = useState<FormType>("expense");
-  const [amountText, setAmountText] = useState("");
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [note, setNote] = useState("");
+  const [amountText, setAmountText] = useState(initial?.amountVnd ? String(initial.amountVnd) : "");
+  const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
+  const [note, setNote] = useState(initial?.note ?? "");
   const [occurredAt, setOccurredAt] = useState(() => new Date());
   const [moneySource, setMoneySource] = useState<string>(vi.moneySources[0]);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -76,12 +92,14 @@ export function TransactionForm({
       setSplitMode("equal");
       setAmountInputs({});
       setPercentInputs({});
-      setPayerId((g.members.find((m) => m.isMe) ?? g.members[0])?.id ?? null);
+      const wanted = g.members.find((m) => m.id === initial?.payerMemberId);
+      setPayerId((wanted ?? g.members.find((m) => m.isMe) ?? g.members[0])?.id ?? null);
       setTicked(new Set(g.members.map((m) => m.id)));
     });
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groups, targetGroupId, isGroup]);
 
   useEffect(() => {
@@ -172,6 +190,7 @@ export function TransactionForm({
           occurredAt: result.input.occurred_at,
           categoryId: result.input.category_id,
           note: result.input.note,
+          source,
         });
       } else if (transactionId && isGroupExpense) {
         // Shares are recomputed from the stored split by the repository.
@@ -182,7 +201,7 @@ export function TransactionForm({
           occurredAt: result.input.occurred_at,
         });
       } else if (transactionId) await transactions.update(transactionId, result.input);
-      else await transactions.create({ ...result.input, source: "manual" });
+      else await transactions.create({ ...result.input, source });
       onSaved?.();
       onClose();
     } catch (e) {
@@ -214,6 +233,11 @@ export function TransactionForm({
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        {notice ? (
+          <Text testID="voice-ai-error" style={styles.notice}>
+            {notice}
+          </Text>
+        ) : null}
         {isGroup ? null : (
           <View accessibilityRole="radiogroup" accessibilityLabel={vi.txn.typeLabel} style={styles.segment}>
             {(["expense", "income"] as const).map((t) => {
@@ -445,6 +469,14 @@ const styles = StyleSheet.create({
   amountInput: { padding: 0, fontFamily: fontFamily.bold, fontSize: 30, color: colors.text },
   inputError: { color: colors.expense },
   hint: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
+  notice: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.secondary,
+    color: colors.warningText,
+    backgroundColor: colors.warningBg,
+    borderRadius: radii.sm,
+    padding: 10,
+  },
   error: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.expense },
   row: {
     minHeight: 48,

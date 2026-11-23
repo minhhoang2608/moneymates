@@ -75,6 +75,10 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
           setMenuOpen(false);
           router.push("/transaction/new");
         }}
+        onVoice={() => {
+          setMenuOpen(false);
+          router.push("/voice");
+        }}
       />
     </View>
   );
