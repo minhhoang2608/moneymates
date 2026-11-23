@@ -19,8 +19,14 @@ jest.mock("expo-camera", () => {
 });
 
 jest.mock("expo-image-picker", () => ({
+  launchCameraAsync: jest.fn(async () => ({ canceled: true, assets: null })),
+  requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: null })),
   requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
+}));
+jest.mock("expo-image-manipulator", () => ({
+  SaveFormat: { JPEG: "jpeg" },
+  manipulateAsync: jest.fn(async (uri) => ({ uri: `${uri}#compressed`, width: 1, height: 1 })),
 }));
 jest.mock("expo-file-system", () => {
   const join = (parts) => parts.map((p) => (typeof p === "string" ? p : p.uri)).join("/");

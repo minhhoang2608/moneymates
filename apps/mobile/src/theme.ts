@@ -19,12 +19,18 @@ export const colors = {
   warningBorder: "#F5D9A8",
   warningText: "#7A4300",
   onPrimary: "#FFFFFF",
+  receipt: "#FBFAF6",
+  receiptInk: "#2B2F36",
+  receiptLine: "#D5D9DF",
   shadow: "#0E7C66",
   bankTcbBg: "#FDE8E8",
   bankTcbFg: "#A3161A",
   bankTpbBg: "#F3E8FF",
   bankTpbFg: "#6B2FB3",
 } as const;
+
+/** Translucent colours (not 6-digit hex) used on dark backdrops. */
+export const overlays = { button: "rgba(255,255,255,0.14)" } as const;
 
 export const chartColors = ["#0E7C66", "#3B82C4", "#E08A2E", "#8B6BC8", "#A5ABB5"] as const;
 
