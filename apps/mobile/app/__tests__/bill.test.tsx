@@ -102,7 +102,7 @@ describe("bill scan screen", () => {
     await renderRouter("./app", { initialUrl: "/bill" });
     await screen.findByTestId("bill-result");
     expect(screen.getByText("AI đã đọc xong bill")).toBeTruthy();
-    expect(screen.getByTestId("bill-done").props.children).toBe(vi.bill.done);
+    expect(screen.getByTestId("bill-done").props.children).toBe("AI đã đọc xong bill");
   });
 
   it("AC3: Chụp lại discards the result and captures again", async () => {
