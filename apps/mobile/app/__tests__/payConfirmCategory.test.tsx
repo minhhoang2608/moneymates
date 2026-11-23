@@ -114,6 +114,7 @@ describe("pay-confirm category preselection", () => {
     ["429", () => ({ ok: false, status: 429, json: async () => ({ error: "quota_exceeded" }) }), featuresOk],
     ["502", () => ({ ok: false, status: 502, json: async () => ({ error: "ai_unavailable" }) }), featuresOk],
     ["403", () => ({ ok: false, status: 403, json: async () => ({ error: "ai_disabled" }) }), featuresOk],
+    ["network error", () => Promise.reject(new Error("down")), featuresOk],
     [
       "ai off",
       () => parsed("Ăn uống"),
@@ -128,6 +129,20 @@ describe("pay-confirm category preselection", () => {
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
     expect((await createTransactionRepository(testDb()).list())[0].category_id).toBe(other);
+  });
+
+  it("AC5: one-tap change via the picker saves the chosen category_id", async () => {
+    route(() => parsed(null));
+    await renderRouter("./app", { initialUrl: urlFor(qr.static) });
+    const other = await idOf("Khác");
+    const shop = await idOf("Mua sắm");
+    await waitFor(() => expect(selected(other)).toBe(true));
+    await fireEvent.press(screen.getByTestId("pay-category-more"));
+    await fireEvent.press(await screen.findByTestId(`category-item-${shop}`));
+    await fireEvent.changeText(screen.getByTestId("pay-amount"), "55000");
+    await fireEvent.press(screen.getByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect((await createTransactionRepository(testDb()).list())[0].category_id).toBe(shop);
   });
 
   it("payment never waits on a pending AI answer", async () => {

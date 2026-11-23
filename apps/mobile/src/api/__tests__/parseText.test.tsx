@@ -1,3 +1,4 @@
+import { DEFAULT_TIMEOUT_MS } from "../constants";
 import { suggestCategoryByAi } from "../parseText";
 
 const original = global.fetch;
@@ -38,6 +39,14 @@ describe("suggestCategoryByAi", () => {
       throw new Error("down");
     });
     await expect(suggestCategoryByAi("x", ["Khác"])).resolves.toBeNull();
+  });
+
+  it("AC4: timeout → null", async () => {
+    jest.useFakeTimers();
+    mock(() => new Promise(() => undefined));
+    const p = suggestCategoryByAi("x", ["Khác"]);
+    await jest.advanceTimersByTimeAsync(DEFAULT_TIMEOUT_MS + 1);
+    await expect(p).resolves.toBeNull();
   });
 
   it("unknown category name → null", async () => {

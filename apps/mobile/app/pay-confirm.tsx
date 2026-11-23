@@ -68,8 +68,6 @@ export default function PayConfirmScreen() {
   const aiId = cats.find((c) => c.name === aiName)?.id ?? null;
   const categoryId = pickedId ?? aiId ?? initialId;
 
-  const pick = setPickedId;
-
   useEffect(() => {
     let alive = true;
     appSettings.get<string[]>(RECENT_KEY).then((ids) => alive && setRecent(Array.isArray(ids) ? ids : []));
@@ -194,7 +192,7 @@ export default function PayConfirmScreen() {
                 testID={`pay-category-${c.id}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: on }}
-                onPress={() => pick(c.id)}
+                onPress={() => setPickedId(c.id)}
                 style={[styles.chip, on && styles.chipOn]}
               >
                 <Text style={[styles.chipText, on && styles.chipTextOn]}>{c.name}</Text>
@@ -284,7 +282,7 @@ export default function PayConfirmScreen() {
         categories={cats}
         selectedId={categoryId}
         onSelect={(id) => {
-          pick(id);
+          setPickedId(id);
           setPicker(false);
         }}
         onClose={() => setPicker(false)}

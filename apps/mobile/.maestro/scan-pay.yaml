@@ -29,4 +29,4 @@ appId: com.moneymates.app
 - assertVisible:
     id: "screen-history"
 - assertVisible: "−55.000đ"
-- assertVisible: "Mua sắm"
+- assertVisible: "Mua sắm · .*"
