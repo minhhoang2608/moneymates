@@ -210,3 +210,13 @@ testing_candidates() {
 
 # Read a field from the agent result file.
 result_get() { jq -r "$1 // empty" "$RESULT_FILE"; }
+
+# PR title, body, conversation and reviews as markdown. Uses REST-backed JSON fields on purpose:
+# `gh pr view --comments` also queries the check rollup over GraphQL, which needs `checks: read`
+# that the agent jobs do not have.
+pr_conversation() {
+  gh pr view "$1" --json title,body,author,comments,reviews --jq '
+    "# PR #'"$1"': \(.title)\n\n**Author:** \(.author.login)\n\n\(.body)\n",
+    (.comments[] | "\n---\n**\(.author.login)** (\(.createdAt)):\n\n\(.body)"),
+    (.reviews[] | select(.body != "") | "\n---\n**\(.author.login)** review (\(.state)):\n\n\(.body)")'
+}
