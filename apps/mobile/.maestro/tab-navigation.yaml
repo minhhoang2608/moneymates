@@ -1,0 +1,24 @@
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Tổng quan"
+- tapOn:
+    id: "tab-history"
+- assertVisible:
+    id: "screen-history"
+- tapOn:
+    id: "tab-groups"
+- assertVisible:
+    id: "screen-groups"
+- tapOn:
+    id: "tab-profile"
+- assertVisible:
+    id: "screen-profile"
+- tapOn:
+    id: "tab-overview"
+- assertVisible:
+    id: "screen-overview"
+- tapOn:
+    id: "tab-qr"
+- assertVisible: "Quét QR"
