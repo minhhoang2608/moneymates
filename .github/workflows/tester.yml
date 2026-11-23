@@ -54,8 +54,7 @@ jobs:
       - uses: ./.github/actions/factory-setup
       - name: Latest E2E result
         # The newest finished (success or failure) e2e.yml run on dev; cancelled runs were superseded and mean nothing.
-        # E2E only reruns when apps/mobile changes. A "success" without an artifact means no Maestro flow ran
-        # yet, so it counts as `none`. `none` also means E2E never ran.
+        # `none` means E2E never ran or never reached the Maestro flows (no artifact).
         run: |
           run="$(gh run list --workflow e2e.yml --branch dev --status completed --limit 20             --json databaseId,conclusion,headSha             --jq '[.[] | select(.conclusion == "success" or .conclusion == "failure")] | .[0] // empty')"
           result=none
@@ -64,7 +63,10 @@ jobs:
             id="$(jq -r .databaseId <<<"$run")"
             result="$(jq -r .conclusion <<<"$run")"
             sha="$(jq -r .headSha <<<"$run")"
-            if ! gh run download "$id" --name e2e-results --dir .factory/e2e && [[ "$result" == success ]]; then
+            # The artifact only exists when Maestro produced output. No artifact means the run never reached the
+            # flows (setup or build failure): that is not a product result, so it counts as none, never as a
+            # failure that would open a regression bug.
+            if ! gh run download "$id" --name e2e-results --dir .factory/e2e; then
               result=none
             fi
           fi
