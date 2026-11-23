@@ -52,3 +52,32 @@ export const bankAccount = sqliteTable(
     index("bank_account_deleted_at_created_at_idx").on(t.deleted_at, t.created_at),
   ],
 );
+
+/** Personal income/expense entries. Money is integer VND. `occurred_at` is ISO UTC. */
+export const transactions = sqliteTable(
+  "transactions",
+  {
+    ...baseColumns(),
+    type: text("type", { enum: ["expense", "income"] }).notNull(),
+    amount: integer("amount").notNull(),
+    currency: text("currency").notNull().default("VND"),
+    category_id: text("category_id")
+      .notNull()
+      .references(() => category.id),
+    note: text("note").notNull().default(""),
+    occurred_at: text("occurred_at").notNull(),
+    money_source: text("money_source").notNull().default("Tiền mặt"),
+    photo_uri: text("photo_uri"),
+    source: text("source", { enum: ["manual", "qr", "voice", "bill"] })
+      .notNull()
+      .default("manual"),
+    qr_data: text("qr_data"),
+  },
+  (t) => [
+    index("transactions_deleted_at_occurred_at_idx").on(t.deleted_at, t.occurred_at),
+    index("transactions_category_id_idx").on(t.category_id),
+    check("transactions_amount_check", sql`${t.amount} > 0`),
+    check("transactions_type_check", sql`${t.type} in ('expense', 'income')`),
+    check("transactions_source_check", sql`${t.source} in ('manual', 'qr', 'voice', 'bill')`),
+  ],
+);
