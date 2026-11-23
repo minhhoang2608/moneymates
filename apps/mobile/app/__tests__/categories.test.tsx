@@ -102,7 +102,7 @@ describe("Danh mục screen", () => {
     expect((await txns.list()).find((x) => x.id === t.id)!.category_id).toBe(catId("Khác"));
     await act(async () => router.navigate("/"));
     await screen.findByTestId("overview-add-button");
-    expect(await screen.findByText(/Khác/)).toBeTruthy();
+    expect((await screen.findAllByText(/Khác/)).length).toBeGreaterThan(0);
     expect((await repo().listByKind("expense")).map((c) => c.id)).not.toContain(cf.id);
   });
 
@@ -123,7 +123,7 @@ describe("Danh mục screen", () => {
 
     await act(async () => router.navigate("/"));
     await screen.findByTestId("overview-add-button");
-    expect(await screen.findByText(/Cafe/)).toBeTruthy();
+    expect((await screen.findAllByText(/Cafe/)).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Cà phê/)).toBeNull();
   });
 

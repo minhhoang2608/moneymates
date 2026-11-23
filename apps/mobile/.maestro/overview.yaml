@@ -1,0 +1,34 @@
+# Overview flow: empty state -> add a manual expense -> total updates -> open a recent row.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- assertVisible:
+    id: "overview-expense"
+    text: "0đ"
+- assertVisible: "Chưa có giao dịch nào"
+- assertNotVisible:
+    id: "overview-banner"
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- tapOn:
+    id: "amount-input"
+- inputText: "50k"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- assertVisible:
+    id: "overview-expense"
+    text: "50.000đ"
+- tapOn:
+    id: "overview-open-.*"
+- assertVisible:
+    id: "screen-transaction-detail"

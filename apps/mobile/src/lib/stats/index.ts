@@ -5,3 +5,7 @@ export { alertLevel } from "./alert";
 export type { AlertLevel } from "./alert";
 export { topCategories } from "./topCategories";
 export type { CategoryTotal } from "./topCategories";
+export { buildOverview, changePercent, prevMonthKey } from "./overview";
+export type { Overview, OverviewTxn } from "./overview";
+export { emptyMyShareSource } from "./myShareSource";
+export type { MyShareSource } from "./myShareSource";
