@@ -14,7 +14,7 @@ description: How factory agents hand off work – the label state machine, the .
 | Creates or edits ticket text and type/priority/area labels (BA, Triage) | Merge PRs, close issues, open Tester bugs                                          |
 | Writes **`.factory/result.json`**                                       | Count attempts and escalate past limits; dispatch the next workflow                |
 
-GitHub doesn't start workflows for events made with `GITHUB_TOKEN`, so scripts hand off with `gh workflow run` (workflow_dispatch). Dev pushes and PRs made with the Claude App token start CI by themselves.
+GitHub doesn't start workflows for events made with `GITHUB_TOKEN`, so scripts hand off with `gh workflow run` (workflow_dispatch). Assignment is event-driven too: a merge, an escalation or newly ready tickets call `kick_assign`, so a freed Dev gets its next ticket within minutes. The 30-minute cron is only a safety net. Dev pushes and PRs made with the Claude App token start CI by themselves.
 
 ## Result file contract
 

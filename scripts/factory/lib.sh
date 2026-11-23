@@ -102,6 +102,8 @@ escalate() {
 
 The factory skips this ticket until the \`needs-human\` label is removed. ([run]($RUN_URL))"
   notice "#$issue escalated to needs-human: $reason"
+  # A Dev holding this ticket is free again (busy tickets exclude needs-human): give it the next one now.
+  if [[ -n "$(role_of_issue "$issue")" ]]; then kick_assign; fi
 }
 
 # Called when an agent run failed (not paused). Counts failures and escalates past the limit.
@@ -219,4 +221,12 @@ pr_conversation() {
     "# PR #'"$1"': \(.title)\n\n**Author:** \(.author.login)\n\n\(.body)\n",
     (.comments[] | "\n---\n**\(.author.login)** (\(.createdAt)):\n\n\(.body)"),
     (.reviews[] | select(.body != "") | "\n---\n**\(.author.login)** review (\(.state)):\n\n\(.body)")'
+}
+
+# Continuous assignment: ask the Tech Lead to assign right away instead of waiting for the 30-minute
+# sweep. Call it whenever a Dev is freed (merge, escalation) or new tickets become ready. The assign
+# workflow only calls Claude when an idle Dev has a compatible ticket, and a pending run is collapsed
+# by its concurrency group, so extra kicks are cheap. Never fails the caller.
+kick_assign() {
+  dispatch tech-lead-assign.yml || log "could not dispatch tech-lead-assign.yml"
 }

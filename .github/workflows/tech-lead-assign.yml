@@ -1,4 +1,7 @@
-# Every 30 minutes (GitHub may start scheduled runs a few minutes late):
+# Runs continuously, not just on a timer. A merge, an escalation or newly ready tickets dispatch this
+# workflow right away (kick_assign in scripts/factory/lib.sh), so a Dev that finishes a ticket gets the
+# next one within minutes. The 30-minute cron below is the safety net (GitHub may start scheduled runs
+# a few minutes late):
 #  1. resume – re-dispatch tickets/PRs that are mid-flow with no agent run queued or running
 #     (for example after a Claude usage-limit pause has reset). No Claude call.
 #  2. assign – give each idle Dev (FE = area:mobile, BE = area:api, Fullstack = both / infra / overflow)
@@ -74,7 +77,9 @@ jobs:
 
             `.factory/input.json` contains `idle_roles`, `eligible` tickets (dependencies already merged) and
             `in_flight` tickets (being worked on right now).
-            Choose at most one ticket per idle role:
+            Goal: keep every idle Dev busy. Give each idle role a ticket whenever a compatible one is eligible;
+            leave a role idle only when no compatible ticket exists or the only candidates touch the same module as
+            a ticket you are already assigning or that is in flight. Choose at most one ticket per idle role:
             - dev-fe: area:mobile only · dev-be: area:api only · dev-fullstack: tickets with both areas, area:infra,
               or overflow from FE/BE when their queue is long.
             - Highest priority first (p0 > p3), then oldest (lowest number). Bugs before features at equal priority.
