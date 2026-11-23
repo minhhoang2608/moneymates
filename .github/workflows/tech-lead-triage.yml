@@ -11,15 +11,17 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: tech-lead-triage
-  cancel-in-progress: false
-
+# Concurrency is set on the JOB, not the workflow: every label added to any issue starts a run of this
+# workflow, and a workflow-level group would let those no-op runs replace (cancel) the pending real
+# triage run. A job whose `if` is false never joins the group.
 jobs:
   triage:
     if: >-
       vars.FACTORY_ENABLED == 'true' &&
       (github.event_name == 'workflow_dispatch' || github.event.label.name == 'status:triage')
+    concurrency:
+      group: tech-lead-triage
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
