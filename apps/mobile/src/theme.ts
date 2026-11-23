@@ -14,6 +14,7 @@ export const colors = {
   segmentBg: "#E9ECF0",
   neutral: "#A5ABB5",
   expense: "#B42318",
+  expenseBorder: "#F1C4C0",
   warningBg: "#FEF3E2",
   warningBorder: "#F5D9A8",
   warningText: "#7A4300",
@@ -58,3 +59,18 @@ export const layout = {
   tabBarHeight: 84,
   qrButtonSize: 60,
 } as const;
+
+/** Category tile pairs from the Danh mục design: `fg` is stored on the category, `bg` is its tint. */
+export const categoryTiles = [
+  { fg: "#0E7C66", bg: "#E7F4F0" },
+  { fg: "#A0561A", bg: "#FDF0E3" },
+  { fg: "#5E3FA8", bg: "#EFEAFB" },
+  { fg: "#245E94", bg: "#E8F1FA" },
+  { fg: "#9D174D", bg: "#FCE7F3" },
+  { fg: "#7A4300", bg: "#FEF3E2" },
+  { fg: "#075985", bg: "#E0F2FE" },
+  { fg: "#A3161A", bg: "#FDE8E8" },
+  { fg: "#4B5563", bg: "#EEF0F3" },
+  { fg: "#6B4423", bg: "#F5EDE4" },
+  { fg: "#3F6212", bg: "#ECFCCB" },
+] as const;

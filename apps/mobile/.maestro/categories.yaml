@@ -1,0 +1,23 @@
+# Danh mục: Hồ sơ -> Danh mục -> add "Cà phê" -> visible -> delete -> gone.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "row-categories"
+- assertVisible:
+    id: "screen-categories"
+- tapOn:
+    id: "category-add"
+- tapOn:
+    id: "category-name-input"
+- inputText: "Cà phê"
+- hideKeyboard
+- tapOn:
+    id: "category-save"
+- assertVisible: "Cà phê"
+- tapOn: "Xóa"
+- tapOn: "Xóa"
+- assertNotVisible: "Cà phê"

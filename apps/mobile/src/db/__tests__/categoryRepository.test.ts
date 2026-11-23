@@ -6,7 +6,8 @@ import { eq } from "drizzle-orm";
 
 import { DEFAULT_CATEGORIES } from "../../lib/category/defaults";
 import { createCategoryRepository } from "../repositories";
-import { category } from "../schema";
+import { newId } from "../ids";
+import { category, transactions } from "../schema";
 import { seedDefaultCategories, type AnyDb } from "../seed";
 import { openTestDb } from "../testing/testDb";
 
@@ -111,5 +112,70 @@ describe("category repository", () => {
     await expect(repo.delete(c.id)).rejects.toMatchObject({ code: "not_found" });
     await expect(repo.update("nope", { icon: "x" })).rejects.toMatchObject({ code: "not_found" });
     await expect(repo.update(ANUONG, { name: " " })).rejects.toMatchObject({ code: "name_required" });
+  });
+});
+
+describe("deleteCategory", () => {
+  const khacExpense = DEFAULT_CATEGORIES.find((d) => d.name === "Khác" && d.type === "expense")!.id;
+  const khacIncome = DEFAULT_CATEGORIES.find((d) => d.name === "Khác" && d.type === "income")!.id;
+
+  function txn(categoryId: string, type: "expense" | "income", deleted: string | null = null) {
+    const now = "2026-01-01T00:00:00.000Z";
+    return {
+      id: newId(),
+      created_at: now,
+      updated_at: now,
+      deleted_at: deleted,
+      type,
+      amount: 1000,
+      category_id: categoryId,
+      occurred_at: now,
+    } as const;
+  }
+
+  it("AC4: moves live transactions to Khác and soft-deletes in one go", async () => {
+    const { db, repo } = setup();
+    const cf = await repo.create({ name: "Cà phê", kind: "expense", icon: "CF", color: "#6B4423" });
+    const a = txn(cf.id, "expense");
+    const b = txn(cf.id, "expense");
+    const other = txn(ANUONG, "expense");
+    const gone = txn(cf.id, "expense", "2026-01-02T00:00:00.000Z");
+    db.insert(transactions).values([a, b, other, gone]).run();
+
+    await repo.deleteCategory(cf.id);
+
+    const cat = (id: string) => db.select().from(transactions).where(eq(transactions.id, id)).get()!;
+    expect(cat(a.id).category_id).toBe(khacExpense);
+    expect(cat(a.id).updated_at).not.toBe(a.updated_at);
+    expect(cat(b.id).category_id).toBe(khacExpense);
+    expect(cat(other.id).category_id).toBe(ANUONG);
+    expect(cat(gone.id).category_id).toBe(cf.id);
+    expect((await repo.listByKind("expense")).map((c) => c.id)).not.toContain(cf.id);
+    expect(db.select().from(category).where(eq(category.id, cf.id)).get()!.deleted_at).not.toBeNull();
+  });
+
+  it("moves income transactions to the income Khác", async () => {
+    const { db, repo } = setup();
+    const c = await repo.create({ name: "Thưởng", kind: "income", icon: "T", color: "#0E7C66" });
+    const t = txn(c.id, "income");
+    db.insert(transactions).values(t).run();
+    await repo.deleteCategory(c.id);
+    expect(db.select().from(transactions).where(eq(transactions.id, t.id)).get()!.category_id).toBe(khacIncome);
+  });
+
+  it("rejects defaults", async () => {
+    const { repo } = setup();
+    await expect(repo.deleteCategory(ANUONG)).rejects.toMatchObject({ code: "default_delete_forbidden" });
+  });
+
+  it("rolls back when the category update fails", async () => {
+    const { db, sqlite, repo } = setup();
+    const cf = await repo.create({ name: "Cà phê", kind: "expense", icon: "CF", color: "#6B4423" });
+    const a = txn(cf.id, "expense");
+    db.insert(transactions).values(a).run();
+    sqlite.exec("CREATE TRIGGER fail_cat BEFORE UPDATE ON category BEGIN SELECT RAISE(ABORT, 'boom'); END");
+    await expect(repo.deleteCategory(cf.id)).rejects.toThrow();
+    expect(db.select().from(transactions).where(eq(transactions.id, a.id)).get()!.category_id).toBe(cf.id);
+    expect(db.select().from(category).where(eq(category.id, cf.id)).get()!.deleted_at).toBeNull();
   });
 });
