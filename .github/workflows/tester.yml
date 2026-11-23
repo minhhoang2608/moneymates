@@ -11,9 +11,9 @@
 name: Tester
 run-name: Tester on dev
 
+# No push trigger: claude-code-action rejects the push event, and every factory merge dispatches this
+# workflow explicitly. Run it by hand after merging something yourself.
 on:
-  push:
-    branches: [dev]
   workflow_dispatch:
 
 permissions: {}
