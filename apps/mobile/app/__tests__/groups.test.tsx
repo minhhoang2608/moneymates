@@ -134,6 +134,16 @@ describe("Tạo/sửa nhóm", () => {
     expect(g.members.map((m) => m.displayName)).toEqual(["", "An"]);
   });
 
+  it("shows added members by testID and updates the count", async () => {
+    freshFile();
+    await renderEdit();
+    await addMembers("An", "Bình");
+    expect(screen.getByTestId("member-name-1")).toHaveTextContent("An");
+    expect(screen.getByTestId("member-name-2")).toHaveTextContent("Bình");
+    expect(screen.getByTestId("member-count")).toHaveTextContent(`${vi.groups.members} (3)`);
+    expect(screen.getByTestId("member-add-input").props.value).toBe("");
+  });
+
   it("blank submit adds nothing", async () => {
     freshFile();
     await renderEdit();
