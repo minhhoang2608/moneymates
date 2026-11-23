@@ -23,13 +23,20 @@ jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
 }));
 jest.mock("expo-file-system", () => {
+  const join = (parts) => parts.map((p) => (typeof p === "string" ? p : p.uri)).join("/");
   class File {
     constructor(...parts) {
-      this.uri = parts.join("/");
+      this.uri = join(parts);
     }
     copy() {}
   }
-  return { File, Paths: { document: "file:///doc" } };
+  class Directory {
+    constructor(...parts) {
+      this.uri = join(parts);
+    }
+    create() {}
+  }
+  return { File, Directory, Paths: { document: "file:///doc" } };
 });
 jest.mock("@react-native-community/datetimepicker", () => {
   const { View } = require("react-native");
