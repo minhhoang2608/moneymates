@@ -19,6 +19,10 @@ export const colors = {
   warningText: "#7A4300",
   onPrimary: "#FFFFFF",
   shadow: "#0E7C66",
+  bankTcbBg: "#FDE8E8",
+  bankTcbFg: "#A3161A",
+  bankTpbBg: "#F3E8FF",
+  bankTpbFg: "#6B2FB3",
 } as const;
 
 export const chartColors = ["#0E7C66", "#3B82C4", "#E08A2E", "#8B6BC8", "#A5ABB5"] as const;

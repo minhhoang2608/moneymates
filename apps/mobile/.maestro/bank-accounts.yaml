@@ -1,0 +1,26 @@
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "row-bank-accounts"
+- assertVisible:
+    id: "screen-bank-accounts"
+- tapOn:
+    id: "account-add"
+- tapOn:
+    id: "account-bank"
+- tapOn:
+    id: "bank-option-TPB"
+- tapOn:
+    id: "account-no"
+- inputText: "0123456789"
+- hideKeyboard
+- tapOn:
+    id: "account-save"
+- assertVisible: "Mặc định"
+- tapOn: "TPBank · 0123 4567 89"
+- assertVisible:
+    id: "account-qr"
