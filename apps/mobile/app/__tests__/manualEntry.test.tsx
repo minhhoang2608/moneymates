@@ -42,6 +42,27 @@ describe("manual entry flow (mirrors .maestro/manual-entry.yaml)", () => {
     }
   });
 
+  it("manual entry works with AI disabled by /me/features", async () => {
+    const original = global.fetch;
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ ai_enabled: false, ai_parse_text: false, ai_parse_bill: false }),
+    })) as unknown as typeof fetch;
+    try {
+      await renderRouter("./app", { initialUrl: "/" });
+      await fireEvent.press(screen.getByTestId("overview-add-button"));
+      await fireEvent.press(await screen.findByTestId("entry-menu-manual"));
+      await fireEvent.changeText(await screen.findByTestId("amount-input"), "50k");
+      await fireEvent.press(screen.getByTestId("category-row"));
+      await fireEvent.press(await screen.findByTestId(`category-item-${catId("Ăn uống")}`));
+      await fireEvent.press(screen.getByTestId("save-button"));
+      await waitFor(() => expect(screen.getByTestId("screen-overview")).toBeTruthy());
+      expect((await screen.findAllByText("−50.000đ")).length).toBeGreaterThan(0);
+    } finally {
+      global.fetch = original;
+    }
+  });
+
   it("long-pressing the QR tab opens the entry menu", async () => {
     await renderRouter("./app", { initialUrl: "/" });
     await fireEvent(screen.getByTestId("tab-qr"), "longPress");

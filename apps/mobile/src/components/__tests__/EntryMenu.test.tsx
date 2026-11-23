@@ -5,9 +5,10 @@ import { EntryMenu } from "../EntryMenu";
 
 const original = global.fetch;
 
-function setAi(on: boolean | "offline") {
+function setAi(on: boolean | "offline" | "http-error") {
   global.fetch = jest.fn(async () => {
     if (on === "offline") throw new Error("offline");
+    if (on === "http-error") return { ok: false, status: 503, json: async () => ({}) };
     return { ok: true, json: async () => ({ ai_enabled: on, ai_parse_text: on, ai_parse_bill: on }) };
   }) as unknown as typeof fetch;
 }
@@ -57,5 +58,25 @@ describe("EntryMenu", () => {
     await waitFor(() => expect(screen.getByTestId("entry-menu-voice")).not.toBeDisabled());
     await fireEvent.press(screen.getByTestId("entry-menu-voice"));
     expect(onVoice).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Nhập tay with AI unavailable", () => {
+  it.each([false, "offline", "http-error"] as const)("still calls onManual (AI %s)", async (mode) => {
+    setAi(mode);
+    const onManual = jest.fn();
+    await renderMenu({ onManual, onVoice: jest.fn(), onBill: jest.fn() });
+    await waitFor(() => expect(screen.getByTestId("entry-menu-bill")).toBeDisabled());
+    expect(screen.getByTestId("entry-menu-manual")).not.toBeDisabled();
+    await fireEvent.press(screen.getByTestId("entry-menu-manual"));
+    expect(onManual).toHaveBeenCalledTimes(1);
+  });
+
+  it("still calls onManual while /me/features never resolves", async () => {
+    global.fetch = jest.fn(() => new Promise(() => {})) as unknown as typeof fetch;
+    const onManual = jest.fn();
+    await renderMenu({ onManual, onVoice: jest.fn(), onBill: jest.fn() });
+    await fireEvent.press(screen.getByTestId("entry-menu-manual"));
+    expect(onManual).toHaveBeenCalledTimes(1);
   });
 });
