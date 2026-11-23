@@ -25,11 +25,13 @@ export default function OverviewScreen() {
     useCallback(() => {
       let alive = true;
       void deletedVersion; // reload after the return banner deletes a payment
-      Promise.all([loadOverview(repos), profile.getProfile()]).then(([d, p]) => {
-        if (!alive) return;
-        setData(d);
-        setName(p.display_name);
-      });
+      Promise.all([loadOverview(repos, { myShares: repos.groupExpenses.mySharesInMonth }), profile.getProfile()]).then(
+        ([d, p]) => {
+          if (!alive) return;
+          setData(d);
+          setName(p.display_name);
+        },
+      );
       return () => {
         alive = false;
       };

@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
-import { createTransactionRepository } from "@/db/repositories";
+import { createGroupExpenseRepository, createGroupRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { catId } from "@/testing/repoTestUtils";
@@ -128,5 +128,22 @@ describe("Tổng quan screen", () => {
     await fireEvent.press(screen.getByTestId("overview-add-button"));
     await fireEvent.press(await screen.findByTestId("entry-menu-manual"));
     await waitFor(() => expect(screen.getByTestId("amount-input")).toBeTruthy());
+  });
+
+  it("group expense: the total includes my share and shows the group note", async () => {
+    const db = global.__OVERVIEW_TEST_DB__ as unknown as AnyDb;
+    const g = await createGroupRepository(db).createGroup({ name: "Đà Lạt", members: ["An", "Bình", "Chi"] });
+    const ids = g.members.map((m) => m.id);
+    await createGroupExpenseRepository(db).createGroupExpense({
+      groupId: g.id,
+      amount: 1_000_000,
+      payerMemberId: ids[1],
+      splitMode: "equal",
+      shares: ids.map((memberId) => ({ memberId })),
+      occurredAt: "2026-11-10T03:00:00Z",
+    });
+    await renderOverview();
+    await waitFor(() => expect(text("overview-expense")).toBe("250.000đ"));
+    expect(screen.getByTestId("overview-group-share")).toBeTruthy();
   });
 });

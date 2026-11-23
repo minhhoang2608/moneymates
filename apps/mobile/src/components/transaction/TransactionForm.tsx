@@ -5,6 +5,7 @@ import { useRepositories } from "@/db/RepositoriesProvider";
 import type { CategoryRow, GroupMember } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
 import { evaluateSplitDraft, type DraftMode } from "@/lib/group/splitDraft";
+import { GroupError } from "@/lib/group/types";
 import { formatVnd, parseAmount } from "@/lib/money";
 import { formatTxnDateLabel, validateForm, type FormErrors, type FormType } from "@/lib/transaction/form";
 import { photoPicker as defaultPhotoPicker, type PhotoPicker } from "@/lib/photoPicker";
@@ -37,6 +38,8 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saveFailed, setSaveFailed] = useState(false);
+  const [isGroupExpense, setIsGroupExpense] = useState(false);
+  const [splitError, setSplitError] = useState(false);
   const [list, setList] = useState<CategoryRow[]>([]);
   const [allCategories, setAllCategories] = useState<CategoryRow[]>([]);
   const [sheet, setSheet] = useState<null | "category" | "source" | "time">(null);
@@ -93,6 +96,7 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
         setOccurredAt(new Date(t.occurred_at));
         setMoneySource(t.money_source);
         setPhotoUri(t.photo_uri);
+        setIsGroupExpense(Boolean(t.group_id));
       }
       setLoaded(true);
     });
@@ -114,7 +118,7 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
   const categoryName = allCategories.find((c) => c.id === categoryId)?.name;
 
   const changeType = (next: FormType) => {
-    if (next === type) return;
+    if (next === type || isGroupExpense) return;
     setType(next);
     setCategoryId(null);
     setErrors((e) => ({ ...e, category: undefined }));
@@ -129,6 +133,7 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
     }
     setErrors({});
     setSaveFailed(false);
+    setSplitError(false);
     try {
       if (isGroup && groupId && payerId) {
         await groupExpenses.createGroupExpense({
@@ -141,12 +146,21 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
           categoryId: result.input.category_id,
           note: result.input.note,
         });
+      } else if (transactionId && isGroupExpense) {
+        // Shares are recomputed from the stored split by the repository.
+        await groupExpenses.updateGroupExpense(transactionId, {
+          amount: result.input.amount,
+          categoryId: result.input.category_id,
+          note: result.input.note,
+          occurredAt: result.input.occurred_at,
+        });
       } else if (transactionId) await transactions.update(transactionId, result.input);
       else await transactions.create({ ...result.input, source: "manual" });
       onSaved?.();
       onClose();
-    } catch {
-      setSaveFailed(true);
+    } catch (e) {
+      if (e instanceof GroupError && e.code === "invalid_split") setSplitError(true);
+      else setSaveFailed(true);
     }
   };
 
@@ -315,6 +329,11 @@ export function TransactionForm({ transactionId, groupId, onClose, onSaved, phot
             )}
           </Pressable>
         </View>
+        {splitError ? (
+          <Text testID="split-error" style={styles.error}>
+            {vi.txn.splitEditError}
+          </Text>
+        ) : null}
         {saveFailed ? (
           <Text testID="save-error" style={styles.error}>
             {vi.txn.saveError}

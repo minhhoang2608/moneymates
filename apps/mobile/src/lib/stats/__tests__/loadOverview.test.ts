@@ -1,4 +1,9 @@
-import { createCategoryRepository, createTransactionRepository } from "@/db/repositories";
+import {
+  createCategoryRepository,
+  createGroupExpenseRepository,
+  createGroupRepository,
+  createTransactionRepository,
+} from "@/db/repositories";
 import type { Repositories } from "@/db/RepositoriesProvider";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
@@ -59,5 +64,39 @@ describe("loadOverview", () => {
     const d = await loadOverview(repos, { now: NOW });
     expect(d.recent.map((r) => r.amount)).toEqual([7000, 6000, 5000, 4000, 3000]);
     expect(d.overview.myShareTotal).toBe(0);
+  });
+});
+
+describe("loadOverview with group shares", () => {
+  async function groupSetup(payerIsMe: boolean) {
+    const { db } = openTestDb();
+    const a = db as unknown as AnyDb;
+    const transactions = createTransactionRepository(a);
+    const categories = createCategoryRepository(a);
+    const groups = createGroupRepository(a);
+    const groupExpenses = createGroupExpenseRepository(a);
+    const g = await groups.createGroup({ name: "Đà Lạt", members: ["An", "Bình", "Chi"] });
+    const ids = g.members.map((m) => m.id);
+    const t = await groupExpenses.createGroupExpense({
+      groupId: g.id,
+      amount: 1_000_000,
+      payerMemberId: payerIsMe ? ids[0] : ids[1],
+      splitMode: "equal",
+      shares: ids.map((memberId) => ({ memberId })),
+      occurredAt: "2026-11-10T03:00:00Z",
+    });
+    const repos = { transactions, categories } as unknown as Pick<Repositories, "transactions" | "categories">;
+    return { repos, transactions, groupExpenses, t };
+  }
+
+  it.each([true, false])("AC3/AC4: my share (payer is me: %s) counts, deleting drops it", async (payerIsMe) => {
+    const { repos, transactions, groupExpenses, t } = await groupSetup(payerIsMe);
+    const opts = { now: NOW, myShares: groupExpenses.mySharesInMonth };
+    const d = await loadOverview(repos, opts);
+    expect(d.overview.expenseTotal).toBe(250_000);
+    expect(d.overview.myShareTotal).toBe(250_000);
+    await transactions.softDelete(t.id);
+    const after = await loadOverview(repos, opts);
+    expect(after.overview.expenseTotal).toBe(0);
   });
 });
