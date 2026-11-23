@@ -1,4 +1,4 @@
-"""Entry point for Passenger on Hawk Host (cPanel Python App). Gunicorn-style hosts use config.wsgi directly."""
+"""Entry point for Passenger on Hawk Host (cPanel Python App)."""
 
 from config.wsgi import application
 
