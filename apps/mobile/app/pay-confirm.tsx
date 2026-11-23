@@ -52,7 +52,7 @@ export default function PayConfirmScreen() {
     };
   }, [appSettings]);
 
-  const apps = useMemo(() => orderApps(PAY_APPS, recent, model.bankBin), [recent, model.bankBin]);
+  const apps = useMemo(() => orderApps(PAY_APPS, recent), [recent]);
   const selectedId = appId ?? defaultAppId(apps, recent, model.bankBin);
   const selected = apps.find((a) => a.id === selectedId) ?? apps[0];
 

@@ -12,7 +12,7 @@ export const PAY_APPS: PayApp[] = [
 const BIN_TO_APP: Record<string, string> = { "970423": "tpbank", "970407": "tcb", "970436": "vcb", "970422": "mb" };
 
 /** Recently used apps first (newest first), then the rest in catalogue order. */
-export function orderApps(apps: PayApp[], recentIds: string[], _scannedBin?: string): PayApp[] {
+export function orderApps(apps: PayApp[], recentIds: string[]): PayApp[] {
   const recent = recentIds
     .map((id) => apps.find((a) => a.id === id))
     .filter((a, i, arr): a is PayApp => !!a && arr.indexOf(a) === i);
