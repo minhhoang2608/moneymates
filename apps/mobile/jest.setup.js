@@ -56,6 +56,11 @@ jest.mock("expo-speech-recognition", () => ({
     stop: jest.fn(),
   },
 }));
+jest.mock("expo-local-authentication", () => ({
+  hasHardwareAsync: jest.fn(async () => true),
+  isEnrolledAsync: jest.fn(async () => true),
+  authenticateAsync: jest.fn(async () => ({ success: true })),
+}));
 jest.mock("react-native-qrcode-svg", () => {
   const React = require("react");
   const { View } = require("react-native");

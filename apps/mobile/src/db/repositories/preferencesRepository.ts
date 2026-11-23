@@ -12,6 +12,13 @@ export function createPreferencesRepository(db: AnyDb) {
     async setAlertOverLastMonth(on: boolean): Promise<void> {
       await settings.set(PREF_KEYS.alertOverLastMonth, on);
     },
+    async getAppLockEnabled(): Promise<boolean> {
+      const v = await settings.get<boolean>(PREF_KEYS.appLockEnabled);
+      return v === true;
+    },
+    async setAppLockEnabled(on: boolean): Promise<void> {
+      await settings.set(PREF_KEYS.appLockEnabled, on);
+    },
     async getDefaultCurrency(): Promise<string> {
       const v = await settings.get<string>(PREF_KEYS.defaultCurrency);
       return typeof v === "string" && v ? v : DEFAULT_CURRENCY;

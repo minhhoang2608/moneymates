@@ -15,6 +15,7 @@ export const DEFAULT_CURRENCY = "VND";
 export const PREF_KEYS = {
   alertOverLastMonth: "alert_over_last_month",
   defaultCurrency: "default_currency",
+  appLockEnabled: "app_lock_enabled",
 } as const;
 
 export class PreferencesError extends Error {

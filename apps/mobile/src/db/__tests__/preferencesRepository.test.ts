@@ -41,3 +41,15 @@ describe("preferencesRepository", () => {
     b.sqlite.close();
   });
 });
+
+describe("preferencesRepository app lock", () => {
+  it("defaults to false and round-trips", async () => {
+    const { db } = openTestDb();
+    const repo = createPreferencesRepository(db as unknown as AnyDb);
+    expect(await repo.getAppLockEnabled()).toBe(false);
+    await repo.setAppLockEnabled(true);
+    expect(await repo.getAppLockEnabled()).toBe(true);
+    await repo.setAppLockEnabled(false);
+    expect(await repo.getAppLockEnabled()).toBe(false);
+  });
+});

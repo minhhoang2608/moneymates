@@ -8,6 +8,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { Stack } from "expo-router";
 
+import { AppLockGate } from "@/components/appLock/AppLockGate";
 import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
@@ -27,21 +28,23 @@ export default function RootLayout() {
     <QueryProvider>
       <DatabaseProvider>
         <RepositoriesProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="scan" options={{ presentation: "modal" }} />
-            <Stack.Screen name="pay-confirm" />
-            <Stack.Screen name="bank-accounts" />
-            <Stack.Screen name="categories" />
-            <Stack.Screen name="settings" />
-            <Stack.Screen name="stats" />
-            <Stack.Screen name="group/[id]" />
-            <Stack.Screen name="group/summary" />
-            <Stack.Screen name="group/edit" options={{ presentation: "modal" }} />
-            <Stack.Screen name="transaction/[id]" />
-            <Stack.Screen name="transaction/new" options={{ presentation: "modal" }} />
-          </Stack>
-          <ReturnBanner />
+          <AppLockGate>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="scan" options={{ presentation: "modal" }} />
+              <Stack.Screen name="pay-confirm" />
+              <Stack.Screen name="bank-accounts" />
+              <Stack.Screen name="categories" />
+              <Stack.Screen name="settings" />
+              <Stack.Screen name="stats" />
+              <Stack.Screen name="group/[id]" />
+              <Stack.Screen name="group/summary" />
+              <Stack.Screen name="group/edit" options={{ presentation: "modal" }} />
+              <Stack.Screen name="transaction/[id]" />
+              <Stack.Screen name="transaction/new" options={{ presentation: "modal" }} />
+            </Stack>
+            <ReturnBanner />
+          </AppLockGate>
         </RepositoriesProvider>
       </DatabaseProvider>
     </QueryProvider>

@@ -1,6 +1,12 @@
 import { renderRouter, screen, waitFor } from "expo-router/testing-library";
 import { Text } from "react-native";
 
+import { db } from "@/db/client";
+import { createPreferencesRepository } from "@/db/repositories";
+import type { AnyDb } from "@/db/seed";
+import { setAppLockAuth } from "@/lib/appLock/auth";
+import { useAppLock } from "@/stores/appLock";
+import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { DEFAULT_FEATURES, useFeatures } from "@/api/features";
 
 jest.mock("@/db/client", () => {
@@ -54,5 +60,28 @@ describe("root layout", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(JSON.parse(screen.getByTestId("features-probe").props.children)).toEqual(DEFAULT_FEATURES);
     expect(screen.getByTestId("screen-overview")).toBeTruthy();
+  });
+
+  it("AC4: app lock covers the app, then reveals it with navigation and ReturnBanner intact", async () => {
+    global.fetch = jest.fn(async () => {
+      throw new Error("offline");
+    }) as unknown as typeof fetch;
+    await createPreferencesRepository(db as unknown as AnyDb).setAppLockEnabled(true);
+    useAppLock.setState({ status: "loading", prompting: false, enabled: false });
+    usePendingHandOff.getState().set({ txId: "t1", amount: 50000, label: "Phở" });
+    usePendingHandOff.getState().reveal();
+    let resolve!: (v: boolean) => void;
+    setAppLockAuth({ isLockAvailable: async () => true, authenticate: () => new Promise((r) => (resolve = r)) });
+    try {
+      await renderRouter("./app", { initialUrl: "/" });
+      await waitFor(() => expect(screen.getByTestId("app-lock-screen")).toBeTruthy());
+      resolve(true);
+      await waitFor(() => expect(screen.queryByTestId("app-lock-screen")).toBeNull());
+      expect(screen.getByTestId("screen-overview")).toBeTruthy();
+    } finally {
+      setAppLockAuth(null);
+      usePendingHandOff.getState().clear();
+      await createPreferencesRepository(db as unknown as AnyDb).setAppLockEnabled(false);
+    }
   });
 });
