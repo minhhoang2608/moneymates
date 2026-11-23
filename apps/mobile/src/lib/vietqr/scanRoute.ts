@@ -10,6 +10,7 @@ export function scanResultToRoute(text: unknown): ScanRoute {
   const params: Record<string, string> = {};
   if (r.kind === "vietqr") {
     params.kind = "vietqr";
+    params.payload = String(text).trim();
     params.bankBin = r.bankBin;
     params.bankName = r.bankName;
     params.account = r.account;

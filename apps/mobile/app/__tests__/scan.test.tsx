@@ -43,14 +43,14 @@ describe("scan screen", () => {
     expect(screen).toHaveSearchParams(
       expect.objectContaining({ bankName: "TPBank", amount: "55000", message: "PHO 24" }),
     );
-    expect(screen.getByTestId("pay-confirm-amount")).toBeTruthy();
+    expect(screen.getByTestId("pay-amount").props.value).toBe("55000");
   });
 
   it("static code navigates without amount", async () => {
     await open();
     await scan(qr.static);
     await waitFor(() => expect(screen).toHavePathname("/pay-confirm"));
-    expect(screen.queryByTestId("pay-confirm-amount")).toBeNull();
+    expect(screen.getByTestId("pay-amount").props.value).toBe("");
   });
 
   it("invalid scan shows scan-error and stays on /scan", async () => {

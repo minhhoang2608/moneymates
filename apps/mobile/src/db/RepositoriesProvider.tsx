@@ -2,11 +2,13 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { db as defaultDb } from "./client";
 import {
+  createAppSettingRepository,
   createBankAccountRepository,
   createCategoryRepository,
   createGroupRepository,
   createProfileRepository,
   createTransactionRepository,
+  type AppSettingRepository,
   type BankAccountRepository,
   type CategoryRepository,
   type GroupRepository,
@@ -21,6 +23,7 @@ export type Repositories = {
   categories: CategoryRepository;
   transactions: TransactionRepository;
   groups: GroupRepository;
+  appSettings: AppSettingRepository;
 };
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -35,6 +38,7 @@ export function RepositoriesProvider({ children, db }: { children: ReactNode; db
       categories: createCategoryRepository(target),
       transactions: createTransactionRepository(target),
       groups: createGroupRepository(target),
+      appSettings: createAppSettingRepository(target),
     };
   }, [db]);
   return <RepositoriesContext.Provider value={value}>{children}</RepositoriesContext.Provider>;

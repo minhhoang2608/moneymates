@@ -17,3 +17,16 @@ appId: com.moneymates.app
 - assertVisible: "TPBank"
 - assertVisible: "55.000"
 - assertVisible: "PHO 24"
+- assertVisible:
+    id: "pay-submit"
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    notVisible:
+      id: "screen-pay-confirm"
+    timeout: 10000
+- tapOn:
+    id: "tab-history"
+- assertVisible:
+    id: "screen-history"
+- assertVisible: "55.000"
