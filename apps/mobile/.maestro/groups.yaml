@@ -11,7 +11,9 @@ appId: com.moneymates.app
 - tapOn:
     id: "group-name"
 - inputText: "Đà Lạt"
-- hideKeyboard
+- tapOn:
+    id: "group-name-label"
+- waitForAnimationToEnd
 - tapOn:
     id: "member-add-input"
 - inputText: "An"
@@ -22,7 +24,9 @@ appId: com.moneymates.app
 - inputText: "Bình"
 - tapOn:
     id: "member-add"
-- hideKeyboard
+- tapOn:
+    id: "member-count"
+- waitForAnimationToEnd
 - assertVisible:
     id: "screen-group-edit"
 - scrollUntilVisible:

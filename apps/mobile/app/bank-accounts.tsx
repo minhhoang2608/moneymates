@@ -183,7 +183,9 @@ export default function BankAccountsScreen() {
                 {errors.bank_required && <Text style={styles.error}>{t.bankRequired}</Text>}
               </View>
               <View style={styles.field}>
-                <Text style={styles.label}>{t.accountNo}</Text>
+                <Text testID="account-no-label" style={styles.label}>
+                  {t.accountNo}
+                </Text>
                 <TextInput
                   testID="account-no"
                   style={[styles.input, styles.inputText]}
