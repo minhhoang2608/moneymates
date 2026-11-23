@@ -1,3 +1,5 @@
+import { parseAmount } from "../src/lib/money";
+
 export type GoldenFn = (input: Record<string, unknown>) => unknown;
 
 /**
@@ -6,7 +8,10 @@ export type GoldenFn = (input: Record<string, unknown>) => unknown;
  * Later tickets plug their function in here.
  */
 export const registry: Record<string, GoldenFn | undefined> = {
-  "money-parse": undefined,
+  "money-parse": ({ text }) => {
+    const r = parseAmount(String(text));
+    return { amount: r.ok ? r.vnd : null };
+  },
   split: undefined,
   settlement: undefined,
   stats: undefined,
