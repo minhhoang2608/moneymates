@@ -28,6 +28,10 @@ export type NewGroupExpense = {
   occurredAt: string;
   categoryId?: string;
   note?: string;
+  /** Defaults to "manual". */
+  source?: "manual" | "qr";
+  /** Raw QR payload for `source: "qr"`; defaults to null. */
+  qrData?: string | null;
 };
 
 export type GroupExpensePatch = Partial<Omit<NewGroupExpense, "groupId">>;
@@ -202,6 +206,8 @@ export function createGroupExpenseRepository(db: AnyDb) {
             group_id: input.groupId,
             paid_by_member_id: input.payerMemberId,
             split_mode: input.splitMode,
+            source: input.source ?? "manual",
+            qr_data: input.qrData ?? null,
           })
           .run();
         tx.insert(expenseShares)
