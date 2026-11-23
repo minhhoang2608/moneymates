@@ -10,4 +10,4 @@ quote-style = "double"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings_test"
-testpaths = ["core"]
+testpaths = ["core", "ai"]
