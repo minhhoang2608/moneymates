@@ -14,7 +14,10 @@ appId: com.moneymates.app
     id: "scan-e2e-feed"
 - assertVisible:
     id: "screen-pay-confirm"
-- assertVisible: "TPBank"
+- assertVisible:
+    id: "pay-confirm-bank"
+    text: "TPBank · 0123456789"
+- assertVisible: "Thanh toán 55\\.000đ qua TPBank"
 - assertVisible: "55.000"
 - assertVisible: "PHO 24"
 - assertVisible:
