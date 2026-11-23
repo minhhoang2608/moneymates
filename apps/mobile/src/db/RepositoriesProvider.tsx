@@ -5,9 +5,11 @@ import {
   createBankAccountRepository,
   createCategoryRepository,
   createProfileRepository,
+  createTransactionRepository,
   type BankAccountRepository,
   type CategoryRepository,
   type ProfileRepository,
+  type TransactionRepository,
 } from "./repositories";
 import type { AnyDb } from "./seed";
 
@@ -15,6 +17,7 @@ export type Repositories = {
   profile: ProfileRepository;
   bankAccounts: BankAccountRepository;
   categories: CategoryRepository;
+  transactions: TransactionRepository;
 };
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -27,6 +30,7 @@ export function RepositoriesProvider({ children, db }: { children: ReactNode; db
       profile: createProfileRepository(target),
       bankAccounts: createBankAccountRepository(target),
       categories: createCategoryRepository(target),
+      transactions: createTransactionRepository(target),
     };
   }, [db]);
   return <RepositoriesContext.Provider value={value}>{children}</RepositoriesContext.Provider>;

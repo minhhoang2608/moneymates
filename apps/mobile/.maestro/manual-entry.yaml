@@ -1,0 +1,25 @@
+# Manual entry flow: + -> Nhập tay -> 50k Ăn uống -> save -> the row shows on Tổng quan.
+# Offline by construction (no API URL in the E2E build, no network code in this path).
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- tapOn:
+    id: "amount-input"
+- inputText: "50k"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- assertVisible:
+    id: "screen-overview"
+- assertVisible: "−50.000đ"
