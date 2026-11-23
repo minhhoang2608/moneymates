@@ -168,19 +168,29 @@ describe("bill scan screen", () => {
     const [row] = await createTransactionRepository(d()).list();
     expect(row).toMatchObject({ amount: 345000, currency: "VND", note: "Bánh căn Nhà Chung", source: "bill" });
     expect(row!.photo_uri).toMatch(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/);
-    expect(row!.occurred_at.slice(0, 10) >= "2026-11-21").toBe(true);
-    expect(new Date(row!.occurred_at).getDate() === 22 || new Date(row!.occurred_at).getUTCDate() === 22).toBe(true);
+    const when = new Date(row!.occurred_at);
+    expect([when.getFullYear(), when.getMonth() + 1, when.getDate()]).toEqual([2026, 11, 22]);
   });
 
-  it("AC2: after an AI error, Nhập tay keeps the image and saving stores it", async () => {
-    await accept();
-    postMultipart.mockImplementation(async () => {
-      throw new ApiError("ai_unavailable");
-    });
-    await renderRouter("./app", { initialUrl: "/bill" });
-    await screen.findByTestId("bill-error");
-    await fireEvent.press(screen.getByTestId("bill-manual"));
-    await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
-    expect(await screen.findByTestId("photo-thumbnail")).toBeTruthy();
-  });
+  it.each(["ai_unavailable", "quota_exceeded", "timeout"] as const)(
+    "AC2: after a %s error, Nhập tay keeps the image and saving stores it",
+    async (code) => {
+      await accept();
+      postMultipart.mockImplementation(async () => {
+        throw new ApiError(code);
+      });
+      await renderRouter("./app", { initialUrl: "/bill" });
+      await screen.findByTestId("bill-error");
+      await fireEvent.press(screen.getByTestId("bill-manual"));
+      await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
+      expect(await screen.findByTestId("photo-thumbnail")).toBeTruthy();
+      await fireEvent.changeText(screen.getByTestId("amount-input"), "120000");
+      await fireEvent.press(screen.getByTestId("save-button"));
+      await waitFor(async () => expect((await createTransactionRepository(d()).list()).length).toBe(1));
+      const [row] = await createTransactionRepository(d()).list();
+      const other = (await createCategoryRepository(d()).listByKind("expense")).find((c) => c.name === "Khác")!;
+      expect(row).toMatchObject({ amount: 120000, source: "bill", category_id: other.id });
+      expect(row!.photo_uri).toMatch(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/);
+    },
+  );
 });
