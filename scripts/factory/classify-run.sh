@@ -27,11 +27,18 @@ fi
 
 limit_re='usage limit|hit your limit|limit reached|limit will reset|rate[_ ]limit|out of extra usage|overloaded|status 429|status 529|"429"|"529"'
 
+valid_result=false
+if [[ -s "$result_file" ]] && jq -e 'type == "object"' "$result_file" >/dev/null 2>&1; then valid_result=true; fi
+
 outcome=failed
-if [[ "$step_outcome" == "success" && -s "$result_file" ]] && jq -e 'type == "object"' "$result_file" >/dev/null 2>&1; then
+if [[ "$step_outcome" == "success" && "$valid_result" == true ]]; then
   outcome=ok
 elif [[ -n "$errors" ]] && grep -qiE "$limit_re" <<<"$errors"; then
   outcome=paused
+elif [[ "$valid_result" == true ]] && grep -q "error_max_turns" <<<"$errors"; then
+  # Out of turns, but the agent kept a partial result up to date (e.g. triage): apply what was decided.
+  echo "::warning::Agent ran out of turns; applying its partial result."
+  outcome=ok
 fi
 
 case "$outcome" in
