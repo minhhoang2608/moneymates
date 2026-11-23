@@ -4,6 +4,7 @@ import { TransactionForm } from "@/components/transaction/TransactionForm";
 import { vi } from "@/i18n/vi";
 
 type Params = {
+  transactionId?: string;
   groupId?: string;
   amount?: string;
   note?: string;
@@ -21,6 +22,7 @@ export default function NewTransactionScreen() {
   const aiError = p.aiError && p.aiError in vi.apiErrors ? (p.aiError as keyof typeof vi.apiErrors) : null;
   return (
     <TransactionForm
+      transactionId={p.transactionId}
       groupId={p.groupId}
       onClose={() => router.back()}
       source={voice ? "voice" : "manual"}
