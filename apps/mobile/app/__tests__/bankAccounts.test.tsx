@@ -2,7 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
+import { router } from "expo-router";
+import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { createBankAccountRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
@@ -131,5 +132,22 @@ describe("Tài khoản nhận tiền screen", () => {
     await fillAndSave({ bank: "TPB", no: "   " });
     expect(await screen.findByText(vi.bankAccounts.accountNoRequired)).toBeTruthy();
     expect(await repo().listAccounts()).toHaveLength(0);
+  });
+
+  it("back button leaves the screen after a save, but only closes the form while editing", async () => {
+    freshFile();
+    await renderRouter("./app", { initialUrl: "/" });
+    await act(async () => router.push("/bank-accounts"));
+    await screen.findByTestId("screen-bank-accounts");
+    expect(screen).toHavePathname("/bank-accounts");
+    await fireEvent.press(await screen.findByTestId("account-add"));
+    await fireEvent.press(screen.getByTestId("bank-accounts-back"));
+    await screen.findByTestId("account-add");
+    expect(screen).toHavePathname("/bank-accounts");
+    await fireEvent.press(screen.getByTestId("account-add"));
+    await fillAndSave({ bank: "TPB", no: "0123456789" });
+    await screen.findByText(vi.bankAccounts.defaultBadge);
+    await fireEvent.press(screen.getByTestId("bank-accounts-back"));
+    await waitFor(() => expect(screen).not.toHavePathname("/bank-accounts"));
   });
 });
