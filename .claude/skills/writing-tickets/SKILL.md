@@ -82,8 +82,9 @@ Title: imperative and specific, with no area prefix. For example: "Parse VietQR 
 - Split by Dev area: `area:mobile` (Dev FE), `area:api` (Dev BE), `area:infra` (foundation, tooling; Dev Fullstack). Use one sub-ticket with **both** areas (Dev Fullstack) only when the FE and BE parts are too small or too coupled to split.
 - Within an area, split large work by layer: pure logic + tests → persistence → screen → wiring and Maestro flow.
 - Map every feature acceptance criterion to at least one sub-ticket ("covers feature AC2"). Nothing may fall between the cracks.
-- Order with `Depends on #N`: foundation → schema and contracts → API endpoint → FE wiring that calls it.
-- The API contract (request/response JSON) is written in **both** the BE and the FE sub-ticket, so they can be built in parallel against a mock.
+- Order with `Depends on #N`: foundation → schema → screens. **FE tickets do not depend on BE tickets**: the FE builds against a mock first (see below).
+- **Mock-first for a new API endpoint:** write the contract (method, path, request and response JSON, error codes) in the BE ticket, the FE ticket and the integration ticket. Then split three ways: BE ticket (endpoint + API tests), FE ticket (screens and logic against a mock that implements the contract, mock fixtures included), and an **integration ticket**.
+- **Integration ticket:** title "Integrate <feature> with the live API", `Parent: #feature`, `Depends on #<FE>` and `Depends on #<BE>`, labels `area:mobile` + `area:api` (Dev Fullstack), same priority as the feature. Acceptance criteria: the FE uses the live adapter for these endpoints instead of the mock; the mock fixtures validate against the real response shape (contract check); timeouts, 429 and 503 fall back to the manual form as in the docs; the Maestro flow still passes in E2E mode. Skip it when the feature needs no new endpoint.
 
 ## Acceptance criteria rules
 

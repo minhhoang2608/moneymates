@@ -47,6 +47,10 @@ apps/mobile/
 - Every interactive element has a `testID` (kebab-case, e.g. `qr-confirm-pay-button`) for Maestro.
 - Offline first: every core flow works without network. Only `/ai/*` needs network, and AI failure falls back to the manual form with category "Khác".
 
+## Mock-first API
+
+Dev FE does not wait for the backend. Every API call goes through an interface in `src/api/` with two adapters per endpoint: `mock` (in `src/api/mock/`, backed by fixtures in `e2e/fixtures/`) and `live` (`fetch` + TanStack Query). The ticket's contract (path, request and response JSON, error codes) is the single source of truth: the mock must return exactly that shape, including the error cases (timeout, 429 `rate_limited`, 503 `ai_unavailable`). A registry (for example `apiAdapters`) maps each endpoint to `mock` or `live`; new endpoints start as `mock` until the **integration ticket** switches them to `live` and adds the contract check that validates the fixtures against the real response. Business logic and screens only see the interface.
+
 ## E2E mode
 
 `EXPO_PUBLIC_E2E=1` swaps in the adapters from `src/e2e/` (see the `testing-strategy` skill): deep link scan, fixture voice and AI, and a fake bank opener. Production code depends on interfaces, and E2E adapters are chosen at startup. Never ship test-only branches inside business logic.

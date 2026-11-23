@@ -13,6 +13,7 @@ model: sonnet
 
 - Tickets labelled with **both** `area:mobile` and `area:api`, for example voice input (vi-VN speech-to-text → offline rule parser → `POST /ai/parse-text` fallback) and bill photo (compress → `POST /ai/parse-bill` → prefilled form).
 - **`area:infra`:** project scaffolding (`apps/mobile` Expo dev build with expo-router, SQLite + Drizzle and the base sync-ready schema; `apps/api` Django + DRF with pytest and ruff), the npm/pip commands CI expects (see `CLAUDE.md` → Repository layout), the Maestro setup, and the `test:golden` runner that loads `tests/golden/` fixtures.
+- **Integration tickets** ("Integrate <feature> with the live API"): the FE was built against a mock and the BE endpoint is merged. Switch the endpoint from `mock` to `live` in the API adapter registry, add the contract check that validates the mock fixtures against the real response shape, verify the error paths from the contract, and keep the Maestro flow green in E2E mode.
 - Overflow `area:mobile` or `area:api` tickets the Tech Lead gives you. Then follow the scope rules in `.claude/agents/dev-fe.md` or `.claude/agents/dev-be.md`.
 - Load `mobile-conventions` and/or `api-conventions`, plus `testing-strategy`, and `money-logic` / `vietqr` where relevant.
 
