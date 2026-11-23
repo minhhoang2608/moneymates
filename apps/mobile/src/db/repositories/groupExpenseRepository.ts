@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lt, sql } from "drizzle-orm";
 
 import { DEFAULT_CATEGORIES } from "../../lib/category/defaults";
 import { GroupError } from "../../lib/group/types";
@@ -11,6 +11,7 @@ import { expenseShares, groupMembers, groups, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 
 export type ExpenseShareRow = typeof expenseShares.$inferSelect;
+export type GroupExpenseListRow = typeof transactions.$inferSelect & { share_count: number };
 export type SplitMode = "equal" | "amount" | "percent";
 
 /** equal → `{memberId}`, amount → `{memberId, amount}`, percent → `{memberId, bp}` (10000 = 100%). */
@@ -267,6 +268,19 @@ export function createGroupExpenseRepository(db: AnyDb) {
         .from(transactions)
         .where(and(eq(transactions.group_id, groupId), liveTxn, eq(transactions.type, "expense")));
       return Number(rows[0]?.total ?? 0);
+    },
+
+    /** Live expenses of a group, newest first, with the number of live shares. */
+    async listGroupExpenses(groupId: string): Promise<GroupExpenseListRow[]> {
+      const rows = await db
+        .select({
+          txn: transactions,
+          share_count: sql<number>`(select count(*) from expense_shares es where es.transaction_id = transactions.id and es.deleted_at is null)`,
+        })
+        .from(transactions)
+        .where(and(eq(transactions.group_id, groupId), liveTxn, eq(transactions.type, "expense")))
+        .orderBy(desc(transactions.occurred_at), desc(sql`transactions.rowid`));
+      return rows.map((r) => ({ ...r.txn, share_count: Number(r.share_count) }));
     },
 
     /** My (is_me) share of live group expenses in a VN local month `YYYY-MM`, integer VND. */

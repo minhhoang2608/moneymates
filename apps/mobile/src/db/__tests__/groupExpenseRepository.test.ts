@@ -318,4 +318,27 @@ describe("group expense repository", () => {
     expect(live).toHaveLength(0);
     expect(await s.exp.myShareByMonth("2026-11")).toBe(0);
   });
+
+  it("listGroupExpenses: this group's live expenses, newest first, with share_count", async () => {
+    const s = await setup();
+    const other = await s.groups.createGroup({ name: "Khác nhóm", members: ["Chi"] });
+    const mk = (groupId: string, payer: string, shares: string[], amount: number, occurredAt: string) =>
+      s.exp.createGroupExpense({
+        groupId,
+        amount,
+        payerMemberId: payer,
+        splitMode: "equal",
+        shares: shares.map((memberId) => ({ memberId })),
+        occurredAt,
+      });
+    const old = await mk(s.g.id, s.me, [s.me, s.an, s.binh], 300000, "2026-11-19T08:00:00Z");
+    const recent = await mk(s.g.id, s.an, [s.me, s.an], 200000, "2026-11-21T08:00:00Z");
+    const gone = await mk(s.g.id, s.me, [s.me], 100000, "2026-11-20T08:00:00Z");
+    await mk(other.id, other.members[0].id, [other.members[0].id], 50000, "2026-11-22T08:00:00Z");
+    await s.tx.softDelete(gone.id);
+    const rows = await s.exp.listGroupExpenses(s.g.id);
+    expect(rows.map((r) => r.id)).toEqual([recent.id, old.id]);
+    expect(rows.map((r) => r.share_count)).toEqual([2, 3]);
+    expect(await s.exp.listGroupExpenses(other.id)).toHaveLength(1);
+  });
 });

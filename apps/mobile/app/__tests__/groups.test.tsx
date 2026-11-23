@@ -73,6 +73,15 @@ describe("Nhóm list", () => {
     expect(screen.getByText("3 thành viên · 01–04/12")).toBeTruthy();
   });
 
+  it("AC4: tapping a group card opens /group/<id>", async () => {
+    freshFile();
+    const g = await groupsRepo().createGroup({ name: "Đà Lạt", members: ["An"] });
+    await renderList();
+    await fireEvent.press(await screen.findByTestId(`group-card-${g.id}`));
+    await screen.findByTestId("screen-group-detail");
+    expect(screen).toHavePathname(`/group/${g.id}`);
+  });
+
   it("AC6: no groups shows empty state; create navigates to /group/edit", async () => {
     freshFile();
     await renderList();

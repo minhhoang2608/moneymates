@@ -32,6 +32,7 @@ export type {
   GroupExpenseRepository,
   NewGroupExpense,
   GroupExpensePatch,
+  GroupExpenseListRow,
   ShareInput,
   ExpenseShareRow,
 } from "./groupExpenseRepository";
