@@ -1,7 +1,7 @@
 // PreToolUse hook for Bash. Blocks:
 //  - git push to dev/main, any --force / -f / +refspec, --force-with-lease outside feat/* or fix/*,
 //    remote branch deletion, --all/--mirror; in CI any push to a branch other than feat/* or fix/*
-//  - gh pr merge, API merges, PRs into main; in CI editing status:/agent:/needs-human labels
+//  - PRs into main; in CI: gh pr merge / API merges and editing status:/agent:/needs-human labels
 //  - reading .env files or secret variables through the shell
 //  - shell writes into docs/ or tests/golden/ (and .github/, .claude/ in CI)
 import { execSync } from "node:child_process";
@@ -63,8 +63,11 @@ if (writesText.test(cmd)) {
 }
 
 // ---------- gh ----------
-if (/\bgh\s+pr\s+merge\b/.test(cmd)) block("agents never merge; the Tech Lead review workflow merges approved PRs.");
-if (/\bgh\s+api\b[^;&|\n]*\/pulls\/\d+\/merge\b/.test(cmd)) block("merging through the API is not allowed.");
+// Factory agents (CI) never merge: the Tech Lead review workflow script does. A local session driven
+// by the repo owner may merge (e.g. factory maintenance PRs), but never into main.
+if (inCI && /\bgh\s+pr\s+merge\b/.test(cmd))
+  block("agents never merge; the Tech Lead review workflow merges approved PRs.");
+if (inCI && /\bgh\s+api\b[^;&|\n]*\/pulls\/\d+\/merge\b/.test(cmd)) block("merging through the API is not allowed.");
 if (/\bgh\s+pr\s+create\b[^;&|\n]*(--base|-B)[=\s]+["']?(main|master)\b/.test(cmd))
   block("agents never open PRs into main.");
 if (
