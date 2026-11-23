@@ -1,5 +1,6 @@
 import { parseAmount } from "../src/lib/money";
 import { splitByAmount, splitByPercent, splitEqual, type SplitResult } from "../src/lib/split";
+import { computeBalances, settlementList, type SettleMember } from "../src/lib/settlement";
 import { alertLevel, monthTotals, type MyShare, type StatTxn } from "../src/lib/stats";
 import { buildTransferMessage, generateVietQr, parseVietQr } from "../src/lib/vietqr";
 
@@ -36,7 +37,26 @@ export const registry: Record<string, GoldenFn | undefined> = {
     if (r.reason === "percentNot100") return { error: "percent_not_100", difference_bp: r.diffBp };
     return { error: "sum_mismatch", difference: r.diff };
   },
-  settlement: undefined,
+  settlement: (i) => {
+    type M = { name: string; is_me?: boolean };
+    type E = { paid_by: string; amount: number; splits: Record<string, number> };
+    type S = { from: string; to: string; amount: number; paid?: boolean };
+    const members: SettleMember[] = (i.members as M[]).map((m) => ({ id: m.name, name: m.name, isMe: m.is_me }));
+    const balances = computeBalances({
+      members,
+      expenses: (i.expenses as E[]).map((e) => ({ paidBy: e.paid_by, amount: e.amount, shares: e.splits })),
+      payments: ((i.settlements as S[] | undefined) ?? []).map((s) => ({
+        from: s.from,
+        to: s.to,
+        amount: s.amount,
+        paidAt: s.paid ? "paid" : null,
+      })),
+    });
+    return {
+      balances: Object.fromEntries(balances.map((b) => [b.memberId, b.balance])),
+      transfers: settlementList(members, balances),
+    };
+  },
   stats: (i) => {
     if (i.kind === "alert") {
       return { alert: alertLevel(i.this_month as number, i.last_month as number) !== "none" };
