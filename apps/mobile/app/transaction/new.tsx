@@ -4,6 +4,6 @@ import { TransactionForm } from "@/components/transaction/TransactionForm";
 
 export default function TransactionFormScreen() {
   const router = useRouter();
-  const { transactionId } = useLocalSearchParams<{ transactionId?: string }>();
-  return <TransactionForm transactionId={transactionId} onClose={() => router.back()} />;
+  const { transactionId, groupId } = useLocalSearchParams<{ transactionId?: string; groupId?: string }>();
+  return <TransactionForm transactionId={transactionId} groupId={groupId} onClose={() => router.back()} />;
 }

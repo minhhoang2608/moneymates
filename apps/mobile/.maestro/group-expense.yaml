@@ -1,0 +1,49 @@
+# Group expense: create group with An and Bình -> Thêm chi tiêu -> 1.000.000 equal split -> total shows.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-groups"
+- assertVisible: "Chưa có nhóm nào"
+- tapOn:
+    id: "group-empty-create"
+- tapOn:
+    id: "group-name"
+- inputText: "Đà Lạt"
+- hideKeyboard
+- tapOn:
+    id: "member-add-input"
+- inputText: "An"
+- tapOn:
+    id: "member-add"
+- tapOn:
+    id: "member-add-input"
+- inputText: "Bình"
+- tapOn:
+    id: "member-add"
+- hideKeyboard
+- tapOn:
+    id: "group-save"
+- assertVisible: "Đà Lạt"
+- assertVisible: "0đ"
+- tapOn:
+    text: "Đà Lạt"
+- tapOn:
+    id: "group-add-expense"
+- assertVisible:
+    id: "payer-picker"
+- tapOn:
+    id: "amount-input"
+- inputText: "1000000"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- assertVisible:
+    id: "screen-group-detail"
+- assertVisible:
+    id: "group-total"
+    text: "1.000.000đ"
