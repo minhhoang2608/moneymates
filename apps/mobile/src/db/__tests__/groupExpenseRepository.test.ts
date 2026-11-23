@@ -246,6 +246,7 @@ describe("group expense repository", () => {
     expect(totals.incomeTotal).toBe(25000000);
     expect(totals.expenseTotal).toBe(142000 + myShares.reduce((a, x) => a + x.amount, 0));
     expect(myShares.map((x) => x.amount)).toEqual([333334, 250000]);
+    expect(myShares.every((x) => typeof x.categoryId === "string")).toBe(true);
   });
 
   it("rejects payer or share members from another group, bad amounts, dead groups", async () => {
