@@ -70,13 +70,16 @@ The required checks can only be picked from the list **after they have run once*
 - [ ] Restrict deletions, Block force pushes, Require a pull request, Require status check `ci-gate`.
 - [ ] Bypass list: Repository admin. Agents never target `main` (repo rules and Claude hooks).
 
-### 6. Design references (recommended)
+### 6. Design references (done; keep in sync)
 
-The logo (<https://claude.ai/artifact/2m2qR4FeFweAJzbk9sTkUr#artboard-15dd8cd198dd>) and the UI mockup (<https://claude.ai/artifact/PxFxv62jrWscb7hbTVEAUu#page-dcb81aee8d83>) need a claude.ai login, so **agents in CI cannot open them**. Export the logo (SVG/PNG) and one PNG per screen into `docs/design/`, named after the screen table in the plan (for example `03-xac-nhan-thanh-toan.png`), and push to `dev`. Dev FE and Tester then use them.
+The logo (<https://claude.ai/artifact/2m2qR4FeFweAJzbk9sTkUr>) and UI mockup (<https://claude.ai/artifact/PxFxv62jrWscb7hbTVEAUu>) canvases need a claude.ai login, so agents in CI can't open them. Their source (HTML + CSS per screen, design tokens, logo and `icon.svg`) is exported to `docs/design/`, with `docs/design/README.md` as the index. **When you change the design on the canvas, re-export.** Ask your local Claude Code to "re-export the design canvases into docs/design" (with `FACTORY_HUMAN_OVERRIDE=1`), then push to `dev`.
 
 ### 7. Golden tests (`tests/golden/`)
 
-Agents can't write here. Add canonical cases yourself, using the format in `.claude/skills/testing-strategy/SKILL.md` (VietQR payloads from your real bank apps, split and settlement examples). To let your **local** Claude Code help, start it with `FACTORY_HUMAN_OVERRIDE=1` set in the environment. The override is ignored inside GitHub Actions.
+A first set of canonical cases is in `tests/golden/` (money parsing, split, "Tôi thu hộ" settlement, stats, VietQR generate/parse). `tests/golden/README.md` describes the format. They were computed by a reference implementation and reviewed by a human. **Agents can't change them.**
+
+- **Add real bank QR codes** (recommended): see "Adding real bank QR codes" in `tests/golden/README.md`.
+- To change or add cases with your **local** Claude Code, start it with `FACTORY_HUMAN_OVERRIDE=1` in the environment. The override is ignored inside GitHub Actions.
 
 ## Start, stop, observe
 
