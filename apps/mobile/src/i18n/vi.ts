@@ -337,5 +337,16 @@ export const vi = {
       unknown: "Có lỗi xảy ra, vui lòng thử lại",
     } as Record<string, string>,
   },
+  apiErrors: {
+    invalid_input: "Dữ liệu gửi đi không hợp lệ. Vui lòng kiểm tra lại.",
+    unauthorized: "Ứng dụng chưa được phép kết nối máy chủ.",
+    ai_disabled: "Tính năng AI hiện đang tắt. Vui lòng nhập tay.",
+    quota_exceeded: "Bạn đã dùng hết lượt AI hôm nay. Vui lòng nhập tay.",
+    ai_unavailable: "AI đang bận, vui lòng thử lại sau hoặc nhập tay.",
+    timeout: "Máy chủ phản hồi quá lâu. Vui lòng thử lại.",
+    network: "Không có kết nối mạng. Vui lòng kiểm tra và thử lại.",
+    http_error: "Máy chủ gặp lỗi, vui lòng thử lại sau.",
+    not_configured: "Ứng dụng chưa được cấu hình máy chủ.",
+  },
   comingSoon: "Màn hình đang được xây dựng",
 };

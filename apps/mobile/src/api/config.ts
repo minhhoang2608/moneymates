@@ -4,3 +4,9 @@ export function getApiUrl(): string | null {
   if (!url) return null;
   return url.replace(/\/+$/, "");
 }
+
+/** Shared app secret sent as `X-App-Secret`. Null when unset. */
+export function getAppSecret(): string | null {
+  const secret = process.env.EXPO_PUBLIC_APP_SECRET?.trim();
+  return secret ? secret : null;
+}
