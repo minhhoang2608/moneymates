@@ -1,5 +1,13 @@
 {
   "image": "file:///e2e/bill.jpg",
+  "contract": {
+    "path": "/ai/parse-bill",
+    "fields": ["image", "categories"],
+    "imageName": "bill.jpg",
+    "imageType": "image/jpeg",
+    "headers": ["X-App-Secret", "X-Device-Id"],
+    "responseKeys": ["amount", "currency", "shop", "date", "category"]
+  },
   "response": {
     "amount": 345000,
     "currency": "VND",
