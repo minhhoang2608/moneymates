@@ -6,7 +6,7 @@ import type { CategoryRow } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
 import { formatVnd, parseAmount } from "@/lib/money";
 import { formatTxnDateLabel, validateForm, type FormErrors, type FormType } from "@/lib/transaction/form";
-import { photoPicker as defaultPhotoPicker, type PhotoPicker } from "@/media/photoPicker";
+import { photoPicker as defaultPhotoPicker, type PhotoPicker } from "@/lib/photoPicker";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
 import { CategoryPicker } from "./CategoryPicker";
