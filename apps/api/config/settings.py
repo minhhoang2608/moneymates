@@ -2,18 +2,21 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
-if not SECRET_KEY:
+if not SECRET_KEY or SECRET_KEY == "change-me":
     if DEBUG:
         # Insecure fallback, local development only.
         SECRET_KEY = "insecure-dev-only-key"
     else:
-        raise RuntimeError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is off")
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY must be set to a real value when DJANGO_DEBUG is off"
+        )
 
 
 def _csv(name):
@@ -43,6 +46,22 @@ DATABASES = {
         os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
     )
 }
+
+
+def _caches():
+    backend = os.environ.get("CACHE_BACKEND", "").strip().lower()
+    engine = DATABASES["default"]["ENGINE"]
+    if backend == "db" or (backend != "locmem" and engine == "django.db.backends.postgresql"):
+        return {
+            "default": {
+                "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+                "LOCATION": "django_cache",
+            }
+        }
+    return {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
+
+CACHES = _caches()
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

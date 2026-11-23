@@ -2,6 +2,7 @@ import importlib
 from pathlib import Path
 
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 
 from config import settings
 
@@ -21,7 +22,7 @@ def test_settings_requires_secret_when_not_debug(monkeypatch):
     monkeypatch.delenv("DJANGO_SECRET_KEY")
     monkeypatch.setenv("DJANGO_DEBUG", "0")
     try:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ImproperlyConfigured):
             importlib.reload(settings)
     finally:
         monkeypatch.undo()
@@ -42,3 +43,4 @@ def test_example_env_file_has_only_placeholders():
     assert values["OPENROUTER_API_KEY"] == ""
     assert values["APP_SHARED_SECRET"] == ""
     assert values["DJANGO_SECRET_KEY"] == "change-me"
+    assert values["DATABASE_URL"].startswith("postgres://")

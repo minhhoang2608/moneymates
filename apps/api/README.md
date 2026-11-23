@@ -27,4 +27,15 @@ Errors are the same as parse-text. Models come from `OPENROUTER_VISION_MODELS` (
 
 Env vars: `OPENROUTER_VISION_MODELS`, `AI_BILL_MAX_BYTES`, `OPENROUTER_API_KEY`, `OPENROUTER_MODELS` (comma-separated, tried in order), `OPENROUTER_TIMEOUT_S` (per model, default 10), `AI_LIMIT_PER_MINUTE` (20), `AI_LIMIT_PER_DAY` (50), `APP_SHARED_SECRET`.
 
-Note: request counters use the Django cache. The default LocMem cache is per process; in production use a DB cache (`createcachetable`).
+## Deploy on Hawk Host
+
+1. In cPanel create a Python App on Python 3.12 with app root `apps/api`, startup file `config/wsgi.py`, then entry point `application`.
+2. In the app virtualenv run `pip install -r requirements.txt`.
+3. Set the environment variables listed in `.env.example` (real `DJANGO_SECRET_KEY`, `DATABASE_URL`, `APP_SHARED_SECRET`, `OPENROUTER_*`).
+4. Run `python manage.py migrate` and `python manage.py createcachetable`.
+5. Restart with `touch tmp/restart.txt`.
+6. Check `curl https://<host>/health`.
+
+Notes: Hawk Host only allows a local PostgreSQL (`localhost`). Database and user names carry the cPanel account prefix. URL-encode special characters in the password (e.g. `@` becomes `%40`).
+
+Note: request counters use the Django cache. With PostgreSQL the cache is a DB cache table (`django_cache`, created by `createcachetable`); otherwise LocMem, which is per process. `DatabaseCache.incr` is not atomic, so concurrent workers may slightly undercount a soft quota.
