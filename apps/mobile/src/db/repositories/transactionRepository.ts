@@ -36,6 +36,8 @@ export type TransactionFilter = {
   moneySource?: string;
   /** Case-insensitive (Vietnamese-aware) substring of the note. */
   search?: string;
+  /** Only personal rows (`group_id IS NULL`), e.g. for the Tổng quan totals. */
+  personalOnly?: boolean;
 };
 
 const TYPES = ["expense", "income"];
@@ -157,6 +159,7 @@ export function createTransactionRepository(db: AnyDb) {
       if (filter.categoryId !== undefined) conds.push(eq(transactions.category_id, filter.categoryId));
       if (filter.type !== undefined) conds.push(eq(transactions.type, filter.type));
       if (filter.moneySource !== undefined) conds.push(eq(transactions.money_source, filter.moneySource));
+      if (filter.personalOnly) conds.push(isNull(transactions.group_id));
       const rows = await db
         .select()
         .from(transactions)

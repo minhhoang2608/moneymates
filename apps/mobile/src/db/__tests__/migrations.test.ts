@@ -36,6 +36,21 @@ describe("local migrations", () => {
 
       const txCols = (sqlite.pragma("table_info(transactions)") as { name: string }[]).map((c) => c.name);
       expect(txCols).toContain("group_id");
+      expect(txCols).toContain("split_mode");
+      const shareCols = (sqlite.pragma("table_info(expense_shares)") as { name: string }[]).map((c) => c.name);
+      for (const c of [
+        "id",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+        "owner_id",
+        "transaction_id",
+        "member_id",
+        "amount",
+        "value",
+      ]) {
+        expect(shareCols).toContain(c);
+      }
 
       db.insert(appSetting)
         .values({ ...newBaseRow(), key: "k", value: JSON.stringify({ a: 1 }) })

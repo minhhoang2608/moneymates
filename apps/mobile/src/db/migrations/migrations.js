@@ -6,6 +6,7 @@ import m0001 from "./0001_categories.sql";
 import m0002 from "./0002_profile_bank_account.sql";
 import m0003 from "./0003_transactions.sql";
 import m0004 from "./0004_groups.sql";
+import m0005 from "./0005_expense_shares.sql";
 
 export default {
   journal,
@@ -15,5 +16,6 @@ export default {
     m0002,
     m0003,
     m0004,
+    m0005,
   },
 };
