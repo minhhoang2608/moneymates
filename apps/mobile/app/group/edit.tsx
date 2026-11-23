@@ -106,8 +106,8 @@ export default function GroupEditScreen() {
     };
   }, [id, groups, bankAccounts, profile]);
 
-  function addMember() {
-    const n = newName.trim();
+  function addMember(text?: string) {
+    const n = (text ?? newName).trim();
     if (!n) return;
     setItems((cur) => [...cur, { key: nextKey(), name: n, isMe: false, hasTransactions: false }]);
     setNewName("");
@@ -307,12 +307,12 @@ export default function GroupEditScreen() {
               placeholderTextColor={colors.textMuted}
               value={newName}
               onChangeText={setNewName}
-              onSubmitEditing={addMember}
+              onSubmitEditing={(e) => addMember(e?.nativeEvent?.text)}
               onFocus={scrollToAddRow}
               returnKeyType="done"
               submitBehavior="submit"
             />
-            <Pressable testID="member-add" style={styles.addBtn} onPress={addMember}>
+            <Pressable testID="member-add" style={styles.addBtn} onPress={() => addMember()}>
               <Text style={styles.addBtnText}>{t.add}</Text>
             </Pressable>
           </View>

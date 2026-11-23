@@ -134,6 +134,39 @@ describe("Tạo/sửa nhóm", () => {
     expect(g.members.map((m) => m.displayName)).toEqual(["", "An"]);
   });
 
+  it("submitEditing uses the event text even when state is stale", async () => {
+    freshFile();
+    await renderEdit();
+    const input = screen.getByTestId("member-add-input");
+    await fireEvent(input, "submitEditing", { nativeEvent: { text: "An" } });
+    expect(screen.getByTestId("member-name-1")).toHaveTextContent("An");
+    expect(screen.getByTestId("member-count")).toHaveTextContent(`${vi.groups.members} (2)`);
+    expect(screen.getByTestId("member-add-input").props.value).toBe("");
+  });
+
+  it("submitting twice adds An then Bình", async () => {
+    freshFile();
+    await renderEdit();
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Đà Lạt");
+    const input = screen.getByTestId("member-add-input");
+    await fireEvent(input, "submitEditing", { nativeEvent: { text: "An" } });
+    await fireEvent(input, "submitEditing", { nativeEvent: { text: "Bình" } });
+    expect(screen.getByTestId("member-name-2")).toHaveTextContent("Bình");
+    expect(screen.getByTestId("member-count")).toHaveTextContent(`${vi.groups.members} (3)`);
+    await fireEvent.press(screen.getByTestId("group-save"));
+    await waitFor(async () => expect(await groupsRepo().listGroups()).toHaveLength(1));
+    const [g] = await groupsRepo().listGroups();
+    expect(g.members.map((m) => m.displayName)).toEqual(["", "An", "Bình"]);
+  });
+
+  it("whitespace event text adds nothing", async () => {
+    freshFile();
+    await renderEdit();
+    const input = screen.getByTestId("member-add-input");
+    await fireEvent(input, "submitEditing", { nativeEvent: { text: "   " } });
+    expect(screen.getByText(`${vi.groups.members} (1)`)).toBeTruthy();
+  });
+
   it("shows added members by testID and updates the count", async () => {
     freshFile();
     await renderEdit();

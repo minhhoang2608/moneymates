@@ -19,9 +19,20 @@ appId: com.moneymates.app
 - tapOn:
     id: "member-add-input"
 - inputText: "Bình"
-- pressKey: Enter
+- tapOn:
+    id: "member-add"
 - hideKeyboard
-- assertVisible: "Bình"
+- assertVisible:
+    id: "screen-group-edit"
+- scrollUntilVisible:
+    element:
+      id: "member-name-2"
+- assertVisible:
+    id: "member-name-1"
+    text: "An"
+- assertVisible:
+    id: "member-name-2"
+    text: "Bình"
 - scrollUntilVisible:
     element:
       id: "group-save"
