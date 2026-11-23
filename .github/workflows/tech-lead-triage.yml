@@ -62,9 +62,12 @@ jobs:
             - BA feature tickets (no `area:*`) are user-facing. Design the technical breakdown and split each one into
               sub-tickets per Dev area with `gh issue create`: `area:mobile` for Dev FE, `area:api` for Dev BE, `area:infra`
               for scaffolding and tooling, or one sub-ticket with both areas for Dev Fullstack when a split makes no sense.
-              Each sub-ticket uses the sub-ticket template, has `Parent: #<feature>`, `Depends on #N` lines (API/schema before
-              FE wiring), type + the parent's priority + area labels, and NO status label. Together they must cover every
+              Each sub-ticket uses the sub-ticket template, has `Parent: #<feature>`, `Depends on #N` lines (schema before
+              screens), type + the parent's priority + area labels, and NO status label. Together they must cover every
               feature acceptance criterion. Return `split` with `children`.
+            - Mock-first: when a feature needs a new API endpoint, FE must not wait for BE. Write the API contract in the BE,
+              FE and integration tickets, make the FE ticket build against a mock (no `Depends on` the BE ticket), and add an
+              integration ticket (`area:mobile` + `area:api`) that `Depends on` both the FE and BE tickets.
             - Small single-area tickets (bugs, chores): add `area:*` (and type/priority if missing) and return `ready`.
             - Before creating sub-tickets, check for existing ones (`gh issue list --search "Parent: #N"`); a resumed run must not duplicate them.
             - Never add or remove `status:*`, `agent:*` or `needs-human` labels yourself.
