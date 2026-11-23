@@ -16,7 +16,8 @@ if (!cmd.trim()) process.exit(0);
 // ---------- secrets ----------
 const envFile = /(?:^|[\s"'=:/<>])\.env(?:\.[\w-]+)*(?![\w/.-])/g;
 for (const m of cmd.match(envFile) || []) {
-  if (!/\.(example|sample|template)$/.test(m.trim())) block(`'${m.trim()}' – .env files must not be read or written by agents.`);
+  if (!/\.(example|sample|template)$/.test(m.trim()))
+    block(`'${m.trim()}' – .env files must not be read or written by agents.`);
 }
 if (/(^|[;&|(]\s*|\s)printenv\b/.test(cmd) || /(^|[;&|(]\s*)env\s*($|[|;&>)])/.test(cmd)) {
   block("dumping the environment would expose secrets.");
@@ -55,22 +56,31 @@ if (writesText.test(cmd)) {
     }
   }
   if (ATTRIBUTION.test(text)) {
-    block("commit messages and PR/issue text must not contain AI attribution (Co-Authored-By: / 'Generated with Claude Code').");
+    block(
+      "commit messages and PR/issue text must not contain AI attribution (Co-Authored-By: / 'Generated with Claude Code').",
+    );
   }
 }
 
 // ---------- gh ----------
 if (/\bgh\s+pr\s+merge\b/.test(cmd)) block("agents never merge; the Tech Lead review workflow merges approved PRs.");
 if (/\bgh\s+api\b[^;&|\n]*\/pulls\/\d+\/merge\b/.test(cmd)) block("merging through the API is not allowed.");
-if (/\bgh\s+pr\s+create\b[^;&|\n]*(--base|-B)[=\s]+["']?(main|master)\b/.test(cmd)) block("agents never open PRs into main.");
-if (inCI && /\bgh\s+(issue|pr)\s+edit\b[^;&|\n]*--(add|remove)-label[=\s][^;&|\n]*(status:|agent:|needs-human)/.test(cmd)) {
+if (/\bgh\s+pr\s+create\b[^;&|\n]*(--base|-B)[=\s]+["']?(main|master)\b/.test(cmd))
+  block("agents never open PRs into main.");
+if (
+  inCI &&
+  /\bgh\s+(issue|pr)\s+edit\b[^;&|\n]*--(add|remove)-label[=\s][^;&|\n]*(status:|agent:|needs-human)/.test(cmd)
+) {
   block("status:*, agent:* and needs-human labels are set by workflow scripts from .factory/result.json.");
 }
 
 // ---------- git push ----------
 function currentBranch() {
   try {
-    return execSync("git rev-parse --abbrev-ref HEAD", { cwd: input.cwd || process.cwd(), stdio: ["ignore", "pipe", "ignore"] })
+    return execSync("git rev-parse --abbrev-ref HEAD", {
+      cwd: input.cwd || process.cwd(),
+      stdio: ["ignore", "pipe", "ignore"],
+    })
       .toString()
       .trim();
   } catch {
@@ -97,7 +107,8 @@ for (const seg of segments) {
     else if (a === "--force-if-includes") continue;
     else if (a.startsWith("--force-with-lease")) lease = true;
     else if (/^-[a-zA-Z]*f[a-zA-Z]*$/.test(a)) force = true;
-    else if (a === "--delete" || a === "-d" || /^-[a-zA-Z]*d[a-zA-Z]*$/.test(a)) block("deleting remote branches is not allowed.");
+    else if (a === "--delete" || a === "-d" || /^-[a-zA-Z]*d[a-zA-Z]*$/.test(a))
+      block("deleting remote branches is not allowed.");
     else if (a === "--all" || a === "--mirror" || a === "--prune") block(`git push ${a} is not allowed.`);
     else if (a === "-o" || a === "--push-option" || a === "--repo" || a === "--receive-pack" || a === "--exec") i++;
     else if (!a.startsWith("-")) positional.push(a);
@@ -117,7 +128,8 @@ for (const seg of segments) {
   for (const t of targets) {
     if (/^(dev|main|master)$/.test(t)) block(`direct push to '${t}' is not allowed; open a PR into dev.`);
     const work = /^(feat|fix)\/[\w.-]+/.test(t);
-    if (lease && !work) block(`--force-with-lease is only allowed on feat/* or fix/* branches (target '${t || "unknown"}').`);
+    if (lease && !work)
+      block(`--force-with-lease is only allowed on feat/* or fix/* branches (target '${t || "unknown"}').`);
     if (inCI && !work) block(`agents may only push feat/* or fix/* branches (target '${t || "unknown"}').`);
   }
 }

@@ -21,12 +21,14 @@ You run after each merge into `dev`, and only against `dev`. The workflow has al
 ## How to verify each ticket
 
 For **every** acceptance criterion, find the evidence:
+
 1. A test on `dev` that exercises the criterion (read it, and check that it asserts the right thing, not just that it runs), **and** the job that runs it passed.
 2. For main user flows, a Maestro flow that covers it, with `e2e_job` = success.
 3. Then decide:
    - All criteria have passing evidence → `pass`.
    - A criterion has no test, a weak test, a failing job, or code that contradicts it → `fail`. Write a bug: title `"<ticket title>: <criterion> not met"`, body with steps, expected vs actual, the acceptance criteria of the fix, and the area and priority (p1 by default, p0 if a core flow is broken).
    - Everything checkable passes, but a criterion depends on a physical phone (bank app deeplink autofill, camera scan of a real VietQR, vi-VN speech recognition, biometrics) → `real_device`. List exactly what a human must check and how.
+
 - General test failures on `dev` are reported automatically as a regression bug. Don't duplicate that; only judge the criteria.
 
 ## Allowed GitHub commands
@@ -47,9 +49,15 @@ For **every** acceptance criterion, find the evidence:
 ## Result
 
 ```json
-{"results": [
-  {"issue": 12, "verdict": "pass", "notes": "AC1 ✓ src/qr/__tests__/parse.test.ts …"},
-  {"issue": 15, "verdict": "fail", "notes": "AC2 ✗ …",
-   "bug": {"title": "…", "body": "…", "area": "area:mobile", "priority": "priority:p1"}}
-]}
+{
+  "results": [
+    { "issue": 12, "verdict": "pass", "notes": "AC1 ✓ src/qr/__tests__/parse.test.ts …" },
+    {
+      "issue": 15,
+      "verdict": "fail",
+      "notes": "AC2 ✗ …",
+      "bug": { "title": "…", "body": "…", "area": "area:mobile", "priority": "priority:p1" }
+    }
+  ]
+}
 ```

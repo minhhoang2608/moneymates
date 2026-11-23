@@ -7,10 +7,10 @@ description: Ticket templates (BA feature ticket and Tech Lead sub-ticket), acce
 
 Tickets come in two levels:
 
-| Level | Written by | Content | Labels | Assigned? |
-| --- | --- | --- | --- | --- |
-| **Feature** | BA | What the user can do: user-facing, end-to-end acceptance criteria. No implementation details. | `type:feature`, `priority:*`, `status:triage` (**no `area:*`**) | No. Triage turns it into a parent (`type:epic`) |
-| **Sub-ticket** | Tech Lead (triage) | One PR of technical work for one Dev area, with technical acceptance criteria | `type:feature` / `type:chore`, `priority:*`, `area:*` | Yes, by area |
+| Level          | Written by         | Content                                                                                       | Labels                                                          | Assigned?                                       |
+| -------------- | ------------------ | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| **Feature**    | BA                 | What the user can do: user-facing, end-to-end acceptance criteria. No implementation details. | `type:feature`, `priority:*`, `status:triage` (**no `area:*`**) | No. Triage turns it into a parent (`type:epic`) |
+| **Sub-ticket** | Tech Lead (triage) | One PR of technical work for one Dev area, with technical acceptance criteria                 | `type:feature` / `type:chore`, `priority:*`, `area:*`           | Yes, by area                                    |
 
 Bugs filed by the Tester are single tickets. Triage adds `area:*` and marks them ready, or splits them when they span FE and BE.
 
@@ -18,23 +18,29 @@ Bugs filed by the Tester are single tickets. Triage adds `area:*` and marks them
 
 ```markdown
 ## Goal
+
 As a <user>, I can <do something> so that <value>.
 
 ## Scope
+
 **In scope**
+
 - ...
-**Out of scope**
+  **Out of scope**
 - ...
-**Source:** docs/plan-chuc-nang-giao-dien.md § <section>
+  **Source:** docs/plan-chuc-nang-giao-dien.md § <section>
 
 ## Acceptance criteria
+
 - [ ] AC1: Given <state>, when <user action>, then <what the user sees or what is saved>.
 - [ ] AC2: ...
 
 ## Dependencies
-Depends on #<n>   <!-- feature-level only, e.g. settlement needs groups -->
+
+Depends on #<n> <!-- feature-level only, e.g. settlement needs groups -->
 
 ## Notes
+
 <Real-device checks (deeplink, camera, speech), golden cases needed, open questions.>
 ```
 
@@ -44,22 +50,28 @@ Depends on #<n>   <!-- feature-level only, e.g. settlement needs groups -->
 Parent: #<feature>
 
 ## Goal
+
 <The technical outcome of this PR in one or two sentences.>
 
 ## Scope
+
 **In scope** (files/modules)
+
 - ...
-**Out of scope**
+  **Out of scope**
 - ...
 
 ## Acceptance criteria
+
 - [ ] AC1: <technical, testable: function/endpoint/screen behaviour with concrete values> (covers feature AC2)
 - [ ] AC2: ...
 
 ## Dependencies
+
 Depends on #<n>
 
 ## Technical notes
+
 <Tables/fields, endpoint + JSON request/response shapes, test data, E2E fixture needs, real-device checks.>
 ```
 
@@ -75,7 +87,7 @@ Title: imperative and specific, with no area prefix. For example: "Parse VietQR 
 
 ## Acceptance criteria rules
 
-- Every criterion is **testable** and maps to at least one automated test (unit, API or Maestro), or is explicitly marked *(real device)*.
+- Every criterion is **testable** and maps to at least one automated test (unit, API or Maestro), or is explicitly marked _(real device)_.
 - Use concrete values. Write "Given amount 1.000.000đ split equally among 3 members, then shares are 333.334đ, 333.333đ, 333.333đ", not "splits correctly".
 - Cover the error and empty paths named in the docs, for example: AI fails or quota runs out → form stays editable and category is "Khác".
 - Quote Vietnamese UI strings exactly as in the docs.

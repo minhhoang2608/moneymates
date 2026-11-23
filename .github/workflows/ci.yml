@@ -52,6 +52,15 @@ jobs:
         run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
       - name: shellcheck
         run: shellcheck scripts/*.sh scripts/factory/*.sh
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Prettier (repo-wide, see .prettierrc.json / .prettierignore)
+        run: |
+          npm ci
+          npm run format:check
       - name: Claude hooks parse
         run: for f in .claude/hooks/*.mjs; do node --check "$f"; done
 

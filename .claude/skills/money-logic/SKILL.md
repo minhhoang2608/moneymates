@@ -16,16 +16,16 @@ description: MoneyMates money rules – integer VND, parsing "50k"/"1tr2", group
 
 Accept case-insensitive input, with spaces, after trimming. Return `null` on ambiguity (the UI then asks).
 
-| Input | Value |
-| --- | --- |
-| `50000`, `50.000`, `50,000` | 50 000 (`.` and `,` as thousands separators when followed by exactly 3 digits) |
-| `50k`, `50 k`, `50 nghìn`, `50 ngàn`, `50 nghin` | 50 000 |
-| `1k5` | 1 500 |
-| `1tr`, `1 triệu`, `1 trieu`, `1 củ` | 1 000 000 |
-| `1tr2` | 1 200 000 |
-| `1tr25`, `1tr250` | 1 250 000 (digits after `tr` are the fraction of a million, right-padded to 3 digits) |
-| `1.5tr`, `1,5tr` | 1 500 000 |
-| `2 tỷ` | 2 000 000 000 |
+| Input                                            | Value                                                                                 |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `50000`, `50.000`, `50,000`                      | 50 000 (`.` and `,` as thousands separators when followed by exactly 3 digits)        |
+| `50k`, `50 k`, `50 nghìn`, `50 ngàn`, `50 nghin` | 50 000                                                                                |
+| `1k5`                                            | 1 500                                                                                 |
+| `1tr`, `1 triệu`, `1 trieu`, `1 củ`              | 1 000 000                                                                             |
+| `1tr2`                                           | 1 200 000                                                                             |
+| `1tr25`, `1tr250`                                | 1 250 000 (digits after `tr` are the fraction of a million, right-padded to 3 digits) |
+| `1.5tr`, `1,5tr`                                 | 1 500 000                                                                             |
+| `2 tỷ`                                           | 2 000 000 000                                                                         |
 
 Voice sentences ("ăn phở 50 nghìn", "Nam trả tiền xăng 200k") use the same number parser after the offline rules extract the amount phrase. Write table-driven tests. These cases belong in `tests/golden/money-parse/`.
 

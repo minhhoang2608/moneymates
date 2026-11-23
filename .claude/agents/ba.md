@@ -48,5 +48,5 @@ You turn the human-owned requirements into **feature tickets**: what the user ca
 `.factory/result.json`:
 
 ```json
-{"created": [12, 13], "commented": [7], "notes": "Remaining: statistics screen, app lock"}
+{ "created": [12, 13], "commented": [7], "notes": "Remaining: statistics screen, app lock" }
 ```

@@ -17,7 +17,9 @@ const win = process.platform === "win32";
 const problems = [];
 
 function run(cmd, args, cwd) {
-  const r = spawnSync(cmd, args, { cwd, encoding: "utf8", shell: win, timeout: 60_000 });
+  // Windows needs shell: true for .cmd shims, so paths with spaces must be quoted by hand.
+  const q = (s) => (win && /\s/.test(s) ? `"${s}"` : s);
+  const r = spawnSync(q(cmd), args.map(q), { cwd, encoding: "utf8", shell: win, timeout: 60_000 });
   return { ok: r.status === 0, out: `${r.stdout || ""}${r.stderr || ""}`.trim(), missing: r.error?.code === "ENOENT" };
 }
 
@@ -32,13 +34,23 @@ function onPath(name) {
 }
 
 const ext = path.extname(rel).toLowerCase();
+const PRETTIER_EXT = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".css", ".md", ".yml", ".yaml", ".html"];
 
-if ([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".css"].includes(ext) && rel.startsWith("apps/mobile/")) {
+// Prettier: repo-wide config (.prettierrc.json, .prettierignore). Prefer the app's own install for
+// apps/mobile files, else the root install (`npm ci` at the repo root). Ignored paths are skipped by Prettier.
+if (PRETTIER_EXT.includes(ext)) {
   const appDir = path.join(root, "apps", "mobile");
-  const prettier = localBin(appDir, "prettier");
-  if (prettier) run(prettier, ["--write", abs], appDir);
+  const prettier = (rel.startsWith("apps/mobile/") && localBin(appDir, "prettier")) || localBin(root, "prettier");
+  if (prettier) {
+    const r = run(prettier, ["--write", "--ignore-unknown", abs], root);
+    if (!r.ok && r.out) problems.push(`Prettier (${rel}):\n${r.out}`);
+  }
+}
+
+if ([".ts", ".tsx", ".js", ".jsx"].includes(ext) && rel.startsWith("apps/mobile/")) {
+  const appDir = path.join(root, "apps", "mobile");
   const eslint = localBin(appDir, "eslint");
-  if (eslint && [".ts", ".tsx", ".js", ".jsx"].includes(ext)) {
+  if (eslint) {
     const r = run(eslint, ["--fix", abs], appDir);
     if (!r.ok && r.out) problems.push(`ESLint (${rel}):\n${r.out}`);
   }
@@ -65,7 +77,9 @@ if (ext === ".sh" && onPath("shellcheck")) {
 }
 
 if (problems.length) {
-  process.stderr.write(`Lint problems remain after auto-fix – please fix them:\n\n${problems.join("\n\n").slice(0, 6000)}\n`);
+  process.stderr.write(
+    `Lint problems remain after auto-fix – please fix them:\n\n${problems.join("\n\n").slice(0, 6000)}\n`,
+  );
   process.exit(2);
 }
 process.exit(0);

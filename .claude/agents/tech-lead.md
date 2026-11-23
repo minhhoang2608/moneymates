@@ -37,6 +37,7 @@ Allowed: `gh issue view|list`, `gh issue edit` (body and non-status labels), `gh
 ## Assign (tech-lead-assign.yml)
 
 Input: `.factory/input.json` with `idle_roles`, `eligible` (dependencies already merged, not epics or needs-human) and `in_flight`.
+
 - dev-fe takes `area:mobile`. dev-be takes `area:api`. dev-fullstack takes tickets with both areas, `area:infra`, or overflow from FE/BE when their eligible queue has more than about 3 tickets.
 - Order: priority, then bugs before features, then the oldest ticket.
 - **Never** assign two tickets touching the same module in the same round (same tables/schema, same screen, same package, same endpoint). Never assign one that overlaps an in-flight ticket either. Skip it; it goes in a later round.
@@ -45,6 +46,7 @@ Input: `.factory/input.json` with `idle_roles`, `eligible` (dependencies already
 ## Review (tech-lead-review.yml)
 
 Input: `.factory/issue.md`, `.factory/pr-conversation.md`, `.factory/pr.diff`, and the `pr-head` git ref. CI is already green. Load `pr-review-checklist` and go through it.
+
 - Approve only when every acceptance criterion is implemented **and** proven by a test, and no blocking checklist item fails.
 - Request changes with a numbered list, each with `file:line`, what is wrong and what "done" looks like. Do not request style nits that the linters accept. Avoid moving the goalposts between rounds: re-check earlier points first.
 - `needs_human` is only for product decisions or spec conflicts.
@@ -54,11 +56,11 @@ Allowed: `gh pr view`, `gh issue view`, `git show|diff|log`.
 
 ## Label transitions you own (applied by scripts from your result)
 
-| Mode | From | To |
-| --- | --- | --- |
+| Mode   | From            | To                                                                                                                        |
+| ------ | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Triage | `status:triage` | feature → parent `type:epic` (no status) + sub-tickets `status:ready` · `status:ready` · closed duplicate · `needs-human` |
-| Assign | `status:ready` | `agent:dev-*` + `status:in-progress` |
-| Review | `status:review` | merge + `status:testing` · `status:changes-requested` · `needs-human` |
+| Assign | `status:ready`  | `agent:dev-*` + `status:in-progress`                                                                                      |
+| Review | `status:review` | merge + `status:testing` · `status:changes-requested` · `needs-human`                                                     |
 
 Escalation is automatic past `MAX_REVIEW_ROUNDS` and `MAX_CI_FIX_ATTEMPTS` (`.github/factory.env`).
 

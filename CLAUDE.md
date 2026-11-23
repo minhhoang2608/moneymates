@@ -4,12 +4,12 @@ MoneyMates is an iOS/Android expense tracker for Vietnamese users. You can log a
 
 The project is built by an AI software factory. Read the source documents before you plan anything:
 
-| Document | Content |
-| --- | --- |
+| Document                           | Content                                                |
+| ---------------------------------- | ------------------------------------------------------ |
 | `docs/plan-chuc-nang-giao-dien.md` | Product requirements, screens, data model (Vietnamese) |
-| `docs/tech-stack.md` | Technical decisions (Vietnamese) |
-| `docs/ai-software-factory.md` | How the factory works (Vietnamese) |
-| `docs/factory-setup.md` | Human setup checklist |
+| `docs/tech-stack.md`               | Technical decisions (Vietnamese)                       |
+| `docs/ai-software-factory.md`      | How the factory works (Vietnamese)                     |
+| `docs/factory-setup.md`            | Human setup checklist                                  |
 
 `docs/` is **human-owned input**. Agents read it and never edit it.
 
@@ -63,23 +63,23 @@ BA feature (user-facing, no area) ── status:triage
 All sub-tickets closed → Tester verifies the parent feature end to end → closed (status:done)
 ```
 
-| Label | Meaning |
-| --- | --- |
-| `status:triage` | New ticket, waiting for Tech Lead |
-| `status:ready` | Triaged, waiting for assignment |
-| `status:in-progress` | A Dev is working on it |
-| `status:review` | PR open, waiting for Tech Lead review |
-| `status:changes-requested` | Tech Lead (or CI) asked for changes |
-| `status:needs-rebase` | PR conflicts with `dev` |
-| `status:testing` | Merged into `dev`, waiting for Tester |
-| `status:done` | Verified on `dev`, closed |
-| `agent:dev-fe` / `agent:dev-be` / `agent:dev-fullstack` | Which Dev owns the ticket |
-| `needs-human` | Stuck: every agent skips it until a human removes the label |
-| `test:real-device` | Needs a check on a physical phone (paired with `needs-human`) |
-| `type:feature` / `type:bug` / `type:chore` | Ticket type |
-| `type:epic` | Parent feature split into sub-tickets by the Tech Lead. Never assigned; verified end to end when all sub-tickets are closed |
-| `priority:p0`…`priority:p3` | p0 is highest |
-| `area:mobile` / `area:api` / `area:infra` | Code area, set by the **Tech Lead** (BA features have none). FE takes mobile, BE takes api, Fullstack takes both, infra and overflow |
+| Label                                                   | Meaning                                                                                                                              |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `status:triage`                                         | New ticket, waiting for Tech Lead                                                                                                    |
+| `status:ready`                                          | Triaged, waiting for assignment                                                                                                      |
+| `status:in-progress`                                    | A Dev is working on it                                                                                                               |
+| `status:review`                                         | PR open, waiting for Tech Lead review                                                                                                |
+| `status:changes-requested`                              | Tech Lead (or CI) asked for changes                                                                                                  |
+| `status:needs-rebase`                                   | PR conflicts with `dev`                                                                                                              |
+| `status:testing`                                        | Merged into `dev`, waiting for Tester                                                                                                |
+| `status:done`                                           | Verified on `dev`, closed                                                                                                            |
+| `agent:dev-fe` / `agent:dev-be` / `agent:dev-fullstack` | Which Dev owns the ticket                                                                                                            |
+| `needs-human`                                           | Stuck: every agent skips it until a human removes the label                                                                          |
+| `test:real-device`                                      | Needs a check on a physical phone (paired with `needs-human`)                                                                        |
+| `type:feature` / `type:bug` / `type:chore`              | Ticket type                                                                                                                          |
+| `type:epic`                                             | Parent feature split into sub-tickets by the Tech Lead. Never assigned; verified end to end when all sub-tickets are closed          |
+| `priority:p0`…`priority:p3`                             | p0 is highest                                                                                                                        |
+| `area:mobile` / `area:api` / `area:infra`               | Code area, set by the **Tech Lead** (BA features have none). FE takes mobile, BE takes api, Fullstack takes both, infra and overflow |
 
 ## Engineering rules
 
@@ -89,7 +89,8 @@ All sub-tickets closed → Tester verifies the parent feature end to end → clo
 - **The mobile app never talks to a database or third-party AI directly.** Everything goes through the Django API.
 - **Every change ships with tests.** Use unit tests for logic, API tests for endpoints (mock OpenRouter, never call it), and a Maestro flow for any new main user flow. See the `testing-strategy` skill.
 - **`tests/golden/` is read-only for agents.** If a golden case looks wrong, stop and report `blocked`. Never change the fixture to make code pass.
-- Keep each PR to one ticket. Make no drive-by refactors. Follow the existing style. The lint and format hooks run automatically after edits.
+- Keep each PR to one ticket. Make no drive-by refactors. Follow the existing style.
+- **Formatting is Prettier** (repo config `.prettierrc.json` / `.prettierignore`; `npm ci` at the repo root installs it). The format hook runs Prettier after every edit, and CI fails on `npm run format:check`. Run `npm run format` before pushing if you edited files outside Claude Code. Python is formatted by ruff.
 - Write tickets, PRs, commits, code and comments in English. User-facing UI strings are Vietnamese.
 - Use Conventional Commit messages that mention the issue, for example `feat(mobile): parse VietQR payload (#12)`.
 - **No AI attribution, anywhere.** Commit messages must not contain a `Co-Authored-By:` trailer, and PR descriptions and comments must not contain "Generated with Claude Code" (or similar). A hook blocks both, and CI fails the PR if a commit or the PR description has one.

@@ -9,6 +9,7 @@ Refs #<!-- issue number. Use "Refs", NOT "Closes"/"Fixes": the Tester closes the
 ## Acceptance criteria
 
 <!-- Copy every AC from the ticket; tick it and name the test that proves it. -->
+
 - [ ] AC1 — covered by `path/to/test`
 
 ## Tests

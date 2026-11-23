@@ -25,11 +25,11 @@ apps/api/
 
 ## Endpoints (v1)
 
-| Endpoint | Request | Response |
-| --- | --- | --- |
-| `POST /ai/parse-text` | `{text, members?: [name], categories?: [{id,name}]}` | `{amount: int\|null, note, category_id\|null, paid_by: name\|null, type: "expense"\|"income"}` |
-| `POST /ai/parse-bill` | multipart `image` (compressed JPEG ≤ ~1 MB), `categories?` | `{amount: int\|null, merchant, date: "YYYY-MM-DD"\|null, category_id\|null, items?: [...]}` |
-| `GET /me/features` | – | `{"ai": true, ...}`, a fixed config in v1 (no plan checks yet) |
+| Endpoint              | Request                                                    | Response                                                                                       |
+| --------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `POST /ai/parse-text` | `{text, members?: [name], categories?: [{id,name}]}`       | `{amount: int\|null, note, category_id\|null, paid_by: name\|null, type: "expense"\|"income"}` |
+| `POST /ai/parse-bill` | multipart `image` (compressed JPEG ≤ ~1 MB), `categories?` | `{amount: int\|null, merchant, date: "YYYY-MM-DD"\|null, category_id\|null, items?: [...]}`    |
+| `GET /me/features`    | –                                                          | `{"ai": true, ...}`, a fixed config in v1 (no plan checks yet)                                 |
 
 - Amounts are **integers in VND**. Never return floats.
 - Errors use stable machine codes, for example `{"error": "ai_unavailable" | "rate_limited" | "invalid_input"}`. The app maps them to Vietnamese text and falls back to manual entry.

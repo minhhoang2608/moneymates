@@ -10,7 +10,10 @@ const ti = input.tool_input || {};
 const target = ti.file_path || ti.notebook_path || ti.path || "";
 const rel = relPath(input, target);
 
-if (isSecretPath(rel) || (rel === null && /(^|[\\/])\.env(\.[\w.-]+)?$/.test(target) && !/\.(example|sample|template)$/.test(target))) {
+if (
+  isSecretPath(rel) ||
+  (rel === null && /(^|[\\/])\.env(\.[\w.-]+)?$/.test(target) && !/\.(example|sample|template)$/.test(target))
+) {
   block(`${tool} on '${target}' is not allowed: secrets and .env files are off-limits. Use .env.example placeholders.`);
 }
 

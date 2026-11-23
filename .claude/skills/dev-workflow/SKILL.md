@@ -29,12 +29,12 @@ Report `blocked` if the ticket is ambiguous, contradicts `docs/`, is clearly big
 
 Shared setup: `git fetch origin`. If the branch exists on origin, `git checkout <branch>` (tracking origin). Otherwise create it with `git checkout -b <branch> origin/dev`.
 
-| Reason | Do |
-| --- | --- |
-| `assigned` | Implement the plan **with tests**. Make small Conventional Commits (`feat(mobile): … (#n)`, **no `Co-Authored-By:` trailer**) and `git push -u origin <branch>` regularly. When local checks pass, open the PR (below). If the PR already exists, just push. |
-| `changes-requested` | Fix every numbered point of the latest review, then `gh pr comment <pr> --body-file <file>` with "Addressed: 1. …, 2. …". Push. If you disagree with a point, explain why in that comment and still report `pushed` (the reviewer decides). |
-| `ci-failed` | Read `.factory/ci-failure.log`, reproduce locally, fix the root cause (never skip or disable a test), push. |
-| `rebase` | Follow the `rebase-and-resolve-conflicts` skill. |
+| Reason              | Do                                                                                                                                                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `assigned`          | Implement the plan **with tests**. Make small Conventional Commits (`feat(mobile): … (#n)`, **no `Co-Authored-By:` trailer**) and `git push -u origin <branch>` regularly. When local checks pass, open the PR (below). If the PR already exists, just push. |
+| `changes-requested` | Fix every numbered point of the latest review, then `gh pr comment <pr> --body-file <file>` with "Addressed: 1. …, 2. …". Push. If you disagree with a point, explain why in that comment and still report `pushed` (the reviewer decides).                  |
+| `ci-failed`         | Read `.factory/ci-failure.log`, reproduce locally, fix the root cause (never skip or disable a test), push.                                                                                                                                                  |
+| `rebase`            | Follow the `rebase-and-resolve-conflicts` skill.                                                                                                                                                                                                             |
 
 Open the PR with:
 
@@ -61,11 +61,11 @@ Run lint, typecheck and tests for every app you touched (commands are in your ag
 
 ## Label transitions (applied by scripts from your result)
 
-| Before | Your outcome | After |
-| --- | --- | --- |
-| `status:in-progress` | `pr_opened` / `pushed` | `status:review` (CI runs, then Tech Lead review) |
-| `status:changes-requested` / `status:needs-rebase` | `pushed` / `no_changes` | `status:review` |
-| any | `blocked` | `needs-human` |
+| Before                                             | Your outcome            | After                                            |
+| -------------------------------------------------- | ----------------------- | ------------------------------------------------ |
+| `status:in-progress`                               | `pr_opened` / `pushed`  | `status:review` (CI runs, then Tech Lead review) |
+| `status:changes-requested` / `status:needs-rebase` | `pushed` / `no_changes` | `status:review`                                  |
+| any                                                | `blocked`               | `needs-human`                                    |
 
 ## Result
 

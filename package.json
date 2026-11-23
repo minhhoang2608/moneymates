@@ -1,0 +1,12 @@
+{
+  "name": "moneymates-repo",
+  "private": true,
+  "description": "Repo-level tooling (formatting). The apps live in apps/mobile and apps/api with their own dependencies.",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "3.10.1"
+  }
+}

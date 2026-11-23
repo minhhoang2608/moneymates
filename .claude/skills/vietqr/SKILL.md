@@ -11,27 +11,27 @@ VietQR is the EMVCo Merchant-Presented Mode (MPM) QR as profiled by NAPAS. Money
 
 The payload is a string of `ID (2 digits) + LEN (2 digits, decimal) + VALUE (LEN chars)`, repeated. Some values are themselves TLV (templates).
 
-| ID | Name | Value |
-| --- | --- | --- |
-| `00` | Payload format indicator | `01` (must be first) |
-| `01` | Point of initiation | `11` static (reusable, no amount) · `12` dynamic (has amount) |
-| `38` | Merchant account info – NAPAS (template) | see below |
-| `52` | Merchant category code | optional, for example `0000` |
-| `53` | Transaction currency | `704` (VND) |
-| `54` | Transaction amount | integer VND as decimal digits, no separators, e.g. `250000` |
-| `58` | Country code | `VN` |
-| `59` | Merchant / beneficiary name | optional |
-| `60` | Merchant city | optional |
-| `62` | Additional data (template) | sub-tag `08` = purpose of transaction (the transfer message) |
-| `63` | CRC | 4 uppercase hex chars, always last |
+| ID   | Name                                     | Value                                                         |
+| ---- | ---------------------------------------- | ------------------------------------------------------------- |
+| `00` | Payload format indicator                 | `01` (must be first)                                          |
+| `01` | Point of initiation                      | `11` static (reusable, no amount) · `12` dynamic (has amount) |
+| `38` | Merchant account info – NAPAS (template) | see below                                                     |
+| `52` | Merchant category code                   | optional, for example `0000`                                  |
+| `53` | Transaction currency                     | `704` (VND)                                                   |
+| `54` | Transaction amount                       | integer VND as decimal digits, no separators, e.g. `250000`   |
+| `58` | Country code                             | `VN`                                                          |
+| `59` | Merchant / beneficiary name              | optional                                                      |
+| `60` | Merchant city                            | optional                                                      |
+| `62` | Additional data (template)               | sub-tag `08` = purpose of transaction (the transfer message)  |
+| `63` | CRC                                      | 4 uppercase hex chars, always last                            |
 
 Tag `38` template:
 
-| Sub-ID | Value |
-| --- | --- |
-| `00` | GUID `A000000727` (NAPAS) |
-| `01` | Beneficiary organisation (template): `00` = bank BIN (6 digits, e.g. `970422` MB), `01` = account number (or card number) |
-| `02` | Service code: `QRIBFTTA` = transfer to account, `QRIBFTTC` = transfer to card |
+| Sub-ID | Value                                                                                                                     |
+| ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `00`   | GUID `A000000727` (NAPAS)                                                                                                 |
+| `01`   | Beneficiary organisation (template): `00` = bank BIN (6 digits, e.g. `970422` MB), `01` = account number (or card number) |
+| `02`   | Service code: `QRIBFTTA` = transfer to account, `QRIBFTTC` = transfer to card                                             |
 
 ## CRC16
 

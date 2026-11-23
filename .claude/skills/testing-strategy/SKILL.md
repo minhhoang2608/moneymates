@@ -5,12 +5,12 @@ description: MoneyMates test pyramid – unit tests (Jest), API tests (pytest, O
 
 # Testing strategy
 
-| Level | Tool | Where | Runs in | Covers |
-| --- | --- | --- | --- | --- |
-| Unit | Jest (`jest-expo`) | `apps/mobile/src/**/__tests__/` | CI on every PR | VietQR TLV/CRC, money parsing, splits, settlement, stats, category matcher, stores |
-| Golden | Jest runner `npm run test:golden` | fixtures in `tests/golden/` | CI on every PR | canonical money and QR cases, human-owned |
-| API | pytest + DRF `APIClient` | `apps/api/**/tests/` | CI on every PR | `/ai/parse-*`, `/me/features`, request limits, fallbacks |
-| E2E | Maestro | `apps/mobile/.maestro/*.yaml` | Tester, after merge into `dev` | main flows on an Android emulator |
+| Level  | Tool                              | Where                           | Runs in                        | Covers                                                                             |
+| ------ | --------------------------------- | ------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| Unit   | Jest (`jest-expo`)                | `apps/mobile/src/**/__tests__/` | CI on every PR                 | VietQR TLV/CRC, money parsing, splits, settlement, stats, category matcher, stores |
+| Golden | Jest runner `npm run test:golden` | fixtures in `tests/golden/`     | CI on every PR                 | canonical money and QR cases, human-owned                                          |
+| API    | pytest + DRF `APIClient`          | `apps/api/**/tests/`            | CI on every PR                 | `/ai/parse-*`, `/me/features`, request limits, fallbacks                           |
+| E2E    | Maestro                           | `apps/mobile/.maestro/*.yaml`   | Tester, after merge into `dev` | main flows on an Android emulator                                                  |
 
 Every ticket's acceptance criteria map to tests at the lowest level that can prove them. E2E is only for main user flows.
 
