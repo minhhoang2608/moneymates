@@ -27,12 +27,15 @@ describe("local migrations", () => {
         expect(cols).toContain(c);
       }
 
-      for (const table of ["profile", "bank_account", "transactions"]) {
+      for (const table of ["profile", "bank_account", "transactions", "groups", "group_members"]) {
         const names = (sqlite.pragma(`table_info(${table})`) as { name: string }[]).map((c) => c.name);
         for (const c of ["id", "created_at", "updated_at", "deleted_at", "owner_id"]) {
           expect(names).toContain(c);
         }
       }
+
+      const txCols = (sqlite.pragma("table_info(transactions)") as { name: string }[]).map((c) => c.name);
+      expect(txCols).toContain("group_id");
 
       db.insert(appSetting)
         .values({ ...newBaseRow(), key: "k", value: JSON.stringify({ a: 1 }) })
