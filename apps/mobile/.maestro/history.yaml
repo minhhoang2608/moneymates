@@ -1,0 +1,35 @@
+# History flow: add via manual entry -> Lịch sử -> swipe-delete -> Hoàn tác restores it.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- tapOn:
+    id: "amount-input"
+- inputText: "50k"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- tapOn:
+    id: "tab-history"
+- assertVisible:
+    id: "screen-history"
+- assertVisible: "−50.000đ"
+- swipe:
+    from:
+      id: "history-row-.*"
+    direction: LEFT
+- tapOn: "Xóa"
+- assertNotVisible: "−50.000đ"
+- tapOn:
+    id: "undo"
+- assertVisible: "−50.000đ"
