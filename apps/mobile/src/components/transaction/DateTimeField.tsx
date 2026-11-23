@@ -6,10 +6,13 @@ export function DateTimeField({
   value,
   onChange,
   onClose,
+  dateOnly = false,
 }: {
   value: Date;
   onChange: (d: Date) => void;
   onClose: () => void;
+  /** Skip the time step and report the picked day (time kept from `value`). */
+  dateOnly?: boolean;
 }) {
   const [step, setStep] = useState<"date" | "time">("date");
   const [draft, setDraft] = useState(value);
@@ -19,6 +22,11 @@ export function DateTimeField({
     if (step === "date") {
       const next = new Date(value);
       next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate());
+      if (dateOnly) {
+        onChange(next);
+        onClose();
+        return;
+      }
       setDraft(next);
       setStep("time");
       return;

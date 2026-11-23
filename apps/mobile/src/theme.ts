@@ -78,3 +78,14 @@ export const categoryTiles = [
   { fg: "#6B4423", bg: "#F5EDE4" },
   { fg: "#3F6212", bg: "#ECFCCB" },
 ] as const;
+
+/** Group icon tile pairs from the Nhóm designs. */
+export const groupIconTiles = {
+  mountain: { fg: "#0E7C66", bg: "#E7F4F0" },
+  sea: { fg: "#245E94", bg: "#E8F1FA" },
+  food: { fg: "#A0561A", bg: "#FDF0E3" },
+  home: { fg: "#5E3FA8", bg: "#EFEAFB" },
+} as const;
+
+/** Member avatar colours: the first is always "Tôi". */
+export const memberColors = ["#0E7C66", "#3B82C4", "#E08A2E", "#8B6BC8", "#A5ABB5"] as const;

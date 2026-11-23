@@ -1,0 +1,29 @@
+# Nhóm: empty state -> Tạo nhóm -> name + members -> save -> card with 0đ.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-groups"
+- assertVisible: "Chưa có nhóm nào"
+- tapOn:
+    id: "group-empty-create"
+- tapOn:
+    id: "group-name"
+- inputText: "Đà Lạt"
+- hideKeyboard
+- tapOn:
+    id: "member-add-input"
+- inputText: "An"
+- tapOn:
+    id: "member-add"
+- tapOn:
+    id: "member-add-input"
+- inputText: "Bình"
+- tapOn:
+    id: "member-add"
+- hideKeyboard
+- tapOn:
+    id: "group-save"
+- assertVisible: "Đà Lạt"
+- assertVisible: "0đ"
