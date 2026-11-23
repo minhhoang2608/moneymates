@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Xác nhận thanh toán</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E7C66}a:hover{color:#0A5E4D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F7F9; font-family: Inter, sans-serif; color: #111827">
+  <header style="height: 64px; padding: 0 12px; display: flex; align-items: center; gap: 8px">
+    <a href="Scan.dc.html" aria-label="Quay lại" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #111827"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1 style="margin: 0; font-size: 17px; font-weight: 600">Xác nhận thanh toán</h1>
+  </header>
+
+  <div style="padding: 4px 20px 0; display: flex; flex-direction: column; gap: 14px">
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="width: 44px; height: 44px; border-radius: 12px; background: #F3E8FF; color: #6B2FB3; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">TP</span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">QUAN PHO HOA</span><span style="font-size: 13px; color: #5B6472">TPBank · 0123 4567 89</span></span>
+      </div>
+      <div style="border-top: 1px solid #EEF0F3; padding-top: 14px; display: flex; flex-direction: column; gap: 4px">
+        <label for="amount" style="font-size: 13px; color: #5B6472">Số tiền</label>
+        <input id="amount" value="55.000đ" style="border: 0; padding: 0; font-family: Inter, sans-serif; font-size: 32px; font-weight: 700; color: #111827; background: transparent; width: 100%">
+        <span style="font-size: 12px; color: #0E7C66; font-weight: 500">Lấy từ mã QR · có thể sửa</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #5B6472">Nội dung</span><span style="font-weight: 500">PHO HOA BAN 12</span></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #5B6472">Danh mục</h2>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1.5px solid #0E7C66; background: #E7F4F0; color: #0A5E4D; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600">Ăn uống</button>
+        <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E6E8EC; background: #FFFFFF; color: #111827; font-family: Inter, sans-serif; font-size: 13px">Di chuyển</button>
+        <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E6E8EC; background: #FFFFFF; color: #111827; font-family: Inter, sans-serif; font-size: 13px">Mua sắm</button>
+        <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #E6E8EC; background: #FFFFFF; color: #111827; font-family: Inter, sans-serif; font-size: 13px">Thêm…</button>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <a href="TargetPicker.dc.html" style="background: #FFFFFF; border-radius: 14px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: #111827">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #E7F4F0; color: #0E7C66; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 9 9l4 6 3-4 5 9z"/></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5B6472">Ghi vào · dùng gần nhất</span><span style="font-size: 15px; font-weight: 600">Đà Lạt 12/2026</span></span>
+        <span style="font-size: 13px; font-weight: 600; color: #0E7C66">Đổi ›</span>
+      </a>
+      <span style="font-size: 12px; color: #5B6472">Trong nhóm: người chi là Tôi, chia đều 4 người.</span>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #5B6472">Thanh toán bằng</h2>
+      <div style="background: #FFFFFF; border-radius: 16px; overflow: hidden">
+        <button style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; border-bottom: 1px solid #EEF0F3; background: #F2FAF7; font-family: Inter, sans-serif; text-align: left">
+          <span style="width: 36px; height: 36px; border-radius: 10px; background: #F3E8FF; color: #6B2FB3; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">TP</span>
+          <span style="flex: 1; font-size: 14px; font-weight: 600; color: #111827">TPBank</span>
+          <span style="font-size: 11px; font-weight: 600; color: #0A5E4D; background: #D3EEE6; padding: 3px 8px; border-radius: 6px">Tự điền</span>
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0E7C66" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+        </button>
+        <button style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; border-bottom: 1px solid #EEF0F3; background: #FFFFFF; font-family: Inter, sans-serif; text-align: left">
+          <span style="width: 36px; height: 36px; border-radius: 10px; background: #FDE8E8; color: #A3161A; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">TCB</span>
+          <span style="flex: 1; font-size: 14px; color: #111827">Techcombank</span>
+          <span style="font-size: 11px; font-weight: 600; color: #0A5E4D; background: #D3EEE6; padding: 3px 8px; border-radius: 6px">Tự điền</span>
+        </button>
+        <button style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; text-align: left">
+          <span style="width: 36px; height: 36px; border-radius: 10px; background: #FCE7F3; color: #9D174D; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">MoMo</span>
+          <span style="flex: 1; font-size: 14px; color: #111827">MoMo</span>
+          <span style="font-size: 11px; font-weight: 600; color: #5B6472; background: #EEF0F3; padding: 3px 8px; border-radius: 6px">Copy + mở app</span>
+        </button>
+      </div>
+      <a href="Settings.dc.html" style="font-size: 13px; font-weight: 600; text-decoration: none">Xem tất cả ngân hàng / ví</a>
+    </section>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFFFFF; border-top: 1px solid #E6E8EC; padding: 12px 20px 28px; display: flex; flex-direction: column; gap: 8px">
+    <button style="height: 54px; border: 0; border-radius: 14px; background: #0E7C66; color: #FFFFFF; font-family: Inter, sans-serif; font-size: 16px; font-weight: 600">Thanh toán 55.000đ qua TPBank</button>
+    <span style="font-size: 12px; color: #5B6472; text-align: center">Giao dịch được lưu ngay khi bấm. Không chuyển thì vào Lịch sử để xóa.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "Theo tỷ lệ tổng 90%",
+  "input": {
+    "amount": 100000,
+    "currency": "VND",
+    "mode": "percent",
+    "participants": [
+      "Tôi",
+      "An"
+    ],
+    "values": {
+      "Tôi": 5000,
+      "An": 4000
+    }
+  },
+  "expected": {
+    "error": "percent_not_100",
+    "difference_bp": 1000
+  }
+}

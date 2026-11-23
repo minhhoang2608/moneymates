@@ -1,0 +1,9 @@
+{
+  "name": "Parse \"50.00\"",
+  "input": {
+    "text": "50.00"
+  },
+  "expected": {
+    "amount": null
+  }
+}

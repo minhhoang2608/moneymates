@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 100 100" role="img" aria-label="MoneyMates icon: two overlapping coins">
+  <defs><clipPath id="left-coin"><circle cx="40" cy="50" r="22"/></clipPath></defs>
+  <rect width="100" height="100" rx="23" fill="#0E7C66"/>
+  <circle cx="40" cy="50" r="22" fill="#FFFFFF"/>
+  <circle cx="60" cy="50" r="22" fill="#3DD6B0"/>
+  <circle cx="60" cy="50" r="22" fill="#0A5E4D" clip-path="url(#left-coin)"/>
+  <text x="29" y="58.5" text-anchor="middle" font-family="Inter, sans-serif" font-size="24" font-weight="800" fill="#0E7C66">$</text>
+</svg>

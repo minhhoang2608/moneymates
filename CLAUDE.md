@@ -18,7 +18,7 @@ The project is built by an AI software factory. Read the source documents before
 - Logo: <https://claude.ai/artifact/2m2qR4FeFweAJzbk9sTkUr#artboard-15dd8cd198dd> ("Hai đồng xu" with a `$`).
 - UI mockup (19 screens): <https://claude.ai/artifact/PxFxv62jrWscb7hbTVEAUu#page-dcb81aee8d83>.
 
-These links need a claude.ai login, so agents in CI cannot open them. Use the exported copies in `docs/design/` when they exist; otherwise follow the screen table in `docs/plan-chuc-nang-giao-dien.md`. Never invent branding. If a UI ticket depends on a visual detail you cannot see, report `blocked`.
+These links need a claude.ai login, so agents in CI can't open them. **Use the exports in `docs/design/` instead:** `docs/design/README.md` maps the 19 screens to files and holds the design tokens (colours, type, radii, tab bar). `docs/design/screens/*.dc.html` holds each screen's real HTML and CSS, and `docs/design/logo/` holds the chosen logo and `icon.svg`. Never invent branding. If a UI ticket depends on a visual detail that isn't there, report `blocked`.
 
 ## Repository layout
 

@@ -1,0 +1,20 @@
+{
+  "name": "Chia đều 1.000.000đ cho 3 người",
+  "input": {
+    "amount": 1000000,
+    "currency": "VND",
+    "mode": "equal",
+    "participants": [
+      "Tôi",
+      "An",
+      "Bình"
+    ]
+  },
+  "expected": {
+    "shares": {
+      "Tôi": 333334,
+      "An": 333333,
+      "Bình": 333333
+    }
+  }
+}

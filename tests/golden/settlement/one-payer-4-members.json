@@ -1,0 +1,58 @@
+{
+  "name": "Tôi trả 1tr cho 4 người",
+  "input": {
+    "members": [
+      {
+        "name": "Tôi",
+        "is_me": true
+      },
+      {
+        "name": "An"
+      },
+      {
+        "name": "Bình"
+      },
+      {
+        "name": "Chi"
+      }
+    ],
+    "expenses": [
+      {
+        "paid_by": "Tôi",
+        "amount": 1000000,
+        "splits": {
+          "Tôi": 250000,
+          "An": 250000,
+          "Bình": 250000,
+          "Chi": 250000
+        },
+        "note": "Khách sạn"
+      }
+    ]
+  },
+  "expected": {
+    "balances": {
+      "Tôi": 750000,
+      "An": -250000,
+      "Bình": -250000,
+      "Chi": -250000
+    },
+    "transfers": [
+      {
+        "from": "An",
+        "to": "Tôi",
+        "amount": 250000
+      },
+      {
+        "from": "Bình",
+        "to": "Tôi",
+        "amount": 250000
+      },
+      {
+        "from": "Chi",
+        "to": "Tôi",
+        "amount": 250000
+      }
+    ]
+  }
+}

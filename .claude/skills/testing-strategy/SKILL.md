@@ -22,8 +22,8 @@ Every ticket's acceptance criteria map to tests at the lowest level that can pro
 
 ## Golden tests (`tests/golden/`, read-only for agents)
 
-- Layout: `tests/golden/<domain>/<case>.json`, where domain is one of `vietqr-parse`, `vietqr-generate`, `money-parse`, `split`, `settlement`, `stats`, `category`.
-- Case format: `{ "name": "...", "input": { ... }, "expected": { ... } }`. Errors are expected as `{ "error": "<code>" }`.
+- Layout: `tests/golden/<domain>/<case>.json`, where domain is one of `money-parse`, `split`, `settlement`, `stats`, `vietqr-generate`, `vietqr-parse` (more may be added by humans).
+- Case format: `{ "name": "...", "input": { ... }, "expected": { ... } }`. Errors are expected as `{ "error": "<code>" }`. **`tests/golden/README.md` defines the exact input and expected shape per domain.** Your pure functions' signatures must accept those shapes, or the runner adapts them.
 - `apps/mobile` provides `npm run test:golden`. It discovers every JSON file and calls the matching pure function. Fullstack writes this runner in the scaffolding ticket.
 - Agents never create, edit or delete files here (hooks block it). If a golden case seems wrong, report `blocked`. Humans add cases (Tech Lead may request them in a `needs-human` ticket).
 

@@ -1,0 +1,20 @@
+{
+  "name": "Chia đều 300.000đ, bỏ tick Chi",
+  "input": {
+    "amount": 300000,
+    "currency": "VND",
+    "mode": "equal",
+    "participants": [
+      "Tôi",
+      "An",
+      "Bình"
+    ]
+  },
+  "expected": {
+    "shares": {
+      "Tôi": 100000,
+      "An": 100000,
+      "Bình": 100000
+    }
+  }
+}

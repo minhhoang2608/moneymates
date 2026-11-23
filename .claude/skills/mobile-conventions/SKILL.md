@@ -43,7 +43,7 @@ apps/mobile/
 ## UI rules
 
 - All strings live in `src/i18n/vi.ts`, Vietnamese, exactly as in the docs ("Thanh toán", "Tổng kết", "Ghi vào", "QR chung", "Đã trả", "Khác"…).
-- Design references: logo <https://claude.ai/artifact/2m2qR4FeFweAJzbk9sTkUr#artboard-15dd8cd198dd> and mockup <https://claude.ai/artifact/PxFxv62jrWscb7hbTVEAUu#page-dcb81aee8d83>. These need a login, so use the exports in `docs/design/` when present. Otherwise use a simple, consistent theme in `src/theme.ts` and don't invent a logo.
+- **Design source:** `docs/design/README.md` (screen → file map plus tokens) and `docs/design/screens/<Name>.dc.html`. Each screen is plain HTML with inline CSS at 390 × 844. Read the screen file for the ticket's screen and reproduce its layout, spacing, colours and copy in React Native. Put every token in `src/theme.ts`, named as in the README (`primary #0E7C66`, `background #F6F7F9`, `text #111827`, `textMuted #5B6472`, `expense #B42318`, …). Never hard-code hex values in components. Font: Inter (via `expo-font`). App icon: `docs/design/logo/icon.svg`. The original canvases (<https://claude.ai/artifact/PxFxv62jrWscb7hbTVEAUu>, <https://claude.ai/artifact/2m2qR4FeFweAJzbk9sTkUr>) need a login. Don't invent a logo or a colour.
 - Every interactive element has a `testID` (kebab-case, e.g. `qr-confirm-pay-button`) for Maestro.
 - Offline first: every core flow works without network. Only `/ai/*` needs network, and AI failure falls back to the manual form with category "Khác".
 

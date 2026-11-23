@@ -1,0 +1,37 @@
+{
+  "name": "Mọi người tự trả phần mình: không cần chuyển",
+  "input": {
+    "members": [
+      {
+        "name": "Tôi",
+        "is_me": true
+      },
+      {
+        "name": "An"
+      }
+    ],
+    "expenses": [
+      {
+        "paid_by": "Tôi",
+        "amount": 100000,
+        "splits": {
+          "Tôi": 100000
+        }
+      },
+      {
+        "paid_by": "An",
+        "amount": 80000,
+        "splits": {
+          "An": 80000
+        }
+      }
+    ]
+  },
+  "expected": {
+    "balances": {
+      "Tôi": 0,
+      "An": 0
+    },
+    "transfers": []
+  }
+}
