@@ -27,3 +27,12 @@ appId: com.moneymates.app
     id: "group-save"
 - assertVisible: "Đà Lạt"
 - assertVisible: "0đ"
+- tapOn:
+    text: "Đà Lạt"
+- assertVisible:
+    id: "group-total"
+    text: "0đ"
+- tapOn:
+    id: "group-delete"
+- tapOn: "Xóa"
+- assertVisible: "Chưa có nhóm nào"

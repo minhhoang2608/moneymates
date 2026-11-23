@@ -56,9 +56,11 @@ export default function GroupsScreen() {
         {rows.map((g) => {
           const icon = groupIconFor(g.icon);
           return (
-            <View
+            <Pressable
               key={g.id}
               testID={`group-card-${g.id}`}
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: "/group/[id]", params: { id: g.id } })}
               accessibilityLabel={`${g.name}, ${g.members.map(memberLabel).join(", ")}`}
               style={styles.card}
             >
@@ -85,7 +87,7 @@ export default function GroupsScreen() {
                   />
                 ))}
               </View>
-            </View>
+            </Pressable>
           );
         })}
       </ScrollView>
