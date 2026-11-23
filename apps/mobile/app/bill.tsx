@@ -11,6 +11,7 @@ import { vi } from "@/i18n/vi";
 import { BILL_PRIVACY_KEY } from "@/lib/bill/constants";
 import { billErrorMessage, toBillCard, toFormParams } from "@/lib/bill/billResult";
 import { getBillImageSource } from "@/lib/bill/imageSource";
+import { CheckIcon } from "@/components/icons";
 import { persistAttachment } from "@/lib/photoPicker";
 import { colors, overlays, fontFamily, fontSize, radii } from "@/theme";
 
@@ -227,7 +228,14 @@ export default function BillScreen() {
 
         {view === "result" && card ? (
           <View style={styles.gap} testID="bill-result">
-            <Text style={styles.sheetTitle}>✓ {vi.bill.done}</Text>
+            <View style={styles.titleRow}>
+              <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <CheckIcon size={18} color={colors.primary} />
+              </View>
+              <Text testID="bill-done" style={styles.sheetTitle}>
+                {vi.bill.done}
+              </Text>
+            </View>
             <View style={styles.card}>
               {rows.map(([key, label, value], i) => (
                 <View key={key} style={[styles.row, i === rows.length - 1 && styles.lastRow]}>
@@ -317,6 +325,7 @@ const styles = StyleSheet.create({
   },
   gap: { gap: 14 },
   center: { alignItems: "center" },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   sheetTitle: { fontFamily: fontFamily.semibold, fontSize: 16, color: colors.text },
   card: { backgroundColor: colors.background, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 4 },
   row: {

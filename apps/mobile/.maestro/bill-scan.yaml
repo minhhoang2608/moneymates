@@ -22,9 +22,16 @@ appId: com.moneymates.app
 - assertVisible: "Bánh căn Nhà Chung"
 - assertVisible: "22/11/2026"
 - assertVisible: "Ăn uống"
+- assertVisible:
+    id: "bill-result"
 - tapOn:
     id: "bill-retake"
 - extendedWaitUntil:
     visible: "AI đã đọc xong bill"
     timeout: 10000
 - assertVisible: "345.000đ"
+- assertVisible: "Bánh căn Nhà Chung"
+- assertVisible: "22/11/2026"
+- assertVisible: "Ăn uống"
+- assertVisible:
+    id: "bill-result"
