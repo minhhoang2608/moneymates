@@ -129,4 +129,17 @@ describe("group expense form", () => {
     expect(screen.getByTestId(`payer-${an}`).props.accessibilityState.selected).toBe(true);
     expect(screen.getByTestId(`payer-${me}`).props.accessibilityState.selected).toBe(false);
   });
+
+  it("flow path: payer chips for all members and the equal-split summary", async () => {
+    const { g, me, an, binh } = await setup();
+    for (const id of [me, an, binh]) expect(screen.getByTestId(`payer-${id}`)).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("amount-input"), "1000000");
+    expect(screen.getByTestId("split-summary").props.children).toBe("Chia đều · 3 người · 333.334đ mỗi người");
+    await pickCategory();
+    await fireEvent.press(screen.getByTestId("save-button"));
+    await until(async () => (await repo().groupTotal(g.id)) === 1_000_000);
+    const { shares } = await sharesOf(g.id);
+    expect(shares).toHaveLength(3);
+    expect(shares.reduce((a, b) => a + b, 0)).toBe(1_000_000);
+  });
 });
