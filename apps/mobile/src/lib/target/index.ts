@@ -6,3 +6,4 @@ export type { ResolveInput } from "./resolveDefaultTarget";
 export { listTargets } from "./listTargets";
 export type { ListTargetsInput } from "./listTargets";
 export type { Target, TargetGroup, LastUsed } from "./types";
+export { formatLastUsed, formatEndedOn, targetName } from "./format";
