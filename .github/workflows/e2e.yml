@@ -54,7 +54,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: gradle
       - name: Build release APK (E2E mode, mock data)
         if: steps.check.outputs.run == 'true'
         working-directory: apps/mobile
