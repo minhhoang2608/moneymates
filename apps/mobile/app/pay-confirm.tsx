@@ -8,7 +8,10 @@ import { useTargetDefault } from "@/components/target/useTargetDefault";
 import { CategoryPicker } from "@/components/transaction/CategoryPicker";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { CategoryRow } from "@/db/repositories";
+import { useAiAvailable } from "@/api/features";
+import { useCategorySuggestion } from "@/api/parseText";
 import { vi } from "@/i18n/vi";
+import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
 import { PAY_APPS, defaultAppId, orderApps } from "@/lib/payConfirm/apps";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
@@ -18,7 +21,6 @@ import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 const RECENT_KEY = "pay.recent_apps";
-const OTHER_NAME = "Khác";
 
 export default function PayConfirmScreen() {
   const router = useRouter();
@@ -31,11 +33,13 @@ export default function PayConfirmScreen() {
   const [amountText, setAmountText] = useState(model.amount !== undefined ? String(model.amount) : "");
   const [note, setNote] = useState(model.message ?? "");
   const [cats, setCats] = useState<CategoryRow[]>([]);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [initialId, setInitialId] = useState<string | null>(null);
+  const [pickedId, setPickedId] = useState<string | null>(null);
   const [picker, setPicker] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   const [appId, setAppId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
   const busy = useRef(false);
   const qrRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
@@ -44,12 +48,27 @@ export default function PayConfirmScreen() {
     categories.listByKind("expense").then((rows) => {
       if (!alive) return;
       setCats(rows);
-      setCategoryId((cur) => cur ?? rows.find((c) => c.name === OTHER_NAME)?.id ?? rows[0]?.id ?? null);
+      const initial = pickInitialCategory(rows, model.kind === "vietqr" ? model.name : null, model.message);
+      setInitialId((cur) => cur ?? initial.id);
+      setKeywordHit(initial.source === "keyword");
     });
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories]);
+
+  const ai = useAiAvailable("parse_text");
+  const aiName = useCategorySuggestion({
+    text: aiText(model.kind === "vietqr" ? model.name : null, model.message),
+    categories: useMemo(() => cats.map((c) => c.name), [cats]),
+    enabled: keywordHit === false && ai.available,
+  });
+  // A tap always wins; the AI answer only replaces the initial choice.
+  const aiId = cats.find((c) => c.name === aiName)?.id ?? null;
+  const categoryId = pickedId ?? aiId ?? initialId;
+
+  const pick = setPickedId;
 
   useEffect(() => {
     let alive = true;
@@ -175,7 +194,7 @@ export default function PayConfirmScreen() {
                 testID={`pay-category-${c.id}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: on }}
-                onPress={() => setCategoryId(c.id)}
+                onPress={() => pick(c.id)}
                 style={[styles.chip, on && styles.chipOn]}
               >
                 <Text style={[styles.chipText, on && styles.chipTextOn]}>{c.name}</Text>
@@ -265,7 +284,7 @@ export default function PayConfirmScreen() {
         categories={cats}
         selectedId={categoryId}
         onSelect={(id) => {
-          setCategoryId(id);
+          pick(id);
           setPicker(false);
         }}
         onClose={() => setPicker(false)}

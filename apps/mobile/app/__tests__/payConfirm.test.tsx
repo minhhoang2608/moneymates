@@ -94,7 +94,7 @@ describe("pay-confirm screen", () => {
 
   it("AC3/AC5: submit saves one qr expense before hand-off; chosen app is remembered", async () => {
     const txRepo = createTransactionRepository(testDb());
-    const other = (await createCategoryRepository(testDb()).listByKind("expense")).find((c) => c.name === "Khác");
+    const food = (await createCategoryRepository(testDb()).listByKind("expense")).find((c) => c.name === "Ăn uống");
     let atHandOff: Awaited<ReturnType<typeof txRepo.list>> = [];
     mockHandOff.mockImplementation(async () => {
       atHandOff = await txRepo.list();
@@ -120,9 +120,9 @@ describe("pay-confirm screen", () => {
       currency: "VND",
       source: "qr",
       qr_data: qr.dynamic,
-      category_id: other?.id,
+      category_id: food?.id,
     });
-    expect(other).toBeTruthy();
+    expect(food).toBeTruthy();
 
     // AC5: remembered, and listed first on the next visit.
     expect(await createAppSettingRepository(testDb()).get("pay.recent_apps")).toEqual(["mb"]);

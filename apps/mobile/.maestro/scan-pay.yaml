@@ -12,6 +12,11 @@ appId: com.moneymates.app
     id: "scan-e2e-feed"
 - assertVisible:
     id: "screen-pay-confirm"
+- assertVisible:
+    id: "pay-category-more"
+- tapOn:
+    id: "pay-category-more"
+- tapOn: "Mua sắm"
 - tapOn:
     id: "pay-submit"
 - extendedWaitUntil:
@@ -24,3 +29,4 @@ appId: com.moneymates.app
 - assertVisible:
     id: "screen-history"
 - assertVisible: "−55.000đ"
+- assertVisible: "Mua sắm"
