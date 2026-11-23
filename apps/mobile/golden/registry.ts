@@ -1,7 +1,7 @@
 import { parseAmount } from "../src/lib/money";
 import { splitByAmount, splitByPercent, splitEqual, type SplitResult } from "../src/lib/split";
 import { alertLevel, monthTotals, type MyShare, type StatTxn } from "../src/lib/stats";
-import { buildTransferMessage, generateVietQr } from "../src/lib/vietqr";
+import { buildTransferMessage, generateVietQr, parseVietQr } from "../src/lib/vietqr";
 
 export type GoldenFn = (input: Record<string, unknown>) => unknown;
 
@@ -70,7 +70,20 @@ export const registry: Record<string, GoldenFn | undefined> = {
       }),
     };
   },
-  "vietqr-parse": undefined,
+  "vietqr-parse": ({ payload }) => {
+    const r = parseVietQr(payload);
+    if (r.kind === "invalid") return { error: r.reason };
+    if (r.kind === "other") return { kind: "merchant", amount: r.amount ?? null };
+    return {
+      kind: "vietqr_transfer",
+      bank_bin: r.bankBin,
+      account_no: r.account,
+      account_name: r.name ?? null,
+      amount: r.amount ?? null,
+      message: r.message ?? null,
+      is_dynamic: r.isDynamic,
+    };
+  },
 };
 
 export const DOMAINS = Object.keys(registry);
