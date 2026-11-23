@@ -1,4 +1,4 @@
-import { encodeTlv, encodeTlvList } from "../tlv";
+import { decodeTlv, encodeTlv, encodeTlvList } from "../tlv";
 
 describe("tlv", () => {
   it("encodes id, padded length and value", () => {
@@ -19,5 +19,25 @@ describe("tlv", () => {
     expect(() => encodeTlv("ab", "x")).toThrow(RangeError);
     expect(() => encodeTlv("00", "x".repeat(100))).toThrow(RangeError);
     expect(encodeTlv("00", "x".repeat(99))).toHaveLength(103);
+  });
+});
+
+describe("decodeTlv", () => {
+  it("decodes flat fields, empty values and nesting", () => {
+    const r = decodeTlv("0002016200" + "0504abcd");
+    expect(r).toEqual({
+      ok: true,
+      fields: new Map([
+        ["00", "01"],
+        ["62", ""],
+        ["05", "abcd"],
+      ]),
+    });
+  });
+  it("fails on length overrun and non-numeric id/length", () => {
+    expect(decodeTlv("0005ab")).toEqual({ ok: false });
+    expect(decodeTlv("AB02xx")).toEqual({ ok: false });
+    expect(decodeTlv("000x01")).toEqual({ ok: false });
+    expect(decodeTlv("00")).toEqual({ ok: false });
   });
 });
