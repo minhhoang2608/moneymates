@@ -38,6 +38,8 @@ jobs:
     permissions:
       contents: read
       issues: write
+      # collect looks up each ticket's merged PR (merge_commit_of_issue)
+      pull-requests: read
       actions: write
       id-token: write
     env:
