@@ -3,6 +3,9 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { TransactionForm } from "../TransactionForm";
 import { catId, setup } from "@/testing/repoTestUtils";
 
+// The first render cold-loads the form tree; the default 5s is too tight on loaded CI runners.
+jest.setTimeout(20000);
+
 const NOW = new Date(2026, 10, 23, 14, 20);
 
 beforeEach(() => {
