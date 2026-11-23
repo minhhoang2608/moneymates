@@ -29,4 +29,5 @@ appId: com.moneymates.app
     id: "tab-history"
 - assertVisible:
     id: "screen-history"
-- assertVisible: "55.000"
+- assertVisible: "−55.000đ"
+- assertVisible: "PHO 24"
