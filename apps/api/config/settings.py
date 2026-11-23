@@ -59,6 +59,8 @@ REST_FRAMEWORK = {
 # Read now, used by later tickets (AI endpoints).
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODELS = _csv("OPENROUTER_MODELS")
+OPENROUTER_VISION_MODELS = _csv("OPENROUTER_VISION_MODELS")
+AI_BILL_MAX_BYTES = int(os.environ.get("AI_BILL_MAX_BYTES", str(1_500_000)))
 APP_SHARED_SECRET = os.environ.get("APP_SHARED_SECRET", "")
 OPENROUTER_TIMEOUT_S = float(os.environ.get("OPENROUTER_TIMEOUT_S", "10"))
 AI_LIMIT_PER_MINUTE = int(os.environ.get("AI_LIMIT_PER_MINUTE", "20"))

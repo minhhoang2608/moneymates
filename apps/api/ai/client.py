@@ -34,10 +34,10 @@ def _call_model(model, messages, timeout):
     return data
 
 
-def call_openrouter(messages):
+def call_openrouter(messages, models=None):
     """Try each configured model in order; raise AIUnavailable if all fail."""
     start = time.monotonic()
-    for model in settings.OPENROUTER_MODELS:
+    for model in models if models is not None else settings.OPENROUTER_MODELS:
         remaining = OVERALL_DEADLINE_S - (time.monotonic() - start)
         if remaining <= 0:
             break
