@@ -16,6 +16,11 @@
       }
     },
     "web": { "favicon": "./assets/favicon.png" },
-    "plugins": ["expo-router", "expo-font", "expo-sqlite"]
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sqlite",
+      ["expo-image-picker", { "photosPermission": "MoneyMates cần truy cập thư viện ảnh để bạn chọn ảnh đại diện." }]
+    ]
   }
 }

@@ -3,6 +3,11 @@ import { Text } from "react-native";
 
 import { DEFAULT_FEATURES, useFeatures } from "@/api/features";
 
+jest.mock("@/db/client", () => {
+  const { openTestDb } = jest.requireActual("@/db/testing/testDb");
+  return { db: openTestDb().db };
+});
+
 jest.mock("@expo-google-fonts/inter", () => ({
   useFonts: () => [true, null],
 }));

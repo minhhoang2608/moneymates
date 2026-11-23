@@ -10,6 +10,7 @@ import { Stack } from "expo-router";
 
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
+import { RepositoriesProvider } from "@/db/RepositoriesProvider";
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -24,10 +25,15 @@ export default function RootLayout() {
   return (
     <QueryProvider>
       <DatabaseProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="scan" options={{ presentation: "modal" }} />
-        </Stack>
+        <RepositoriesProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="scan" options={{ presentation: "modal" }} />
+            <Stack.Screen name="bank-accounts" />
+            <Stack.Screen name="categories" />
+            <Stack.Screen name="settings" />
+          </Stack>
+        </RepositoriesProvider>
       </DatabaseProvider>
     </QueryProvider>
   );

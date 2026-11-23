@@ -2,6 +2,11 @@ import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
 
 import { vi } from "@/i18n/vi";
 
+jest.mock("@/db/client", () => {
+  const { openTestDb } = jest.requireActual("@/db/testing/testDb");
+  return { db: openTestDb().db };
+});
+
 jest.mock("@expo-google-fonts/inter", () => ({
   useFonts: () => [true, null],
 }));
