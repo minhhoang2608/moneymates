@@ -5,7 +5,12 @@ import os from "node:os";
 import path from "node:path";
 
 import qr from "../../e2e/fixtures/qr.json";
-import { createAppSettingRepository, createCategoryRepository, createTransactionRepository } from "@/db/repositories";
+import {
+  createAppSettingRepository,
+  createCategoryRepository,
+  createPaymentAppPrefsRepository,
+  createTransactionRepository,
+} from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
@@ -145,11 +150,13 @@ describe("pay-confirm screen", () => {
     expect(await txRepo.list()).toHaveLength(1);
   });
 
-  it("AC5: a remembered app is listed first and preselected", async () => {
+  it("AC5: a remembered app is preselected, the list follows the saved order", async () => {
     await createAppSettingRepository(testDb()).set("pay.recent_apps", ["mb"]);
+    await createPaymentAppPrefsRepository(testDb()).setAppOrder(["momo", "tpbank", "tcb", "vcb", "mb"]);
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
     await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy());
     const ids = screen.getAllByTestId(/^app-/).map((n) => n.props.testID);
-    expect(ids[0]).toBe("app-mb");
+    expect(ids[0]).toBe("app-momo");
+    expect(ids).toEqual(["app-momo", "app-tpbank", "app-tcb", "app-vcb", "app-mb"]);
   });
 });

@@ -1,0 +1,68 @@
+# Settings take effect: a new money source shows in the entry form, and the saved app order drives pay-confirm.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "row-settings"
+- assertVisible:
+    id: "screen-settings"
+- scrollUntilVisible:
+    element:
+      id: "settings-app-up-momo"
+- tapOn:
+    id: "settings-app-up-momo"
+- tapOn:
+    id: "settings-app-up-momo"
+- tapOn:
+    id: "settings-app-up-momo"
+- tapOn:
+    id: "settings-app-up-momo"
+- tapOn:
+    id: "settings-sources-row"
+- tapOn:
+    id: "settings-source-name"
+- inputText: "Visa"
+- hideKeyboard
+- tapOn:
+    id: "settings-source-kind-card"
+- tapOn:
+    id: "settings-source-add"
+- assertVisible: "Visa"
+- back
+- tapOn:
+    id: "tab-overview"
+- tapOn:
+    id: "overview-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- tapOn:
+    id: "money-source-row"
+- assertVisible: "Visa"
+- tapOn: "Visa"
+- assertVisible: "Visa ›"
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- assertVisible:
+    id: "screen-pay-confirm"
+- scrollUntilVisible:
+    element:
+      id: "app-momo"
+- scrollUntilVisible:
+    element:
+      id: "app-tpbank"
+- assertVisible:
+    id: "app-momo"
+    below:
+      id: "pay-confirm-bank"
+- assertVisible:
+    id: "app-tpbank"
+    below:
+      id: "app-momo"

@@ -18,6 +18,7 @@ export default function OverviewScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [data, setData] = useState<OverviewData | null>(null);
   const [name, setName] = useState("");
+  const [alertOn, setAlertOn] = useState(true);
 
   const deletedVersion = usePendingHandOff((s) => s.deletedVersion);
 
@@ -25,13 +26,16 @@ export default function OverviewScreen() {
     useCallback(() => {
       let alive = true;
       void deletedVersion; // reload after the return banner deletes a payment
-      Promise.all([loadOverview(repos, { myShares: repos.groupExpenses.mySharesInMonth }), profile.getProfile()]).then(
-        ([d, p]) => {
-          if (!alive) return;
-          setData(d);
-          setName(p.display_name);
-        },
-      );
+      Promise.all([
+        loadOverview(repos, { myShares: repos.groupExpenses.mySharesInMonth }),
+        profile.getProfile(),
+        repos.preferences.getAlertOverLastMonth(),
+      ]).then(([d, p, a]) => {
+        if (!alive) return;
+        setData(d);
+        setName(p.display_name);
+        setAlertOn(a);
+      });
       return () => {
         alive = false;
       };
@@ -88,7 +92,7 @@ export default function OverviewScreen() {
           </View>
         </View>
 
-        {o && o.alert !== "none" ? (
+        {o && o.alert !== "none" && alertOn ? (
           <View style={styles.banner} testID="overview-banner" accessibilityRole="alert">
             <Text style={styles.bannerText}>
               {o.alert === "up" ? vi.overview.bannerUp(o.percent) : vi.overview.bannerDown(o.percent)}

@@ -12,7 +12,7 @@ import { useAiAvailable } from "@/api/features";
 import { useCategorySuggestion } from "@/api/parseText";
 import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
-import { PAY_APPS, defaultAppId, orderApps } from "@/lib/payConfirm/apps";
+import { PAY_APPS, defaultAppId, orderAppsBySaved } from "@/lib/payConfirm/apps";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
 import { parsePayConfirmParams } from "@/lib/payConfirm/params";
@@ -26,7 +26,14 @@ export default function PayConfirmScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<Record<string, string>>();
   const model = useMemo(() => parsePayConfirmParams(params), [params]);
-  const { transactions, categories, appSettings, groups: groupRepo, groupExpenses } = useRepositories();
+  const {
+    transactions,
+    categories,
+    appSettings,
+    groups: groupRepo,
+    groupExpenses,
+    paymentAppPrefs,
+  } = useRepositories();
   const targetState = useTargetDefault();
   const { target } = targetState;
 
@@ -37,6 +44,7 @@ export default function PayConfirmScreen() {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [picker, setPicker] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
+  const [savedOrder, setSavedOrder] = useState<string[]>([]);
   const [appId, setAppId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
@@ -76,7 +84,15 @@ export default function PayConfirmScreen() {
     };
   }, [appSettings]);
 
-  const apps = useMemo(() => orderApps(PAY_APPS, recent), [recent]);
+  useEffect(() => {
+    let alive = true;
+    paymentAppPrefs.getAppOrder().then((keys) => alive && setSavedOrder(keys));
+    return () => {
+      alive = false;
+    };
+  }, [paymentAppPrefs]);
+
+  const apps = useMemo(() => orderAppsBySaved(PAY_APPS, savedOrder), [savedOrder]);
   const selectedId = appId ?? defaultAppId(apps, recent, model.bankBin);
   const selected = apps.find((a) => a.id === selectedId) ?? apps[0];
 

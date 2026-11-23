@@ -4,7 +4,12 @@ import path from "node:path";
 
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
-import { createGroupExpenseRepository, createGroupRepository, createTransactionRepository } from "@/db/repositories";
+import {
+  createGroupExpenseRepository,
+  createGroupRepository,
+  createPreferencesRepository,
+  createTransactionRepository,
+} from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { catId } from "@/testing/repoTestUtils";
@@ -80,6 +85,26 @@ describe("Tổng quan screen", () => {
   it("AC2: banner shows above 20% and is absent otherwise", async () => {
     await add(10_000_000, "2026-10-05T03:00:00Z");
     await add(12_500_000, "2026-11-05T03:00:00Z");
+    await renderOverview();
+    expect(await screen.findByTestId("overview-banner")).toBeTruthy();
+    expect(screen.getByText(/cao hơn tháng trước 25%/)).toBeTruthy();
+  });
+
+  it("AC4: the alert toggle off hides the banner", async () => {
+    const prefs = createPreferencesRepository(global.__OVERVIEW_TEST_DB__ as unknown as AnyDb);
+    await add(1_000_000, "2026-10-05T03:00:00Z");
+    await add(1_250_000, "2026-11-05T03:00:00Z");
+    await prefs.setAlertOverLastMonth(false);
+    await renderOverview();
+    await waitFor(() => expect(text("overview-expense")).toBe("1.250.000đ"));
+    expect(screen.queryByTestId("overview-banner")).toBeNull();
+  });
+
+  it("AC4: banner shows up with the toggle on", async () => {
+    const prefs = createPreferencesRepository(global.__OVERVIEW_TEST_DB__ as unknown as AnyDb);
+    await add(1_000_000, "2026-10-05T03:00:00Z");
+    await add(1_250_000, "2026-11-05T03:00:00Z");
+    await prefs.setAlertOverLastMonth(true);
     await renderOverview();
     expect(await screen.findByTestId("overview-banner")).toBeTruthy();
     expect(screen.getByText(/cao hơn tháng trước 25%/)).toBeTruthy();

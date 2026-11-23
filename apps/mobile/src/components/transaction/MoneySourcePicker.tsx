@@ -4,11 +4,13 @@ import { SheetPicker } from "./SheetPicker";
 
 export function MoneySourcePicker({
   visible,
+  options,
   selected,
   onSelect,
   onClose,
 }: {
   visible: boolean;
+  options: string[];
   selected: string;
   onSelect: (source: string) => void;
   onClose: () => void;
@@ -17,7 +19,7 @@ export function MoneySourcePicker({
     <SheetPicker
       visible={visible}
       title={vi.txn.moneySource}
-      options={vi.moneySources.map((s, i) => ({ key: s, label: s, testID: `money-source-item-${i}` }))}
+      options={options.map((s, i) => ({ key: s, label: s, testID: `money-source-item-${i}` }))}
       selectedKey={selected}
       onSelect={onSelect}
       onClose={onClose}

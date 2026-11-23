@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { TransactionForm } from "../TransactionForm";
-import { createGroupExpenseRepository, createGroupRepository } from "@/db/repositories";
+import { createGroupExpenseRepository, createGroupRepository, createMoneySourceRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { catId, setup } from "@/testing/repoTestUtils";
 
@@ -27,6 +27,52 @@ async function chooseCategory(id: string) {
   await fireEvent.press(screen.getByTestId("category-row"));
   await fireEvent.press(await screen.findByTestId(`category-item-${id}`));
 }
+
+describe("TransactionForm money sources", () => {
+  it("AC2/AC5: a source added in Settings can be picked and is saved as VND", async () => {
+    const { db, repos, mount, onClose } = form();
+    await createMoneySourceRepository(db).addSource("Visa", "card");
+    await mount();
+    await fireEvent.changeText(screen.getByTestId("amount-input"), "50k");
+    await chooseCategory(catId("Ăn uống"));
+    await fireEvent.press(screen.getByTestId("money-source-row"));
+    await fireEvent.press(await screen.findByText("Visa"));
+    await fireEvent.press(screen.getByTestId("save-button"));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    const rows = await repos.transactions.list();
+    expect(rows[0]).toMatchObject({ money_source: "Visa", currency: "VND" });
+  });
+
+  it("AC2: a deleted source is not offered any more", async () => {
+    const { db, mount } = form();
+    const sources = createMoneySourceRepository(db);
+    const visa = await sources.addSource("Visa", "card");
+    await sources.deleteSource(visa.id);
+    await mount();
+    await fireEvent.press(screen.getByTestId("money-source-row"));
+    await screen.findByText("Ví điện tử");
+    expect(screen.queryByText("Visa")).toBeNull();
+  });
+
+  it("AC3: editing a transaction keeps its deleted source selected", async () => {
+    const { db, repos, mount } = form();
+    const sources = createMoneySourceRepository(db);
+    const visa = await sources.addSource("Visa", "card");
+    const t = await repos.transactions.create({
+      type: "expense",
+      amount: 1000,
+      occurred_at: NOW.toISOString(),
+      note: "",
+      category_id: catId("Ăn uống"),
+      money_source: "Visa",
+    });
+    await sources.deleteSource(visa.id);
+    await mount(<TransactionForm transactionId={t.id} onClose={jest.fn()} photoPicker={noPhoto} />);
+    expect(await screen.findByText("Visa ›")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("money-source-row"));
+    expect(await screen.findAllByText("Visa")).toBeTruthy();
+  });
+});
 
 describe("TransactionForm", () => {
   it("AC1: saves 50k Ăn uống phở as an expense", async () => {

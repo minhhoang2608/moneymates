@@ -56,7 +56,7 @@ export function TransactionForm({
   source = "manual",
   notice,
 }: Props) {
-  const { transactions, categories, groups, groupExpenses } = useRepositories();
+  const { transactions, categories, groups, groupExpenses, moneySources } = useRepositories();
   const targetState = useTargetDefault({ fromGroupId: groupId, clock, enabled: !transactionId });
   const { target } = targetState;
   const targetGroupId = target.kind === "group" ? target.groupId : undefined;
@@ -67,6 +67,7 @@ export function TransactionForm({
   const [note, setNote] = useState(initial?.note ?? "");
   const [occurredAt, setOccurredAt] = useState(() => new Date());
   const [moneySource, setMoneySource] = useState<string>(vi.moneySources[0]);
+  const [sourceNames, setSourceNames] = useState<string[]>([...vi.moneySources]);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saveFailed, setSaveFailed] = useState(false);
@@ -119,6 +120,21 @@ export function TransactionForm({
       alive = false;
     };
   }, [categories]);
+
+  useEffect(() => {
+    let alive = true;
+    moneySources.listSources().then((rows) => {
+      if (!alive) return;
+      const names = rows.map((r) => r.name);
+      if (names.length > 0) {
+        setSourceNames(names);
+        if (!transactionId) setMoneySource((cur) => (names.includes(cur) ? cur : names[0]));
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [moneySources, transactionId]);
 
   useEffect(() => {
     if (!transactionId) return;
@@ -427,6 +443,7 @@ export function TransactionForm({
       />
       <MoneySourcePicker
         visible={sheet === "source"}
+        options={sourceNames.includes(moneySource) ? sourceNames : [...sourceNames, moneySource]}
         selected={moneySource}
         onSelect={(s) => {
           setMoneySource(s);
