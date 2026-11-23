@@ -27,6 +27,7 @@ For **every** acceptance criterion, find the evidence:
 3. Then decide:
    - All criteria have passing evidence → `pass`.
    - A criterion has no test, a weak test, a failing job, or code that contradicts it → `fail`. Write a bug: title `"<ticket title>: <criterion> not met"`, body with steps, expected vs actual, the acceptance criteria of the fix, and the area and priority (p1 by default, p0 if a core flow is broken).
+   - Evidence is missing for a reason that is **not** a product defect (no E2E result yet or one older than the change while a criterion needs a Maestro flow; tests that ran on a commit without the change) → `pending`, with `"needs_e2e": true` when an E2E run would settle it. **Never file a bug for missing evidence.** The ticket stays in `status:testing` and is verified again later.
    - Everything checkable passes, but a criterion depends on a physical phone (bank app deeplink autofill, camera scan of a real VietQR, vi-VN speech recognition, biometrics) → `real_device`. List exactly what a human must check and how.
 
 - General test failures on `dev` are reported automatically as a regression bug. Don't duplicate that; only judge the criteria.

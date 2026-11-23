@@ -99,10 +99,15 @@ jobs:
             - `pass`: every criterion is covered and green.
             - `fail`: a criterion is missing, wrong, or its test failed. Describe the bug (steps, expected, actual).
             - `real_device`: everything else passes, but a criterion can only be checked on a physical phone
-              (bank deeplink, camera scan, Vietnamese speech). List exactly what a human must check.
+              (bank deeplink, camera scan, Vietnamese speech, how an icon or native widget looks). List exactly what a
+              human must check; the ticket is closed and the items go to the shared Real-device checklist.
+            - `pending`: the evidence is missing for a reason that is NOT a product defect, for example `e2e_job` is
+              `none` or older than the change and a criterion needs a Maestro flow, or the tests ran on a commit that
+              does not contain the change. Do NOT file a bug for that. Set `"needs_e2e": true` when an E2E run would
+              settle it (it is started automatically and the Tester runs again afterwards).
 
             Write `.factory/result.json`:
-            `{"results":[{"issue":N,"verdict":"pass"|"fail"|"real_device","notes":"<markdown, per criterion>","bug":{"title":"...","body":"<markdown with acceptance criteria>","area":"area:mobile|area:api|area:infra","priority":"priority:p0..p3"}}]}`
+            `{"results":[{"issue":N,"verdict":"pass"|"fail"|"real_device"|"pending","needs_e2e":true|false,"notes":"<markdown, per criterion>","bug":{"title":"...","body":"<markdown with acceptance criteria>","area":"area:mobile|area:api|area:infra","priority":"priority:p0..p3"}}]}`
             (`bug` is only for `fail`.)
       - name: Apply verification (Tester)
         if: steps.agent.outcome == 'success'
@@ -142,10 +147,15 @@ jobs:
             - `pass`: every criterion is covered and green.
             - `fail`: a criterion is missing, wrong, or its test failed. Describe the bug (steps, expected, actual).
             - `real_device`: everything else passes, but a criterion can only be checked on a physical phone
-              (bank deeplink, camera scan, Vietnamese speech). List exactly what a human must check.
+              (bank deeplink, camera scan, Vietnamese speech, how an icon or native widget looks). List exactly what a
+              human must check; the ticket is closed and the items go to the shared Real-device checklist.
+            - `pending`: the evidence is missing for a reason that is NOT a product defect, for example `e2e_job` is
+              `none` or older than the change and a criterion needs a Maestro flow, or the tests ran on a commit that
+              does not contain the change. Do NOT file a bug for that. Set `"needs_e2e": true` when an E2E run would
+              settle it (it is started automatically and the Tester runs again afterwards).
 
             Write `.factory/result.json`:
-            `{"results":[{"issue":N,"verdict":"pass"|"fail"|"real_device","notes":"<markdown, per criterion>","bug":{"title":"...","body":"<markdown with acceptance criteria>","area":"area:mobile|area:api|area:infra","priority":"priority:p0..p3"}}]}`
+            `{"results":[{"issue":N,"verdict":"pass"|"fail"|"real_device"|"pending","needs_e2e":true|false,"notes":"<markdown, per criterion>","bug":{"title":"...","body":"<markdown with acceptance criteria>","area":"area:mobile|area:api|area:infra","priority":"priority:p0..p3"}}]}`
             (`bug` is only for `fail`.)
       - name: Apply verification (BA)
         if: ${{ !cancelled() && steps.ba_agent.outcome == 'success' }}
