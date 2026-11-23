@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
-import type { CategoryRow } from "@/db/repositories";
+import type { CategoryRow, GroupMember } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
+import { evaluateSplitDraft, type DraftMode } from "@/lib/group/splitDraft";
 import { formatVnd, parseAmount } from "@/lib/money";
 import { formatTxnDateLabel, validateForm, type FormErrors, type FormType } from "@/lib/transaction/form";
 import { photoPicker as defaultPhotoPicker, type PhotoPicker } from "@/lib/photoPicker";
@@ -11,18 +12,22 @@ import { colors, fontFamily, fontSize, radii } from "@/theme";
 
 import { CategoryPicker } from "./CategoryPicker";
 import { DateTimeField } from "./DateTimeField";
+import { GroupSplitSection } from "./GroupSplitSection";
 import { MoneySourcePicker } from "./MoneySourcePicker";
 
 type Props = {
   /** Edit mode when set; otherwise creates a new transaction. */
   transactionId?: string;
+  /** Group expense mode: payer + split section, saves through groupExpenses. */
+  groupId?: string;
   onClose: () => void;
   onSaved?: () => void;
   photoPicker?: PhotoPicker;
 };
 
-export function TransactionForm({ transactionId, onClose, onSaved, photoPicker = defaultPhotoPicker }: Props) {
-  const { transactions, categories } = useRepositories();
+export function TransactionForm({ transactionId, groupId, onClose, onSaved, photoPicker = defaultPhotoPicker }: Props) {
+  const { transactions, categories, groups, groupExpenses } = useRepositories();
+  const isGroup = !!groupId && !transactionId;
   const [type, setType] = useState<FormType>("expense");
   const [amountText, setAmountText] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -36,6 +41,26 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
   const [allCategories, setAllCategories] = useState<CategoryRow[]>([]);
   const [sheet, setSheet] = useState<null | "category" | "source" | "time">(null);
   const [loaded, setLoaded] = useState(!transactionId);
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [payerId, setPayerId] = useState<string | null>(null);
+  const [splitMode, setSplitMode] = useState<DraftMode>("equal");
+  const [ticked, setTicked] = useState<Set<string>>(new Set());
+  const [amountInputs, setAmountInputs] = useState<Record<string, string>>({});
+  const [percentInputs, setPercentInputs] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!isGroup || !groupId) return;
+    let alive = true;
+    groups.getGroup(groupId).then((g) => {
+      if (!alive) return;
+      setMembers(g.members);
+      setPayerId((g.members.find((m) => m.isMe) ?? g.members[0])?.id ?? null);
+      setTicked(new Set(g.members.map((m) => m.id)));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [groups, groupId, isGroup]);
 
   useEffect(() => {
     let alive = true;
@@ -77,6 +102,15 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
   }, [transactions, transactionId]);
 
   const parsed = parseAmount(amountText);
+  const draft = evaluateSplitDraft({
+    amount: parsed.ok ? parsed.vnd : null,
+    mode: splitMode,
+    members: members.map((m) => m.id),
+    ticked,
+    amountInputs,
+    percentInputs,
+  });
+  const saveDisabled = isGroup && (!draft.ok || !payerId);
   const categoryName = allCategories.find((c) => c.id === categoryId)?.name;
 
   const changeType = (next: FormType) => {
@@ -87,6 +121,7 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
   };
 
   const save = async () => {
+    if (saveDisabled) return;
     const result = validateForm({ type, amountText, categoryId, note, occurredAt, moneySource, photoUri });
     if (!result.ok) {
       setErrors(result.errors);
@@ -95,7 +130,18 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
     setErrors({});
     setSaveFailed(false);
     try {
-      if (transactionId) await transactions.update(transactionId, result.input);
+      if (isGroup && groupId && payerId) {
+        await groupExpenses.createGroupExpense({
+          groupId,
+          amount: result.input.amount,
+          payerMemberId: payerId,
+          splitMode,
+          shares: draft.shares,
+          occurredAt: result.input.occurred_at,
+          categoryId: result.input.category_id,
+          note: result.input.note,
+        });
+      } else if (transactionId) await transactions.update(transactionId, result.input);
       else await transactions.create({ ...result.input, source: "manual" });
       onSaved?.();
       onClose();
@@ -127,33 +173,35 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <View accessibilityRole="radiogroup" accessibilityLabel={vi.txn.typeLabel} style={styles.segment}>
-          {(["expense", "income"] as const).map((t) => {
-            const active = type === t;
-            return (
-              <Pressable
-                key={t}
-                testID={`type-${t}`}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: active }}
-                onPress={() => changeType(t)}
-                style={[styles.segmentItem, active && styles.segmentActive]}
-              >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    active && {
-                      fontFamily: fontFamily.semibold,
-                      color: t === "expense" ? colors.expense : colors.primary,
-                    },
-                  ]}
+        {isGroup ? null : (
+          <View accessibilityRole="radiogroup" accessibilityLabel={vi.txn.typeLabel} style={styles.segment}>
+            {(["expense", "income"] as const).map((t) => {
+              const active = type === t;
+              return (
+                <Pressable
+                  key={t}
+                  testID={`type-${t}`}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: active }}
+                  onPress={() => changeType(t)}
+                  style={[styles.segmentItem, active && styles.segmentActive]}
                 >
-                  {t === "expense" ? vi.txn.expense : vi.txn.income}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      active && {
+                        fontFamily: fontFamily.semibold,
+                        color: t === "expense" ? colors.expense : colors.primary,
+                      },
+                    ]}
+                  >
+                    {t === "expense" ? vi.txn.expense : vi.txn.income}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
 
         <View style={styles.modes}>
           <View style={[styles.mode, styles.modeActive]}>
@@ -193,6 +241,30 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
           )}
         </View>
 
+        {isGroup ? (
+          <GroupSplitSection
+            members={members}
+            payerId={payerId}
+            onPayer={setPayerId}
+            mode={splitMode}
+            onMode={setSplitMode}
+            ticked={ticked}
+            onToggle={(id) =>
+              setTicked((prev) => {
+                const next = new Set(prev);
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
+                return next;
+              })
+            }
+            amountInputs={amountInputs}
+            percentInputs={percentInputs}
+            onAmountInput={(id, t) => setAmountInputs((v) => ({ ...v, [id]: t }))}
+            onPercentInput={(id, t) => setPercentInputs((v) => ({ ...v, [id]: t }))}
+            draft={draft}
+          />
+        ) : null}
+
         <View style={[styles.card, styles.listCard]}>
           <Pressable
             testID="category-row"
@@ -218,15 +290,17 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
             <Text style={styles.rowLabel}>{vi.txn.time}</Text>
             <Text style={styles.rowValue}>{`${formatTxnDateLabel(occurredAt, new Date())} ›`}</Text>
           </Pressable>
-          <Pressable
-            testID="money-source-row"
-            accessibilityRole="button"
-            onPress={() => setSheet("source")}
-            style={styles.row}
-          >
-            <Text style={styles.rowLabel}>{vi.txn.moneySource}</Text>
-            <Text style={styles.rowValue}>{`${moneySource} ›`}</Text>
-          </Pressable>
+          {isGroup ? null : (
+            <Pressable
+              testID="money-source-row"
+              accessibilityRole="button"
+              onPress={() => setSheet("source")}
+              style={styles.row}
+            >
+              <Text style={styles.rowLabel}>{vi.txn.moneySource}</Text>
+              <Text style={styles.rowValue}>{`${moneySource} ›`}</Text>
+            </Pressable>
+          )}
           <Pressable
             testID="photo-row"
             accessibilityRole="button"
@@ -249,7 +323,13 @@ export function TransactionForm({ transactionId, onClose, onSaved, photoPicker =
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable testID="save-button" accessibilityRole="button" onPress={save} style={styles.save}>
+        <Pressable
+          testID="save-button"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: saveDisabled }}
+          onPress={save}
+          style={[styles.save, saveDisabled && styles.saveDisabled]}
+        >
           <Text style={styles.saveText}>{vi.txn.save}</Text>
         </Pressable>
       </View>
@@ -345,5 +425,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  saveDisabled: { backgroundColor: colors.neutral },
   saveText: { fontFamily: fontFamily.semibold, fontSize: 16, color: colors.onPrimary },
 });
