@@ -44,3 +44,9 @@ export type {
   SettlementPaymentRow,
   SettlementRepository,
 } from "./settlementRepository";
+export { createPaymentAppPrefsRepository } from "./paymentAppPrefsRepository";
+export type { PaymentAppPrefsRepository } from "./paymentAppPrefsRepository";
+export { createMoneySourceRepository } from "./moneySourceRepository";
+export type { MoneySourceRepository, MoneySourceRow } from "./moneySourceRepository";
+export { createPreferencesRepository } from "./preferencesRepository";
+export type { PreferencesRepository } from "./preferencesRepository";

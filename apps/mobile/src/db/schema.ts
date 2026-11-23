@@ -179,3 +179,33 @@ export const settlementPayments = sqliteTable(
     check("settlement_payments_direction_check", sql`${t.direction} in ('pay_to_me', 'pay_from_me')`),
   ],
 );
+
+/** User-chosen order of payment apps (`app_key` ids come from `src/lib/payConfirm/apps.ts`). */
+export const paymentAppPrefs = sqliteTable(
+  "payment_app_prefs",
+  {
+    ...baseColumns(),
+    app_key: text("app_key").notNull(),
+    sort_order: integer("sort_order").notNull(),
+  },
+  (t) => [
+    uniqueIndex("payment_app_prefs_app_key_idx")
+      .on(t.app_key)
+      .where(sql`${t.deleted_at} is null`),
+  ],
+);
+
+/** Where money comes from ("Ghi vào"). Transactions reference the name in `transactions.money_source`. */
+export const moneySources = sqliteTable(
+  "money_sources",
+  {
+    ...baseColumns(),
+    name: text("name").notNull(),
+    kind: text("kind", { enum: ["cash", "bank", "wallet", "card"] }).notNull(),
+    is_default: integer("is_default", { mode: "boolean" }).notNull().default(false),
+  },
+  (t) => [
+    index("money_sources_deleted_at_created_at_idx").on(t.deleted_at, t.created_at),
+    check("money_sources_kind_check", sql`${t.kind} in ('cash', 'bank', 'wallet', 'card')`),
+  ],
+);

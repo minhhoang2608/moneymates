@@ -1,0 +1,42 @@
+import { createPaymentAppPrefsRepository } from "../repositories";
+import { paymentAppPrefs } from "../schema";
+import type { AnyDb } from "../seed";
+import { openTestDb } from "../testing/testDb";
+import { tick, tmpDbFile } from "../testing/tmpFile";
+
+const repoFor = (db: unknown) => createPaymentAppPrefsRepository(db as AnyDb);
+
+describe("paymentAppPrefsRepository", () => {
+  it("AC1: saved order survives close and reopen", async () => {
+    const file = tmpDbFile();
+    const a = openTestDb(file);
+    await repoFor(a.db).setAppOrder(["tpbank", "tcb", "momo", "vcb", "mb"]);
+    await repoFor(a.db).setAppOrder(["momo", "tpbank", "tcb", "vcb", "mb"]);
+    a.sqlite.close();
+    const b = openTestDb(file);
+    expect(await repoFor(b.db).getAppOrder()).toEqual(["momo", "tpbank", "tcb", "vcb", "mb"]);
+    expect(await b.db.select().from(paymentAppPrefs)).toHaveLength(5);
+    b.sqlite.close();
+  });
+
+  it("defaults to catalogue order, appends missing apps, ignores unknown keys", async () => {
+    const { db } = openTestDb();
+    const repo = repoFor(db);
+    expect(await repo.getAppOrder()).toEqual(["tpbank", "tcb", "vcb", "mb", "momo"]);
+    await repo.setAppOrder(["momo", "unknown", "mb"]);
+    expect(await repo.getAppOrder()).toEqual(["momo", "mb", "tpbank", "tcb", "vcb"]);
+  });
+
+  it("bumps updated_at and revives soft-deleted rows", async () => {
+    const { db } = openTestDb();
+    const repo = repoFor(db);
+    await repo.setAppOrder(["mb", "momo"]);
+    const first = (await db.select().from(paymentAppPrefs)).find((r) => r.app_key === "mb")!;
+    await tick();
+    await repo.setAppOrder(["momo", "mb"]);
+    const second = (await db.select().from(paymentAppPrefs)).find((r) => r.app_key === "mb")!;
+    expect(second.id).toBe(first.id);
+    expect(second.sort_order).toBe(1);
+    expect(second.updated_at > first.updated_at).toBe(true);
+  });
+});

@@ -50,6 +50,13 @@
       "when": 1795431182642,
       "tag": "0006_settlement_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1795446304117,
+      "tag": "0007_preferences",
+      "breakpoints": true
     }
   ]
 }
