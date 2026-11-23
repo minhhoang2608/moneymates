@@ -1,6 +1,139 @@
-import { PlaceholderScreen } from "@/components/PlaceholderScreen";
+import Constants from "expo-constants";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+
+import { MoneySourceSection } from "@/components/settings/MoneySourceSection";
+import { PaymentAppList } from "@/components/settings/PaymentAppList";
+import { useRepositories } from "@/db/RepositoriesProvider";
+import type { MoneySourceRow } from "@/db/repositories/moneySourceRepository";
 import { vi } from "@/i18n/vi";
+import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function SettingsScreen() {
-  return <PlaceholderScreen title={vi.profile.rows.settings} testID="screen-settings" />;
+  const router = useRouter();
+  const { paymentAppPrefs, moneySources, preferences } = useRepositories();
+  const [order, setOrder] = useState<string[]>([]);
+  const [sources, setSources] = useState<MoneySourceRow[]>([]);
+  const [currency, setCurrency] = useState("VND");
+  const [alertOn, setAlertOn] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      let alive = true;
+      (async () => {
+        const [o, s, c, a] = await Promise.all([
+          paymentAppPrefs.getAppOrder(),
+          moneySources.listSources(),
+          preferences.getDefaultCurrency(),
+          preferences.getAlertOverLastMonth(),
+        ]);
+        if (!alive) return;
+        setOrder(o);
+        setSources(s);
+        setCurrency(c);
+        setAlertOn(a);
+      })();
+      return () => {
+        alive = false;
+      };
+    }, [paymentAppPrefs, moneySources, preferences]),
+  );
+
+  const version = Constants.expoConfig?.version ?? "";
+
+  return (
+    <View style={styles.root} testID="screen-settings">
+      <View style={styles.header}>
+        <Pressable
+          testID="settings-back"
+          accessibilityRole="button"
+          accessibilityLabel={vi.settings.back}
+          onPress={() => router.back()}
+          style={styles.iconBtn}
+        >
+          <Text style={styles.back}>‹</Text>
+        </Pressable>
+        <Text style={styles.title}>{vi.settings.title}</Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <Text style={styles.section}>{vi.settings.appsHeading}</Text>
+        <PaymentAppList
+          order={order}
+          onChange={(keys) => {
+            setOrder(keys);
+            void paymentAppPrefs.setAppOrder(keys);
+          }}
+        />
+        <Text style={styles.note}>{vi.settings.appsNote}</Text>
+
+        <Text style={[styles.section, styles.sectionGap]}>{vi.settings.general}</Text>
+        <View style={styles.card}>
+          <View style={styles.divider}>
+            <MoneySourceSection
+              sources={sources}
+              onAdd={async (name, kind) => {
+                await moneySources.addSource(name, kind);
+                setSources(await moneySources.listSources());
+              }}
+              onDelete={async (id) => {
+                await moneySources.deleteSource(id);
+                setSources(await moneySources.listSources());
+              }}
+            />
+          </View>
+          <View style={[styles.row, styles.divider]} testID="settings-currency">
+            <Text style={styles.label}>{vi.settings.currency}</Text>
+            <Text style={styles.value}>{currency}</Text>
+          </View>
+          <View style={styles.row}>
+            <View style={styles.flex}>
+              <Text style={styles.label}>{vi.settings.alert}</Text>
+              <Text style={styles.hint}>{vi.settings.alertHint}</Text>
+            </View>
+            <Switch
+              testID="settings-alert-toggle"
+              accessibilityLabel={vi.settings.alert}
+              value={alertOn}
+              trackColor={{ true: colors.primary }}
+              onValueChange={(v) => {
+                setAlertOn(v);
+                void preferences.setAlertOverLastMonth(v);
+              }}
+            />
+          </View>
+        </View>
+
+        <Text style={styles.footer} testID="settings-footer">
+          {`${vi.settings.footer} ${version}`}
+        </Text>
+      </ScrollView>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { height: 64, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
+  iconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  back: { fontSize: 30, color: colors.text },
+  title: { flex: 1, fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text },
+  body: { paddingHorizontal: layout.screenPadding, gap: 10, paddingBottom: 32 },
+  section: { fontFamily: fontFamily.semibold, fontSize: fontSize.secondary, color: colors.textMuted },
+  sectionGap: { marginTop: 8 },
+  note: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, paddingHorizontal: 16 },
+  divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+  row: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  flex: { flex: 1 },
+  label: { fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.text },
+  value: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.textMuted },
+  hint: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
+  footer: {
+    textAlign: "center",
+    paddingTop: 8,
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.caption,
+    color: colors.textMuted,
+  },
+});
