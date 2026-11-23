@@ -1,4 +1,5 @@
 import { parseAmount } from "../src/lib/money";
+import { splitByAmount, splitByPercent, splitEqual, type SplitResult } from "../src/lib/split";
 import { alertLevel, monthTotals, type MyShare, type StatTxn } from "../src/lib/stats";
 import { buildTransferMessage, generateVietQr } from "../src/lib/vietqr";
 
@@ -14,7 +15,27 @@ export const registry: Record<string, GoldenFn | undefined> = {
     const r = parseAmount(String(text));
     return { amount: r.ok ? r.vnd : null };
   },
-  split: undefined,
+  split: (i) => {
+    const ids = i.participants as string[];
+    const values = (i.values ?? {}) as Record<string, number>;
+    const amount = i.amount as number;
+    let r: SplitResult;
+    if (i.mode === "equal") r = splitEqual(amount, ids);
+    else if (i.mode === "amount")
+      r = splitByAmount(
+        amount,
+        ids.map((memberId) => ({ memberId, amount: values[memberId] })),
+      );
+    else if (i.mode === "percent")
+      r = splitByPercent(
+        amount,
+        ids.map((memberId) => ({ memberId, bp: values[memberId] })),
+      );
+    else throw new Error(`Unknown split mode: ${String(i.mode)}`);
+    if (r.ok) return { shares: Object.fromEntries(r.shares.map((s) => [s.memberId, s.amount])) };
+    if (r.reason === "percentNot100") return { error: "percent_not_100", difference_bp: r.diffBp };
+    return { error: "sum_mismatch", difference: r.diff };
+  },
   settlement: undefined,
   stats: (i) => {
     if (i.kind === "alert") {
