@@ -394,19 +394,22 @@ export function TransactionForm({
               <Text style={styles.rowValue}>{`${moneySource} ›`}</Text>
             </Pressable>
           )}
-          <Pressable
-            testID="photo-row"
-            accessibilityRole="button"
-            onPress={pickPhoto}
-            style={[styles.row, styles.lastRow]}
-          >
-            <Text style={styles.rowLabel}>{vi.txn.photo}</Text>
+          <View style={[styles.row, styles.lastRow]}>
+            <Pressable testID="photo-row" accessibilityRole="button" onPress={pickPhoto} style={styles.photoMain}>
+              <Text style={styles.rowLabel}>{vi.txn.photo}</Text>
+              {photoUri ? null : <Text style={styles.rowValue}>{`${vi.txn.photoAdd} ›`}</Text>}
+            </Pressable>
             {photoUri ? (
-              <Image testID="photo-thumbnail" source={{ uri: photoUri }} style={styles.thumb} />
-            ) : (
-              <Text style={styles.rowValue}>{`${vi.txn.photoAdd} ›`}</Text>
-            )}
-          </Pressable>
+              <Pressable
+                testID="photo-thumbnail"
+                accessibilityRole="imagebutton"
+                accessibilityLabel={vi.txn.photo}
+                onPress={pickPhoto}
+              >
+                <Image testID="photo-thumbnail-image" source={{ uri: photoUri }} style={styles.thumb} />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
         {splitError ? (
           <Text testID="split-error" style={styles.error}>
@@ -506,6 +509,13 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   lastRow: { borderBottomWidth: 0 },
+  photoMain: {
+    flex: 1,
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   rowLabel: { fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.textMuted },
   rowValue: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.text },
   noteInput: {
