@@ -2,7 +2,7 @@
 
 These files are exported from the claude.ai design canvases, so agents can use the real markup and CSS:
 
-- UI mockup (19 screens): <https://claude.ai/artifact/PxFxv62jrWscb7hbTVEAUu>
+- UI mockup (19 screens + 3 state boards): <https://claude.ai/artifact/PxFxv62jrWscb7hbTVEAUu>
 - Logo (direction A "Hai đồng xu", chosen): <https://claude.ai/artifact/2m2qR4FeFweAJzbk9sTkUr>
 
 The design source of truth stays on the canvas. Re-export when it changes.
@@ -34,6 +34,20 @@ Agents implement these screens in React Native (`apps/mobile`) and translate the
 | 17 | Danh mục | `screens/Categories.dc.html` |
 | 18 | Cài đặt | `screens/Settings.dc.html` |
 | 19 | Chọn nơi ghi | `screens/TargetPicker.dc.html` |
+| 03b | Hướng dẫn chuyển (coach sheet, lần đầu với mỗi ngân hàng không tự điền) | `screens/PayCoachSheet.dc.html` |
+| 03c | Sau khi chuyển (banner "Đã thanh toán xong chưa?") | `screens/HandoffReturn.dc.html` |
+| 05b | Voice – 4 trạng thái mic (chờ, đang nghe, đang xử lý, xong) | `screens/VoiceStates.dc.html` |
+
+Boards 03b, 03c and 05b were added for #209 (pay through any bank app) and #265 (touch feedback and motion). The motion rules (pressed scale 0.97 for 100–150 ms, sheets ≤ 250 ms with backdrop fade, scan-frame sweep and detection flash, haptics, "reduce motion") are a note on the canvas, repeated here:
+
+- Every pressable shows a pressed state (scale 0.97 or opacity, 100–150 ms).
+- Bottom sheets and popups slide up with a backdrop fade (≤ 250 ms); toasts and banners slide and fade in and out; stack screens use the native slide.
+- History rows animate in and out; the overview and the > 20% alert fade in; loading uses skeletons.
+- Scan screen: a sweep line in the frame while looking, a short flash on detection.
+- Haptics: light impact on save, pay and hand-off; selection on pickers; error on validation.
+- "Reduce motion" makes every change instant but keeps haptics.
+
+Bank picker badges: "Tự điền" (VietQR autofill: MB Bank, VietinBank, BIDV, ACB, OCB) or "Quét ảnh QR" (all other apps). The picker has a search field and lists recent/preferred apps first, then the scanned bank's app, then the rest.
 
 ## Logo
 
@@ -66,7 +80,7 @@ Put these in `apps/mobile/src/theme.ts`. Don't introduce other colours without a
 | `expense` | `#B42318` | Negative amounts, "Chi" |
 | `warningBg` / `warningBorder` / `warningText` | `#FEF3E2` / `#F5D9A8` / `#7A4300` | > 20% spending alert banner |
 
-Category chart colours, in order: `#0E7C66`, `#3B82C4`, `#E08A2E`, `#8B6BC8`, then `#A5ABB5` for the rest. Bank and wallet tiles use a light tint with dark text, e.g. TPBank `#F3E8FF`/`#6B2FB3`, Techcombank `#FDE8E8`/`#A3161A`, MoMo `#FCE7F3`/`#9D174D`.
+Category chart colours, in order: `#0E7C66`, `#3B82C4`, `#E08A2E`, `#8B6BC8`, then `#A5ABB5` for the rest. Bank and wallet tiles use a light tint with dark text, e.g. TPBank `#F3E8FF`/`#6B2FB3`, Techcombank `#FDE8E8`/`#A3161A`, MB Bank `#E0ECFF`/`#1D4E9E`, MoMo `#FCE7F3`/`#9D174D`.
 
 ### Typography
 

@@ -21,15 +21,22 @@ a{color:#0E7C66}a:hover{color:#0A5E4D}
   </header>
 
   <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px">
+    <div role="status" style="background: #E7F4F0; border: 1px solid #D3EEE6; border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px">
+      <span style="font-size: 13px; line-height: 1.45; color: #0A5E4D">Đặt <b>MB Bank</b> làm app thanh toán mặc định? App này tự điền sẵn thông tin chuyển khoản.</span>
+      <div style="display: flex; gap: 8px; justify-content: flex-end">
+        <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #D3EEE6; background: #FFFFFF; color: #0A5E4D; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600">Bỏ qua</button>
+        <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #0E7C66; color: #FFFFFF; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600">Đặt mặc định</button>
+      </div>
+    </div>
     <h2 style="margin: 4px 0 0; font-size: 13px; font-weight: 600; color: #5B6472">App thanh toán · kéo để sắp xếp</h2>
     <section style="background: #FFFFFF; border-radius: 16px; padding: 0 16px">
-      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">TPBank</span><span style="font-size: 12px; color: #0A5E4D">Tự điền</span></div>
-      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">Techcombank</span><span style="font-size: 12px; color: #0A5E4D">Tự điền</span></div>
-      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">MoMo</span><span style="font-size: 12px; color: #5B6472">Copy + mở app</span></div>
-      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">Vietcombank</span><span style="font-size: 12px; color: #5B6472">Copy + mở app</span></div>
-      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">MBBank</span><span style="font-size: 12px; color: #5B6472">Copy + mở app</span></div>
+      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3;"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">TPBank</span><span style="font-size: 12px; color: #5B6472">Quét ảnh QR</span></div>
+      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3;"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">MB Bank</span><span style="font-size: 12px; font-weight: 600; color: #0A5E4D">Tự điền</span></div>
+      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3;"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">Techcombank</span><span style="font-size: 12px; color: #5B6472">Quét ảnh QR</span></div>
+      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3;"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">MoMo</span><span style="font-size: 12px; color: #5B6472">Quét ảnh QR</span></div>
+      <div style="min-height: 52px; display: flex; align-items: center; gap: 12px;"><span aria-hidden="true" style="color: #A5ABB5; font-size: 16px">⋮⋮</span><span style="flex: 1; font-size: 14px; font-weight: 600">Vietcombank</span><span style="font-size: 12px; color: #5B6472">Quét ảnh QR</span></div>
     </section>
-    <span style="font-size: 12px; color: #5B6472">“Tự điền” hay “Copy + mở app” sẽ chốt sau khi test deeplink thật.</span>
+    <span style="font-size: 12px; color: #5B6472">Ngoài danh sách này, khi thanh toán có thể tìm mọi app ngân hàng / ví có trong VietQR.</span>
 
     <h2 style="margin: 8px 0 0; font-size: 13px; font-weight: 600; color: #5B6472">Chung</h2>
     <section style="background: #FFFFFF; border-radius: 16px; padding: 0 16px">

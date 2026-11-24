@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Voice – trạng thái mic</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E7C66}a:hover{color:#0A5E4D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F7F9; font-family: Inter, sans-serif; color: #111827">
+  <header style="height: 64px; padding: 0 12px; display: flex; align-items: center; gap: 8px">
+    <a href="Voice.dc.html" aria-label="Đóng" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #111827"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></a>
+    <h1 style="margin: 0; font-size: 17px; font-weight: 600">Nói để nhập · 4 trạng thái</h1>
+  </header>
+
+  <div style="padding: 0 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 340px">
+      <h2 style="margin: 0; align-self: flex-start; font-size: 13px; font-weight: 600; color: #5B6472">1 · Chờ</h2>
+      <div aria-hidden="true" style="height: 40px; display: flex; align-items: center; gap: 4px">
+        <span style="width: 4px; height: 4px; border-radius: 2px; background: #D3EEE6"></span><span style="width: 4px; height: 4px; border-radius: 2px; background: #D3EEE6"></span><span style="width: 4px; height: 4px; border-radius: 2px; background: #D3EEE6"></span><span style="width: 4px; height: 4px; border-radius: 2px; background: #D3EEE6"></span><span style="width: 4px; height: 4px; border-radius: 2px; background: #D3EEE6"></span>
+      </div>
+      <button aria-label="Giữ để nói" style="width: 84px; height: 84px; border-radius: 42px; border: 0; background: #0E7C66; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <span style="font-size: 13px; color: #5B6472; text-align: center; line-height: 1.4">Giữ để nói, thả ra để dừng</span>
+      <span style="font-size: 12px; color: #5B6472; text-align: center; line-height: 1.4">Nút tĩnh, không vòng sáng.</span>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 340px">
+      <h2 style="margin: 0; align-self: flex-start; font-size: 13px; font-weight: 600; color: #5B6472">2 · Đang nghe</h2>
+      <div aria-hidden="true" style="height: 40px; display: flex; align-items: center; gap: 4px">
+        <span style="width: 4px; height: 12px; border-radius: 2px; background: #6CC4AC"></span><span style="width: 4px; height: 30px; border-radius: 2px; background: #0E7C66"></span><span style="width: 4px; height: 38px; border-radius: 2px; background: #0E7C66"></span><span style="width: 4px; height: 22px; border-radius: 2px; background: #0E7C66"></span><span style="width: 4px; height: 10px; border-radius: 2px; background: #6CC4AC"></span>
+      </div>
+      <button aria-label="Đang nghe, thả ra để dừng" style="width: 84px; height: 84px; border-radius: 42px; border: 0; background: #0A5E4D; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 10px #D3EEE6, 0 0 0 20px #E7F4F0; transform: scale(0.97)"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <span style="font-size: 14px; font-weight: 600; color: #0E7C66; margin-top: 6px">Đang nghe…</span>
+      <span style="font-size: 12px; color: #5B6472; text-align: center; line-height: 1.4">Vòng sáng nhịp theo âm lượng; rung nhẹ khi bắt đầu.</span>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 340px">
+      <h2 style="margin: 0; align-self: flex-start; font-size: 13px; font-weight: 600; color: #5B6472">3 · Đang xử lý</h2>
+      <div aria-hidden="true" style="height: 40px"></div>
+      <div role="progressbar" aria-label="Đang xử lý" style="width: 84px; height: 84px; border-radius: 42px; background: #E7F4F0; display: flex; align-items: center; justify-content: center">
+        <svg aria-hidden="true" width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="14" stroke="#D3EEE6" stroke-width="4"/><path d="M18 4a14 14 0 0 1 14 14" stroke="#0E7C66" stroke-width="4" stroke-linecap="round"/></svg>
+      </div>
+      <span style="font-size: 14px; font-weight: 600; color: #111827">Đang xử lý…</span>
+      <span style="font-size: 12px; color: #5B6472; text-align: center; line-height: 1.4">Nút tắt trong lúc AI tách thông tin; rung nhẹ khi dừng.</span>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 340px">
+      <h2 style="margin: 0; align-self: flex-start; font-size: 13px; font-weight: 600; color: #5B6472">4 · Xong</h2>
+      <div aria-hidden="true" style="height: 40px"></div>
+      <div style="width: 84px; height: 84px; border-radius: 42px; background: #0E7C66; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+      <span style="font-size: 14px; font-weight: 600; color: #0E7C66">Xong</span>
+      <span style="font-size: 12px; color: #5B6472; text-align: center; line-height: 1.4">Dấu tick ngắn, rồi form điền sẵn hiện ra (màn 05).</span>
+    </section>
+  </div>
+
+  <p style="position: absolute; left: 20px; right: 20px; bottom: 28px; margin: 0; font-size: 12px; line-height: 1.5; color: #5B6472; text-align: center">Trạng thái đổi ngay trong khung hình đầu tiên sau khi chạm. Khi bật “Giảm chuyển động”, vòng sáng và spinner đứng yên, chỉ đổi màu và chữ.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

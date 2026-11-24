@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Sau khi chuyển</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E7C66}a:hover{color:#0A5E4D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F7F9; font-family: Inter, sans-serif; color: #111827">
+  <div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 16px">
+    <header style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 13px; color: #5B6472">Xin chào, Hoàng</span>
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700">Tháng 11/2026</h1>
+    </header>
+    <section style="background: #0E7C66; color: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 13px; opacity: 0.85">Đã chi tháng này</span>
+      <span style="font-size: 32px; font-weight: 700; letter-spacing: -0.5px">8.505.000đ</span>
+      <span style="font-size: 13px; opacity: 0.85">Gồm 950.000đ phần của bạn trong nhóm</span>
+    </section>
+    <section style="background: #FFFFFF; border-radius: 16px; padding: 4px 16px">
+      <h2 style="margin: 12px 0 4px; font-size: 15px; font-weight: 600">Gần đây</h2>
+      <div style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EEF0F3">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #E7F4F0; color: #0E7C66; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">ĂU</span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600">QUAN PHO HOA</span><span style="font-size: 12px; color: #5B6472">Đà Lạt 12/2026 · QR · vừa xong</span></span>
+        <span style="font-size: 14px; font-weight: 600; color: #B42318">−55.000đ</span>
+      </div>
+      <div style="min-height: 56px; display: flex; align-items: center; gap: 12px">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #E7F4F0; color: #0E7C66; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">DC</span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600">Grab</span><span style="font-size: 12px; color: #5B6472">Di chuyển · hôm qua</span></span>
+        <span style="font-size: 14px; font-weight: 600; color: #B42318">−86.000đ</span>
+      </div>
+    </section>
+  </div>
+
+  <div role="status" style="position: absolute; left: 16px; right: 16px; bottom: 96px; background: #111827; color: #FFFFFF; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 8px 24px rgba(17,24,39,0.25)">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span style="flex: 1; font-size: 14px; font-weight: 600">Đã lưu 55.000đ · PHO HOA BAN 12</span>
+      <button style="min-height: 44px; padding: 0 4px; border: 0; background: transparent; color: #3DD6B0; font-family: Inter, sans-serif; font-size: 14px; font-weight: 600">Xóa</button>
+    </div>
+    <span style="font-size: 13px; line-height: 1.45; color: #D1D5DB">Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.</span>
+    <div style="border-top: 1px solid rgba(255,255,255,0.14); padding-top: 10px; display: flex; align-items: center; gap: 8px">
+      <span style="flex: 1; font-size: 14px">Đã thanh toán xong chưa?</span>
+      <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: #FFFFFF; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600">Chưa</button>
+      <button style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #3DD6B0; color: #111827; font-family: Inter, sans-serif; font-size: 13px; font-weight: 600">Đã trả</button>
+    </div>
+  </div>
+
+  <nav aria-label="Điều hướng chính" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; background: #FFFFFF; border-top: 1px solid #E6E8EC; display: flex; justify-content: space-around; align-items: flex-start; padding: 8px 8px 0; box-sizing: border-box">
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; font-size: 11px; font-weight: 600; color: #0E7C66; text-decoration: none"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Tổng quan</a>
+    <a href="History.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; font-size: 11px; font-weight: 500; color: #5B6472; text-decoration: none"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Lịch sử</a>
+    <a href="Scan.dc.html" aria-label="Quét QR" style="width: 60px; height: 60px; margin-top: -26px; border-radius: 30px; background: #0E7C66; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(14,124,102,0.35)"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg></a>
+    <a href="Groups.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; font-size: 11px; font-weight: 500; color: #5B6472; text-decoration: none"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Nhóm</a>
+    <a href="Profile.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 64px; font-size: 11px; font-weight: 500; color: #5B6472; text-decoration: none"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Hồ sơ</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -56,31 +56,39 @@ flowchart LR
     C --> E[Bấm Thanh toán<br/>lưu giao dịch ngay]
     E --> F{App hỗ trợ<br/>autofill?}
     F -- có --> G[Mở app bank/ví<br/>đã điền STK, số tiền]
-    F -- không --> H[Copy STK + số tiền<br/>lưu ảnh QR, mở app]
+    F -- không --> H[Tạo lại ảnh QR, lưu album MoneyMates<br/>copy STK, gửi ảnh hoặc mở app]
     G --> I[Xác nhận chuyển trong app]
     H --> I
+    I --> J[Quay lại MoneyMates<br/>hỏi 'Đã thanh toán xong chưa?']
 ```
 
-App không nhận điền sẵn vẫn đi tiếp được nhờ clipboard và ảnh QR. Không chuyển thì user tự vào app xóa giao dịch.
+Mục tiêu: nhập số tiền trong MoneyMates → app ngân hàng mở ra → thanh toán, càng ít bước càng tốt. Dùng được với **mọi app ngân hàng/ví có trong VietQR**, không chỉ vài app cố định. App không nhận điền sẵn vẫn đi tiếp được nhờ ảnh QR và clipboard. Không chuyển thì user xóa giao dịch ngay trên banner hoặc trong Lịch sử.
 
 1. Mở camera từ nút QR giữa thanh điều hướng (có nút chọn ảnh QR từ thư viện).
 2. Đọc mã VietQR trên máy: ngân hàng, số tài khoản, tên người nhận (nếu có), số tiền, nội dung.
 3. Màn xác nhận:
     - Mã có số tiền → điền sẵn (cho sửa nếu mã tĩnh). Mã không có → bàn phím số bật sẵn.
     - Danh mục được chọn sẵn tự động (xem "Tự chọn danh mục" ở mục 2), đổi được; ghi chú; và dòng "Ghi vào" (mặc định theo quy tắc ở mục 4; trong nhóm người chi = chính chủ).
-    - Chọn app thanh toán: danh sách bank/ví, ghim các app hay dùng lên đầu.
+    - Chọn app thanh toán: danh sách **mọi** app bank/ví trong VietQR, có ô tìm kiếm. Thứ tự: app dùng gần đây và app yêu thích (theo Cài đặt) → app của ngân hàng trong mã QR → các app còn lại. Mỗi dòng có nhãn **"Tự điền"** (app nhận điền sẵn) hoặc **"Quét ảnh QR"** (các app khác).
+    - Danh sách app lấy từ API (`GET /banks/apps`, server gộp danh sách deeplink và ngân hàng của VietQR, cache khoảng 24 giờ, VietQR lỗi thì trả bản tốt gần nhất). App có sẵn một bản danh sách để chạy offline và lần mở đầu. App không gọi VietQR trực tiếp.
 4. Bấm **Thanh toán** → lưu giao dịch → mở app đã chọn:
-    - App hỗ trợ autofill → mở thẳng màn chuyển tiền đã điền STK, số tiền, nội dung.
-    - App không hỗ trợ → copy STK + số tiền vào clipboard, lưu ảnh QR vào thư viện, rồi mở app (user dán hoặc "quét từ ảnh").
+    - App hỗ trợ autofill (hiện có MB Bank, VietinBank iPay, BIDV SmartBanking, ACB ONE, OCB OMNI) → mở link `dl.vietqr.io/pay` để app mở thẳng màn chuyển tiền đã điền STK, số tiền, nội dung. Có một bước chuyển nhanh qua trình duyệt, đó là cơ chế của VietQR.
+    - App không hỗ trợ (Techcombank, TPBank, Vietcombank, MoMo…) → không qua trình duyệt:
+        - Tạo lại ảnh VietQR với đúng ngân hàng, STK, số tiền và nội dung đã xác nhận (PNG 640 px, viền trắng 4 ô, đen trên trắng, không có tag tên merchant để app bank đọc được), lưu vào album "MoneyMates" để là ảnh mới nhất, và copy STK vào clipboard.
+        - Android: gửi thẳng ảnh QR sang app đó (chia sẻ ảnh tới đúng package). App không nhận ảnh thì mở app; mở không được thì thử scheme riêng, cuối cùng là link VietQR.
+        - iOS: mở app; ảnh QR đã nằm sẵn trong album.
+        - **Lần đầu dùng mỗi ngân hàng loại này** hiện bottom sheet hướng dẫn ngắn ("Trong <bank>: bấm Quét QR → biểu tượng Ảnh → chọn ảnh đầu tiên") có ô "Không hiện lại". Những lần sau chỉ hiện thông báo ngắn.
+    - App chưa cài hoặc không mở được → báo ngắn, thông tin đã nằm trong clipboard.
     - QR merchant không phải VietQR chuyển khoản → bắt nhập số tiền, lưu ảnh QR, mở app.
-5. Quay lại app thì thấy giao dịch vừa lưu, có nút xóa nhanh nếu không chuyển.
+    - Không tự động thao tác trong app ngân hàng (accessibility, overlay…) và không dùng deeplink riêng không công khai.
+5. Quay lại app thì thấy banner "Đã lưu <số tiền> · <nội dung>" có nút Xóa (nếu không chuyển), kèm câu hỏi một lần **"Đã thanh toán xong chưa?" (Đã trả / Chưa)**. Câu trả lời được nhớ theo từng ngân hàng (gửi ảnh thẳng có chạy không), lần sau chọn cách chuyển nhanh nhất đã biết.
 
 ### 2. Nhập chi tiêu/thu
 
 Một màn nhập chung cho ba cách, kết quả AI luôn hiện ra để user sửa trước khi lưu.
 
 - **Nhập tay:** loại (Chi/Thu), số tiền (hỗ trợ gõ "50k", "1tr2"), danh mục, ghi chú, ngày giờ, nguồn tiền (Tiền mặt / bank / ví / thẻ), ảnh đính kèm. Trong nhóm có thêm "Người chi".
-- **Voice:** giữ nút mic nói "ăn phở 50 nghìn" → điền sẵn form. Trong nhóm nói "Nam trả tiền xăng 200k" thì tự chọn Nam nếu trùng tên thành viên.
+- **Voice:** giữ nút mic nói "ăn phở 50 nghìn" → điền sẵn form. Trong nhóm nói "Nam trả tiền xăng 200k" thì tự chọn Nam nếu trùng tên thành viên. Nút mic có 4 trạng thái nhìn khác nhau rõ: chờ → **đang nghe** (vòng sáng nhịp theo âm lượng, chữ "Đang nghe…") → **đang xử lý** (spinner, "Đang xử lý…") → **xong** (dấu tick rồi form điền sẵn). Trạng thái đổi ngay khi chạm, có rung nhẹ khi bắt đầu và khi dừng.
 - **Ảnh bill:** chụp hoặc chọn ảnh → AI đọc tổng tiền, tên quán, ngày, tự chọn danh mục → điền form, ảnh bill được đính kèm.
 - AI lỗi hoặc hết quota → báo ngắn gọn, để form cho nhập tay, danh mục để "Khác".
 
@@ -131,8 +139,19 @@ App tự phân tích và chọn sẵn danh mục, user không phải chọn tay;
 
 - Hồ sơ: tên hiển thị (dùng làm "Tôi" trong nhóm), ảnh đại diện.
 - Tài khoản nhận tiền của tôi: thêm/sửa/xóa nhiều TK (ngân hàng, STK, tên chủ TK), chọn một TK mặc định, xem trước QR. Dùng để tạo QR đòi tiền trong nhóm.
-- Cài đặt: app thanh toán yêu thích (thứ tự hiển thị), nguồn tiền, đơn vị tiền mặc định (VND).
+- Cài đặt: app thanh toán yêu thích (thứ tự hiển thị, kèm nhãn "Tự điền" / "Quét ảnh QR"), nguồn tiền, đơn vị tiền mặc định (VND). Nếu user có tài khoản ở ngân hàng hỗ trợ tự điền thì gợi ý đặt app đó làm mặc định (Đặt mặc định / Bỏ qua).
 - Khóa app bằng Face ID / vân tay (tuỳ chọn).
+
+### 6b. Cảm giác chạm & chuyển động
+
+App phải phản hồi mọi thao tác, không đứng im. Dùng đúng màu và token của design, không thêm branding mới.
+
+- Mọi nút, dòng danh sách, chip, tab, dòng chọn ngân hàng: khi nhấn thu nhỏ khoảng 0.97 hoặc mờ đi, 100–150 ms.
+- Bottom sheet (Ghi vào, hướng dẫn ngân hàng, danh mục, Popup QR) trượt lên kèm nền tối mờ dần; toast và banner trượt/mờ vào ra; màn stack dùng hiệu ứng trượt gốc của hệ điều hành.
+- Lịch sử: dòng mới hoặc vừa xóa có animation. Tổng quan và cảnh báo >20% hiện dần khi có dữ liệu; lúc đang tải dùng skeleton thay vì màn trống.
+- Quét QR: khung quét có vệt quét chạy, nháy sáng ngắn khi nhận được mã.
+- Rung: nhẹ khi lưu giao dịch, thanh toán, chuyển app; rung chọn khi dùng picker; rung lỗi khi nhập sai. Gom vào một chỗ để tắt được.
+- Animation ngắn (≤ 250 ms), không chặn thao tác. Bật "Giảm chuyển động" của hệ thống thì đổi trạng thái tức thì, vẫn giữ rung.
 
 ### 7. Free / Pro (khi phổ biến app)
 
@@ -171,9 +190,11 @@ Thanh điều hướng dưới có 4 tab + nút QR nổi ở giữa: **Tổng qu
 | --- | --- | --- | --- |
 | 1 | Tổng quan | Tổng chi/thu tháng, so tháng trước, cảnh báo >20%, top danh mục, 5 giao dịch gần nhất | Tab |
 | 2 | Quét QR | Camera, chọn ảnh từ thư viện, đèn flash | Nút QR giữa |
-| 3 | Xác nhận thanh toán | Người nhận, số tiền, danh mục, dòng Ghi vào (mở màn Chọn nơi ghi) + chia cho ai, chọn app bank/ví, nút Thanh toán | Sau khi quét |
+| 3 | Xác nhận thanh toán | Người nhận, số tiền, danh mục, dòng Ghi vào (mở màn Chọn nơi ghi) + chia cho ai, chọn app bank/ví (tìm kiếm, nhãn Tự điền / Quét ảnh QR), nút Thanh toán | Sau khi quét |
+| 3b | Hướng dẫn chuyển | Bottom sheet lần đầu với mỗi ngân hàng không tự điền: các bước trong app bank, "Không hiện lại", nút Thanh toán qua <bank> | Màn 3 |
+| 3c | Sau khi chuyển | Banner trên màn hiện tại: Đã lưu + Xóa, nhắc ảnh QR đã lưu, "Đã thanh toán xong chưa?" (Đã trả / Chưa) | Quay lại từ app bank |
 | 4 | Nhập giao dịch | Form chung cho tay/voice/bill; Chi/Thu; người chi + cách chia khi ở nhóm | Menu "+" |
-| 5 | Voice | Sóng âm, chữ nhận dạng trực tiếp, nút xong | Menu "+" |
+| 5 | Voice | Sóng âm, chữ nhận dạng trực tiếp, nút mic 4 trạng thái (chờ / đang nghe / đang xử lý / xong), nút xong | Menu "+" |
 | 6 | Chụp bill | Camera, xử lý AI, chuyển sang form | Menu "+" |
 | 7 | Lịch sử | Danh sách theo ngày, bộ lọc, tìm kiếm, vuốt xóa | Tab |
 | 8 | Chi tiết giao dịch | Thông tin đầy đủ, ảnh bill/QR, phần chia từng người, sửa, xóa | Lịch sử, Tổng quan, Nhóm |
@@ -186,7 +207,7 @@ Thanh điều hướng dưới có 4 tab + nút QR nổi ở giữa: **Tổng qu
 | 15 | Hồ sơ | Tên, ảnh, lối vào Tài khoản nhận tiền, Danh mục, Cài đặt | Tab |
 | 16 | Tài khoản nhận tiền | Danh sách TK của tôi, thêm/sửa/xóa, TK mặc định, xem trước QR | Hồ sơ |
 | 17 | Danh mục | Danh sách mặc định + riêng, thêm/sửa/xóa | Hồ sơ |
-| 18 | Cài đặt | App thanh toán yêu thích, nguồn tiền, khóa app | Hồ sơ |
+| 18 | Cài đặt | App thanh toán yêu thích, gợi ý app tự điền làm mặc định, nguồn tiền, khóa app | Hồ sơ |
 | 19 | Chọn nơi ghi | Bottom sheet: ô tìm, Cá nhân, các nhóm theo dùng gần nhất, nhóm đã kết thúc ở cuối | Dòng "Ghi vào" ở màn 3 và 4 |
 
 ## Mô hình dữ liệu sơ bộ
@@ -214,7 +235,8 @@ Rủi ro lớn nhất là không phải app bank nào cũng nhận điền sẵn
 
 | Rủi ro | Ảnh hưởng | Cách xử lý |
 | --- | --- | --- |
-| Chỉ một phần app hỗ trợ autofill qua deeplink ([VietQR Deeplink](https://www.nuget.org/packages/VietQR.Deeplink.Client) liệt kê 43+ app, có cờ SupportsAutofill) | Một số bank chỉ mở được app | Copy clipboard + lưu ảnh QR; test thực tế với TPBank, Techcombank, Vietcombank, MBBank, MoMo |
+| Chỉ một phần app hỗ trợ autofill qua deeplink (danh sách VietQR `api.vietqr.io/v2/{android,ios}-app-deeplinks`, cờ `autofill`; hiện chỉ MB, VietinBank, BIDV, ACB, OCB) | Các bank khác chỉ mở được app | Tạo lại ảnh QR dễ đọc, lưu album MoneyMates, gửi thẳng ảnh (Android), hướng dẫn một lần, nhớ cách đã chạy theo từng bank; test thực tế với TPBank, Techcombank, Vietcombank, MBBank, MoMo |
+| Android 11+ ẩn package app khác | Không mở được app bank | Khai báo package và scheme của các app bank trong `<queries>`; thử lần lượt: mở package → scheme riêng → link VietQR |
 | QR merchant (VNPay…) không phải VietQR chuyển khoản | Không đọc được STK/số tiền | Nhập số tiền tay, lưu ảnh QR để app bank quét từ thư viện |
 | [OpenRouter free](https://openrouter.zendesk.com/hc/en-us/articles/39501163636379): 20 req/phút, 50 req/ngày (1.000/ngày sau khi nạp $10) | Hết quota là AI ngừng | Rule offline cho voice đơn giản; chỉ gọi LLM khi cần; khai báo 2–3 model free dự phòng |
 | Model free bị rate limit giờ cao điểm hoặc bị gỡ | AI chậm/lỗi | Fallback model, timeout, luôn cho nhập tay |
@@ -224,7 +246,7 @@ Rủi ro lớn nhất là không phải app bank nào cũng nhận điền sẵn
 
 ## Bước tiếp theo
 
-1. ~~Làm mockup giao diện~~ — đã xong (19 màn).
+1. ~~Làm mockup giao diện~~ — đã xong (19 màn, thêm 3b, 3c và trạng thái mic voice ngày 24/11/2026).
 2. ~~Chọn stack~~ — đã chốt, xem `tech-stack.md`.
 3. Test deeplink thực tế với TPBank, Techcombank, Vietcombank, MBBank, MoMo.
 4. Dựng khung dự án theo `tech-stack.md`.
