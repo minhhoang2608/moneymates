@@ -78,7 +78,7 @@ describe("pay-confirm share memory", () => {
     expect(usePendingHandOff.getState().pending?.askPaid).toBeUndefined();
   });
 
-  it("passes the remembered result to the hand-off; a rejected share is stored as failed", async () => {
+  it("passes the remembered result to the hand-off", async () => {
     await createHandOffMemoryRepository(testDb()).setShareResult("vcb", false);
     mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "share_failed" });
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
@@ -86,6 +86,15 @@ describe("pay-confirm share memory", () => {
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(mockHandOff).toHaveBeenCalled());
     expect(mockHandOff.mock.calls[0][1].knownResult).toBe("share_failed");
+  });
+
+  it("stores a rejected share as failed", async () => {
+    mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "share_failed" });
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
     await fireEvent.press(await screen.findByTestId("app-tcb"));
+    await fireEvent.press(screen.getByTestId("pay-submit"));
+    await waitFor(async () =>
+      expect(await createHandOffMemoryRepository(testDb()).getShareMemory()).toEqual({ tcb: "share_failed" }),
+    );
   });
 });
