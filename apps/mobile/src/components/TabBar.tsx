@@ -56,7 +56,7 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   };
 
   return (
-    <View style={styles.bar}>
+    <View testID="tab-bar" style={styles.bar}>
       {LEFT.map(renderTab)}
       <PressableScale
         testID="tab-qr"
@@ -93,9 +93,10 @@ const styles = StyleSheet.create({
   bar: {
     height: layout.tabBarHeight,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-around",
-    paddingBottom: 16,
+    paddingTop: 8,
+    paddingHorizontal: 8,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
