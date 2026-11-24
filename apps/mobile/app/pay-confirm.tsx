@@ -1,3 +1,4 @@
+import { haptics } from "@/lib/haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
@@ -158,6 +159,7 @@ export default function PayConfirmScreen() {
 
   const submit = async () => {
     if (busy.current || !parsed.ok || !categoryId) return;
+    haptics.light();
     busy.current = true;
     setFailed(false);
     let txId: string;
@@ -223,6 +225,7 @@ export default function PayConfirmScreen() {
   };
 
   const confirmCoach = async ({ dontShow }: { dontShow: boolean }) => {
+    haptics.light();
     const tx = pendingTx.current;
     setCoachOpen(false);
     if (!tx) return;

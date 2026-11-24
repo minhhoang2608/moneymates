@@ -1,3 +1,4 @@
+import { haptics } from "@/lib/haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState, type ComponentRef } from "react";
 import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -125,10 +126,15 @@ export default function GroupEditScreen() {
   }
 
   async function save() {
-    if (!name.trim()) return setError(groupErrorMessage("name_required"));
+    const fail = (message: string) => {
+      haptics.error();
+      setError(message);
+    };
+    if (!name.trim()) return fail(groupErrorMessage("name_required"));
     const others = items.filter((m) => !m.isMe);
-    if (others.some((m) => !m.name.trim())) return setError(groupErrorMessage("member_name_required"));
-    if (start && end && end < start) return setError(groupErrorMessage("invalid_dates"));
+    if (others.some((m) => !m.name.trim())) return fail(groupErrorMessage("member_name_required"));
+    if (start && end && end < start) return fail(groupErrorMessage("invalid_dates"));
+    haptics.light();
     setError(null);
     try {
       if (id) {
@@ -156,7 +162,7 @@ export default function GroupEditScreen() {
       }
       router.back();
     } catch (e) {
-      setError(e instanceof GroupError ? groupErrorMessage(e.code) : t.errors.unknown);
+      fail(e instanceof GroupError ? groupErrorMessage(e.code) : t.errors.unknown);
     }
   }
 

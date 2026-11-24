@@ -1,3 +1,4 @@
+import { haptics } from "@/lib/haptics";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
@@ -192,9 +193,11 @@ export function TransactionForm({
     if (saveDisabled) return;
     const result = validateForm({ type, amountText, categoryId, note, occurredAt, moneySource, photoUri });
     if (!result.ok) {
+      haptics.error();
       setErrors(result.errors);
       return;
     }
+    haptics.light();
     setErrors({});
     setSaveFailed(false);
     setSplitError(false);

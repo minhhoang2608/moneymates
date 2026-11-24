@@ -1,3 +1,4 @@
+import { haptics } from "@/lib/haptics";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
@@ -34,7 +35,10 @@ export function SheetPicker({
               key={o.key}
               testID={o.testID}
               accessibilityRole="button"
-              onPress={() => onSelect(o.key)}
+              onPress={() => {
+                haptics.selection();
+                onSelect(o.key);
+              }}
               style={styles.item}
             >
               <Text style={[styles.itemText, o.key === selectedKey && styles.itemSelected]}>{o.label}</Text>

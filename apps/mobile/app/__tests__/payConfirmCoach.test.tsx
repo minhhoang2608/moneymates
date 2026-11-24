@@ -8,6 +8,7 @@ import qr from "../../e2e/fixtures/qr.json";
 import { createAppSettingRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
+import { setHapticsEnabled } from "@/lib/haptics";
 import { COACH_KEY } from "@/lib/payConfirm/coach";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
 import { useToast } from "@/stores/toast";
@@ -50,11 +51,33 @@ async function open(appId: string) {
 
 describe("pay-confirm coach sheet", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
+    setHapticsEnabled(true);
     mockHandOff.mockReset();
     mockHandOff.mockImplementation(async () => ({ opened: true }));
     useToast.getState().hide();
     const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-coach-")), "test.db");
     global.__PAY_TEST_DB__ = openTestDb(file).db;
+  });
+
+  afterEach(() => setHapticsEnabled(true));
+
+  it("AC1: coach confirm fires a light haptic (after the pay submit one)", async () => {
+    const Haptics = jest.requireMock("expo-haptics");
+    await open("tcb");
+    await fireEvent.press(await screen.findByTestId("coach-confirm"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(2);
+    expect(Haptics.impactAsync).toHaveBeenLastCalledWith("light");
+  });
+
+  it("AC4: coach confirm with disabled haptics stays silent", async () => {
+    setHapticsEnabled(false);
+    const Haptics = jest.requireMock("expo-haptics");
+    await open("tcb");
+    await fireEvent.press(await screen.findByTestId("coach-confirm"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
   });
 
   it("AC1: a non-autofill bank shows the sheet and waits for confirm", async () => {
