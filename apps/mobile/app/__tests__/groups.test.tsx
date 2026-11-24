@@ -144,6 +144,16 @@ describe("Tạo/sửa nhóm", () => {
     expect(screen.getByTestId("member-add-input").props.value).toBe("");
   });
 
+  it("pressing the title dismisses the keyboard and stays on the screen", async () => {
+    freshFile();
+    const spy = jest.spyOn(Keyboard, "dismiss");
+    await renderEdit();
+    await fireEvent.press(screen.getByTestId("group-edit-title"));
+    expect(spy).toHaveBeenCalled();
+    expect(screen.getByTestId("screen-group-edit")).toBeTruthy();
+    spy.mockRestore();
+  });
+
   it("submitting twice adds An then Bình", async () => {
     freshFile();
     await renderEdit();

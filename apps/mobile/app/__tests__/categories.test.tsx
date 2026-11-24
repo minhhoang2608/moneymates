@@ -1,4 +1,4 @@
-import { Alert } from "react-native";
+import { Alert, Keyboard } from "react-native";
 import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 import { router } from "expo-router";
 
@@ -41,6 +41,16 @@ async function addCustom(name: string) {
 }
 
 describe("Danh mục screen", () => {
+  it("pressing the sheet title dismisses the keyboard and keeps the sheet open", async () => {
+    const spy = jest.spyOn(Keyboard, "dismiss");
+    await open();
+    await fireEvent.press(screen.getByTestId("category-add"));
+    await fireEvent.press(await screen.findByTestId("category-sheet-title"));
+    expect(spy).toHaveBeenCalled();
+    expect(screen.getByTestId("category-save")).toBeTruthy();
+    spy.mockRestore();
+  });
+
   it("AC1: shows 9 expense tiles and 3 income tiles", async () => {
     await open();
     await waitFor(() => expect(screen.getAllByTestId(/^category-tile-/)).toHaveLength(9));

@@ -12,7 +12,7 @@ appId: com.moneymates.app
     id: "group-name"
 - inputText: "Đà Lạt"
 - tapOn:
-    id: "group-name-label"
+    id: "group-edit-title"
 - waitForAnimationToEnd
 - tapOn:
     id: "member-add-input"
@@ -25,7 +25,7 @@ appId: com.moneymates.app
 - tapOn:
     id: "member-add"
 - tapOn:
-    id: "member-count"
+    id: "group-edit-title"
 - waitForAnimationToEnd
 - assertVisible:
     id: "screen-group-edit"

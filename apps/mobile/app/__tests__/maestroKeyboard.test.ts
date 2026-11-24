@@ -1,8 +1,23 @@
 import fs from "fs";
 import path from "path";
 
-const FLOWS = ["groups", "target-line", "settlement", "group-summary", "group-expense", "settings", "settings-effects"];
-const TARGETS = ["group-name-label", "member-count", "amount-preview", "account-no-label", "settings-general-heading"];
+const FLOWS = [
+  "groups",
+  "target-line",
+  "settlement",
+  "group-summary",
+  "group-expense",
+  "settings",
+  "settings-effects",
+  "categories",
+];
+const TARGETS = [
+  "group-edit-title",
+  "category-sheet-title",
+  "amount-preview",
+  "account-no-label",
+  "settings-general-heading",
+];
 const dir = path.join(__dirname, "..", "..", ".maestro");
 const read = (f: string) => fs.readFileSync(path.join(dir, `${f}.yaml`), "utf8");
 
@@ -22,8 +37,11 @@ describe("maestro keyboard dismissal", () => {
 
   it("screens render the dismiss targets", () => {
     const app = path.join(__dirname, "..");
-    expect(fs.readFileSync(path.join(app, "group", "edit.tsx"), "utf8")).toContain('testID="group-name-label"');
-    expect(fs.readFileSync(path.join(app, "group", "edit.tsx"), "utf8")).toContain('testID="member-count"');
+    expect(fs.readFileSync(path.join(app, "group", "edit.tsx"), "utf8")).toContain('testID="group-edit-title"');
+    expect(fs.readFileSync(path.join(app, "group", "edit.tsx"), "utf8")).toContain("onPress={Keyboard.dismiss}");
+    expect(
+      fs.readFileSync(path.join(app, "..", "src", "components", "category", "CategoryEditSheet.tsx"), "utf8"),
+    ).toContain('testID="category-sheet-title"');
     expect(fs.readFileSync(path.join(app, "bank-accounts.tsx"), "utf8")).toContain('testID="account-no-label"');
     expect(fs.readFileSync(path.join(app, "settings.tsx"), "utf8")).toContain('testID="settings-general-heading"');
   });
