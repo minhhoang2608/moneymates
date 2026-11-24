@@ -1,19 +1,24 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { PressableScale } from "@/components/PressableScale";
+import Animated from "react-native-reanimated";
 
+import { PressableScale } from "@/components/PressableScale";
+import { SkeletonCard } from "@/components/Skeleton";
 import { EntryMenu } from "@/components/EntryMenu";
 import { TransactionListItem } from "@/components/transaction/TransactionListItem";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import { vi } from "@/i18n/vi";
 import { formatVnd } from "@/lib/money";
+import { fadeInProps, useReduceMotion } from "@/lib/motion";
 import { loadOverview, type OverviewData } from "@/lib/stats/loadOverview";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { chartColors, colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function OverviewScreen() {
   const router = useRouter();
+  const reduceMotion = useReduceMotion();
+  const fade = fadeInProps(reduceMotion);
   const repos = useRepositories();
   const { profile } = repos;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,86 +72,92 @@ export default function OverviewScreen() {
           </PressableScale>
         </View>
 
-        <View style={styles.hero}>
-          <Text style={styles.heroLabel}>{vi.overview.spentThisMonth}</Text>
-          <Text style={styles.heroAmount} testID="overview-expense">
-            {formatVnd(o?.expenseTotal ?? 0)}
-          </Text>
-          {o && o.myShareTotal > 0 ? (
-            <Text style={styles.heroNote} testID="overview-group-share">
-              {vi.overview.groupShareNote(formatVnd(o.myShareTotal))}
-            </Text>
-          ) : null}
-          <View style={styles.tiles}>
-            <View style={styles.tile}>
-              <Text style={styles.tileLabel}>{vi.overview.income}</Text>
-              <Text style={styles.tileAmount} testID="overview-income">
-                {formatVnd(o?.incomeTotal ?? 0)}
+        {data === null ? (
+          <SkeletonCard testID="overview-skeleton" />
+        ) : (
+          <>
+            <Animated.View style={styles.hero} testID="overview-hero" {...fade}>
+              <Text style={styles.heroLabel}>{vi.overview.spentThisMonth}</Text>
+              <Text style={styles.heroAmount} testID="overview-expense">
+                {formatVnd(o?.expenseTotal ?? 0)}
               </Text>
-            </View>
-            <View style={styles.tile}>
-              <Text style={styles.tileLabel}>{vi.overview.lastMonthSpent}</Text>
-              <Text style={styles.tileAmount} testID="overview-last-expense">
-                {formatVnd(o?.lastExpenseTotal ?? 0)}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {o && o.alert !== "none" && alertOn ? (
-          <View style={styles.banner} testID="overview-banner" accessibilityRole="alert">
-            <Text style={styles.bannerText}>
-              {o.alert === "up" ? vi.overview.bannerUp(o.percent) : vi.overview.bannerDown(o.percent)}
-            </Text>
-          </View>
-        ) : null}
-
-        {o && o.top.length > 0 ? (
-          <View style={styles.card} testID="overview-top">
-            <View style={styles.cardHead}>
-              <Text style={styles.cardTitle}>{vi.overview.topCategories}</Text>
-              <PressableScale testID="overview-stats-link" onPress={() => router.push("/stats")}>
-                <Text style={styles.link}>{vi.overview.statsLink}</Text>
-              </PressableScale>
-            </View>
-            <View style={styles.stack}>
-              {bar.map((amount, i) => (
-                <View
-                  key={i}
-                  style={{ flex: amount, backgroundColor: chartColors[Math.min(i, chartColors.length - 1)] }}
-                />
-              ))}
-            </View>
-            {o.top.map((c, i) => (
-              <View key={c.category} style={styles.legendRow} testID={`overview-top-${i}`}>
-                <View style={[styles.dot, { backgroundColor: chartColors[Math.min(i, chartColors.length - 1)] }]} />
-                <Text style={styles.legendName}>{c.category}</Text>
-                <Text style={styles.legendAmount}>{formatVnd(c.amount)}</Text>
+              {o && o.myShareTotal > 0 ? (
+                <Text style={styles.heroNote} testID="overview-group-share">
+                  {vi.overview.groupShareNote(formatVnd(o.myShareTotal))}
+                </Text>
+              ) : null}
+              <View style={styles.tiles}>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>{vi.overview.income}</Text>
+                  <Text style={styles.tileAmount} testID="overview-income">
+                    {formatVnd(o?.incomeTotal ?? 0)}
+                  </Text>
+                </View>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>{vi.overview.lastMonthSpent}</Text>
+                  <Text style={styles.tileAmount} testID="overview-last-expense">
+                    {formatVnd(o?.lastExpenseTotal ?? 0)}
+                  </Text>
+                </View>
               </View>
-            ))}
-          </View>
-        ) : null}
+            </Animated.View>
 
-        <View style={styles.card}>
-          <View style={styles.cardHead}>
-            <Text style={styles.cardTitle}>{vi.overview.recent}</Text>
-            <PressableScale testID="overview-see-all" onPress={() => router.push("/history")}>
-              <Text style={styles.link}>{vi.overview.seeAll}</Text>
-            </PressableScale>
-          </View>
-          <View testID="overview-recent-list">
-            {data && !data.hasAny ? <Text style={styles.empty}>{vi.overview.empty}</Text> : null}
-            {data?.recent.map((t) => (
-              <PressableScale
-                key={t.id}
-                testID={`overview-open-${t.id}`}
-                onPress={() => router.push(`/transaction/${t.id}`)}
-              >
-                <TransactionListItem txn={t} categoryName={data.categoryNames[t.category_id] ?? ""} />
-              </PressableScale>
-            ))}
-          </View>
-        </View>
+            {o && o.alert !== "none" && alertOn ? (
+              <Animated.View style={styles.banner} testID="overview-banner" accessibilityRole="alert" {...fade}>
+                <Text style={styles.bannerText}>
+                  {o.alert === "up" ? vi.overview.bannerUp(o.percent) : vi.overview.bannerDown(o.percent)}
+                </Text>
+              </Animated.View>
+            ) : null}
+
+            {o && o.top.length > 0 ? (
+              <Animated.View style={styles.card} testID="overview-top" {...fade}>
+                <View style={styles.cardHead}>
+                  <Text style={styles.cardTitle}>{vi.overview.topCategories}</Text>
+                  <PressableScale testID="overview-stats-link" onPress={() => router.push("/stats")}>
+                    <Text style={styles.link}>{vi.overview.statsLink}</Text>
+                  </PressableScale>
+                </View>
+                <View style={styles.stack}>
+                  {bar.map((amount, i) => (
+                    <View
+                      key={i}
+                      style={{ flex: amount, backgroundColor: chartColors[Math.min(i, chartColors.length - 1)] }}
+                    />
+                  ))}
+                </View>
+                {o.top.map((c, i) => (
+                  <View key={c.category} style={styles.legendRow} testID={`overview-top-${i}`}>
+                    <View style={[styles.dot, { backgroundColor: chartColors[Math.min(i, chartColors.length - 1)] }]} />
+                    <Text style={styles.legendName}>{c.category}</Text>
+                    <Text style={styles.legendAmount}>{formatVnd(c.amount)}</Text>
+                  </View>
+                ))}
+              </Animated.View>
+            ) : null}
+
+            <Animated.View style={styles.card} testID="overview-recent" {...fade}>
+              <View style={styles.cardHead}>
+                <Text style={styles.cardTitle}>{vi.overview.recent}</Text>
+                <PressableScale testID="overview-see-all" onPress={() => router.push("/history")}>
+                  <Text style={styles.link}>{vi.overview.seeAll}</Text>
+                </PressableScale>
+              </View>
+              <View testID="overview-recent-list">
+                {data && !data.hasAny ? <Text style={styles.empty}>{vi.overview.empty}</Text> : null}
+                {data?.recent.map((t) => (
+                  <PressableScale
+                    key={t.id}
+                    testID={`overview-open-${t.id}`}
+                    onPress={() => router.push(`/transaction/${t.id}`)}
+                  >
+                    <TransactionListItem txn={t} categoryName={data.categoryNames[t.category_id] ?? ""} />
+                  </PressableScale>
+                ))}
+              </View>
+            </Animated.View>
+          </>
+        )}
       </ScrollView>
       <EntryMenu
         visible={menuOpen}

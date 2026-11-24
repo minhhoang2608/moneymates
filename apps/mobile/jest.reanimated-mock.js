@@ -5,12 +5,20 @@
 module.exports = (() => {
   const React = require("react");
   const createAnimatedComponent = (C) => C;
+  const builder = () => {
+    const b = new Proxy(() => b, { get: (_t, key) => (key === "__builder" ? true : () => b) });
+    return b;
+  };
+  const layoutBuilder = () => ({ duration: () => builder() });
   return {
     __esModule: true,
     // Lazy: requiring react-native here can re-enter this mock through a circular import.
     default: {
       get View() {
         return require("react-native").View;
+      },
+      get ScrollView() {
+        return require("react-native").ScrollView;
       },
       createAnimatedComponent,
     },
@@ -25,5 +33,9 @@ module.exports = (() => {
     withSequence: (...anims) => anims[anims.length - 1],
     cancelAnimation: () => {},
     Easing: { linear: (t) => t, inOut: (f) => f },
+    FadeIn: layoutBuilder(),
+    FadeOut: layoutBuilder(),
+    LinearTransition: layoutBuilder(),
+    ReduceMotion: { System: "system", Always: "always", Never: "never" },
   };
 })();

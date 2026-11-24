@@ -1,6 +1,9 @@
 export const vi = {
   appName: "MoneyMates",
   placeholder: "MoneyMates đang được xây dựng",
+  common: {
+    loading: "Đang tải",
+  },
   target: {
     personal: "Cá nhân",
     line: "Ghi vào",

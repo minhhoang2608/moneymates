@@ -1,8 +1,10 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { PressableScale } from "@/components/PressableScale";
+import Animated from "react-native-reanimated";
 
+import { PressableScale } from "@/components/PressableScale";
+import { SkeletonList } from "@/components/Skeleton";
 import { Avatar } from "@/components/group/Avatar";
 import { GroupGlyph } from "@/components/group/GroupIconTile";
 import { useRepositories } from "@/db/RepositoriesProvider";
@@ -11,12 +13,14 @@ import { vi } from "@/i18n/vi";
 import { formatGroupDates, memberLabel } from "@/lib/group/format";
 import { groupIconFor } from "@/lib/group/icons";
 import { formatVnd } from "@/lib/money";
+import { fadeInProps, useReduceMotion } from "@/lib/motion";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 const t = vi.groups;
 
 export default function GroupsScreen() {
   const router = useRouter();
+  const reduceMotion = useReduceMotion();
   const { groups } = useRepositories();
   const [rows, setRows] = useState<GroupSummary[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -46,6 +50,7 @@ export default function GroupsScreen() {
         </PressableScale>
       </View>
       <ScrollView contentContainerStyle={styles.body}>
+        {!loaded && <SkeletonList testID="groups-skeleton" count={3} />}
         {loaded && rows.length === 0 && (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>{t.empty}</Text>
@@ -57,38 +62,39 @@ export default function GroupsScreen() {
         {rows.map((g) => {
           const icon = groupIconFor(g.icon);
           return (
-            <PressableScale
-              key={g.id}
-              testID={`group-card-${g.id}`}
-              accessibilityRole="button"
-              onPress={() => router.push({ pathname: "/group/[id]", params: { id: g.id } })}
-              accessibilityLabel={`${g.name}, ${g.members.map(memberLabel).join(", ")}`}
-              style={styles.card}
-            >
-              <View style={styles.top}>
-                <View style={[styles.tile, { backgroundColor: icon.bg }]}>
-                  <GroupGlyph path={icon.path} color={icon.fg} />
+            <Animated.View key={g.id} {...fadeInProps(reduceMotion)}>
+              <PressableScale
+                testID={`group-card-${g.id}`}
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: "/group/[id]", params: { id: g.id } })}
+                accessibilityLabel={`${g.name}, ${g.members.map(memberLabel).join(", ")}`}
+                style={styles.card}
+              >
+                <View style={styles.top}>
+                  <View style={[styles.tile, { backgroundColor: icon.bg }]}>
+                    <GroupGlyph path={icon.path} color={icon.fg} />
+                  </View>
+                  <View style={styles.info}>
+                    <Text style={styles.name}>{g.name}</Text>
+                    <Text style={styles.meta}>
+                      {g.members.length} {t.memberCount} · {formatGroupDates(g.start_date, g.end_date)}
+                    </Text>
+                  </View>
+                  <Text style={styles.total}>{formatVnd(g.total)}</Text>
                 </View>
-                <View style={styles.info}>
-                  <Text style={styles.name}>{g.name}</Text>
-                  <Text style={styles.meta}>
-                    {g.members.length} {t.memberCount} · {formatGroupDates(g.start_date, g.end_date)}
-                  </Text>
+                <View style={styles.bottom}>
+                  {g.members.map((m, i) => (
+                    <Avatar
+                      key={m.id}
+                      name={m.isMe ? m.displayName || t.me : m.displayName}
+                      index={i}
+                      size={28}
+                      overlap={i > 0}
+                    />
+                  ))}
                 </View>
-                <Text style={styles.total}>{formatVnd(g.total)}</Text>
-              </View>
-              <View style={styles.bottom}>
-                {g.members.map((m, i) => (
-                  <Avatar
-                    key={m.id}
-                    name={m.isMe ? m.displayName || t.me : m.displayName}
-                    index={i}
-                    size={28}
-                    overlap={i > 0}
-                  />
-                ))}
-              </View>
-            </PressableScale>
+              </PressableScale>
+            </Animated.View>
           );
         })}
       </ScrollView>

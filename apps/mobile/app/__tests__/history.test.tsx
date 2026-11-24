@@ -132,6 +132,19 @@ describe("Lịch sử screen", () => {
     expect(back.deleted_at).toBeNull();
   });
 
+  it("AC1: rows are animated wrappers; deleting one removes only that row", async () => {
+    const a = await add(55_000, "2026-11-22T03:00:00Z", { note: "phở bò" });
+    const b = await add(30_000, "2026-11-22T04:00:00Z", { note: "cà phê" });
+    await renderHistory();
+    const wrapper = await screen.findByTestId(`history-row-anim-${a.id}`);
+    expect(wrapper.props.entering).toBeDefined();
+    expect(wrapper.props.exiting).toBeDefined();
+    expect(wrapper.props.layout).toBeDefined();
+    await fireEvent.press(screen.getByTestId(`history-delete-${a.id}`));
+    await waitFor(() => expect(screen.queryByTestId(`history-row-anim-${a.id}`)).toBeNull());
+    expect(screen.getByTestId(`history-row-anim-${b.id}`)).toBeTruthy();
+  });
+
   it("AC4: without undo the row stays deleted after reopening the db", async () => {
     const t = await add(55_000, "2026-11-22T03:00:00Z", { note: "phở bò" });
     await renderHistory();
