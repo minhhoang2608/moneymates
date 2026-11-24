@@ -10,6 +10,7 @@ export type PaybackQr =
       amount: number | null;
       message: string;
       holder: string;
+      bankBin: string;
       bankName: string;
       accountNo: string;
     };
@@ -42,6 +43,7 @@ export function buildPaybackQr(input: {
     amount: hasAmount ? amount : null,
     message,
     holder: account.account_name,
+    bankBin: account.bank_bin,
     bankName: account.bank_name,
     accountNo: account.account_no,
   };

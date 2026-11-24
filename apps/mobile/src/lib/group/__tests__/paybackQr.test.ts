@@ -56,4 +56,9 @@ describe("buildPaybackQr", () => {
       kind: "no_account",
     });
   });
+
+  it("exposes the bank BIN for the image template", () => {
+    const r = buildPaybackQr({ groupName: "Đà Lạt", account, memberName: "An", amount: 400000 });
+    expect(r.kind === "qr" && r.bankBin).toBe("970423");
+  });
 });

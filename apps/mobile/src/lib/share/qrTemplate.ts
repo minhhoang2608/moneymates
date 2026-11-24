@@ -23,6 +23,8 @@ export type QrImageInput = {
   message?: string;
   /** Encoded instead when a fresh VietQR cannot be built (bad amount, over-long note, bad bank/account). */
   fallbackPayload?: string;
+  /** Default true: adds the "temporary image, auto-deleted" footer. False for images the user keeps (popup QR). */
+  temporary?: boolean;
 };
 
 export type QrImageContent = {
@@ -31,7 +33,7 @@ export type QrImageContent = {
   bankLine: string;
   amountLine: string | null;
   messageLine: string | null;
-  footer: string;
+  footer: string | null;
 };
 
 /** "0123456789" → "0123 4567 89". */
@@ -68,7 +70,7 @@ export function buildQrImageContent(input: QrImageInput): QrImageContent {
     bankLine: `${bankName} · ${groupAccount(input.account)}`,
     amountLine: amountValid && input.amount !== undefined ? formatVnd(input.amount) : null,
     messageLine: message ?? null,
-    footer: vi.payConfirm.qrImageFooter,
+    footer: input.temporary === false ? null : vi.payConfirm.qrImageFooter,
   };
 }
 
@@ -95,7 +97,7 @@ export type QrImageLayout = {
   bank: Block;
   amount: Block | null;
   message: Block | null;
-  footer: Block;
+  footer: Block | null;
 };
 
 const block = (top: number, fontSize: number, lineHeight: number): Block => ({
@@ -107,7 +109,7 @@ const block = (top: number, fontSize: number, lineHeight: number): Block => ({
 
 export function computeQrImageLayout(
   moduleCount: number,
-  opts: { hasTitle?: boolean; hasAmount: boolean; hasMessage: boolean },
+  opts: { hasTitle?: boolean; hasAmount: boolean; hasMessage: boolean; hasFooter?: boolean },
 ): QrImageLayout {
   const cells = moduleCount + QUIET * 2;
   let moduleSize = Math.floor(TARGET_BOX / cells);
@@ -133,7 +135,7 @@ export function computeQrImageLayout(
     y += 6;
     message = block(y, 18, 24);
   }
-  const footer = block(CANVAS_H - PAD_Y - 20, 15, 20);
+  const footer = opts.hasFooter === false ? null : block(CANVAS_H - PAD_Y - 20, 15, 20);
 
   return {
     width: CANVAS_W,

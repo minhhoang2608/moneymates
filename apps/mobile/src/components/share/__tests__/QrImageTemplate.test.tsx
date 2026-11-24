@@ -40,6 +40,12 @@ describe("QrImageTemplate", () => {
       expect(screen.getByText(t)).toBeTruthy();
     }
   });
+  it("omits the temporary footer when temporary is false", async () => {
+    await render(<QrImageTemplate {...base} temporary={false} />);
+    expect(screen.queryByText(/Ảnh tạm/)).toBeNull();
+    expect(screen.queryByText(/tự xoá/)).toBeNull();
+    expect(screen.getByText("55.000đ")).toBeTruthy();
+  });
   it("renders no message line without a message", async () => {
     await render(<QrImageTemplate {...base} />);
     expect(screen.queryByText("PHO HOA BAN 12")).toBeNull();

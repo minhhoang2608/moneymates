@@ -15,16 +15,17 @@ type Props = QrImageInput & {
 
 /** The 600×900 transfer image handed to bank apps (design: mockup 27). Rendered off-screen, exported as PNG. */
 export function QrImageTemplate({ getRef, ...input }: Props) {
-  const { name, bankBin, bankName, account, amount, message, fallbackPayload } = input;
+  const { name, bankBin, bankName, account, amount, message, fallbackPayload, temporary } = input;
   const content = useMemo(
-    () => buildQrImageContent({ name, bankBin, bankName, account, amount, message, fallbackPayload }),
-    [name, bankBin, bankName, account, amount, message, fallbackPayload],
+    () => buildQrImageContent({ name, bankBin, bankName, account, amount, message, fallbackPayload, temporary }),
+    [name, bankBin, bankName, account, amount, message, fallbackPayload, temporary],
   );
   const matrix = useMemo(() => qrMatrix(content.payload), [content.payload]);
   const L = computeQrImageLayout(matrix.size, {
     hasTitle: content.title !== null,
     hasAmount: content.amountLine !== null,
     hasMessage: content.messageLine !== null,
+    hasFooter: content.footer !== null,
   });
 
   const cells: React.ReactElement[] = [];
@@ -102,9 +103,11 @@ export function QrImageTemplate({ getRef, ...input }: Props) {
           {content.messageLine}
         </SvgText>
       ) : null}
-      <SvgText {...common} y={L.footer.baseline} fontFamily="Inter_400Regular" fontSize={15} fill={FOOTER_GREY}>
-        {content.footer}
-      </SvgText>
+      {content.footer && L.footer ? (
+        <SvgText {...common} y={L.footer.baseline} fontFamily="Inter_400Regular" fontSize={15} fill={FOOTER_GREY}>
+          {content.footer}
+        </SvgText>
+      ) : null}
     </Svg>
   );
 }
