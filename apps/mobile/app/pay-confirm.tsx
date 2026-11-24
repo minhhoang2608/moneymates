@@ -1,8 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, View } from "react-native";
 
+import { CoachSheet } from "@/components/payConfirm/CoachSheet";
 import { TargetLine } from "@/components/target/TargetLine";
 import { useTargetDefault } from "@/components/target/useTargetDefault";
 import { CategoryPicker } from "@/components/transaction/CategoryPicker";
@@ -14,6 +15,7 @@ import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
 import { useBankApps } from "@/api/bankApps";
 import { buildPayApps, defaultAppId, filterApps, normalizeAppId, orderPickerApps } from "@/lib/payConfirm/apps";
+import { createCoachStore, needsCoach } from "@/lib/payConfirm/coach";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { buildClipboardText } from "@/lib/payConfirm/deeplink";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
@@ -26,6 +28,7 @@ import { formatVnd, parseAmount } from "@/lib/money";
 import { PREF_KEYS } from "@/lib/preferences/defaults";
 import { knownResultFor } from "@/lib/payConfirm/shareMemory";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
+import { useToast } from "@/stores/toast";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 const RECENT_KEY = PREF_KEYS.recentPayApps;
@@ -58,7 +61,9 @@ export default function PayConfirmScreen() {
   const [appQuery, setAppQuery] = useState("");
   const [failed, setFailed] = useState(false);
   const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
+  const [coachOpen, setCoachOpen] = useState(false);
   const busy = useRef(false);
+  const pendingTx = useRef<{ amount: number; note: string } | null>(null);
   const qrRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
   useEffect(() => {
@@ -174,12 +179,35 @@ export default function PayConfirmScreen() {
     try {
       await appSettings.set(RECENT_KEY, [selected.id, ...recent.filter((id) => id !== selected.id)].slice(0, 10));
       usePendingHandOff.getState().set({ txId, amount: parsed.vnd, label: note });
+      const mode = needsCoach(selected, await createCoachStore(appSettings).list());
+      if (mode === "sheet") {
+        pendingTx.current = { amount: parsed.vnd, note };
+        setCoachOpen(true);
+        return;
+      }
+      if (mode === "toast") {
+        const text = vi.coach.text(selected.name);
+        useToast.getState().show(text);
+        if (Platform.OS === "android" && process.env.EXPO_PUBLIC_E2E !== "1")
+          ToastAndroid.show(text, ToastAndroid.SHORT);
+      }
+    } catch {
+      usePendingHandOff.getState().reveal();
+      busy.current = false;
+      router.back();
+      return;
+    }
+    await runHandOff(parsed.vnd, note);
+  };
+
+  const runHandOff = async (amount: number, text: string) => {
+    try {
       const handOff = makeHandOff(getQrBase64);
       const memory = await handOffMemory.getShareMemory().catch(() => ({}));
       const { opened, mode, decision, share } = await handOff(selected, {
         model,
-        amount: parsed.vnd,
-        note,
+        amount,
+        note: text,
         knownResult: knownResultFor(memory, selected.id),
       });
       if (decision === "direct-share" && share === "shared") usePendingHandOff.getState().askPaid(selected.id);
@@ -191,6 +219,27 @@ export default function PayConfirmScreen() {
     } finally {
       router.back();
     }
+  };
+
+  const confirmCoach = async ({ dontShow }: { dontShow: boolean }) => {
+    const tx = pendingTx.current;
+    setCoachOpen(false);
+    if (!tx) return;
+    if (dontShow) {
+      try {
+        await createCoachStore(appSettings).dismiss(selected.id);
+      } catch {
+        // The hint just shows again next time.
+      }
+    }
+    await runHandOff(tx.amount, tx.note);
+  };
+
+  const closeCoach = () => {
+    setCoachOpen(false);
+    pendingTx.current = null;
+    usePendingHandOff.getState().reveal();
+    router.back();
   };
 
   return (
@@ -360,6 +409,8 @@ export default function PayConfirmScreen() {
       <View style={styles.hiddenQr} pointerEvents="none" accessibilityElementsHidden>
         <QRCode value={qrPayload || " "} size={300} getRef={(r) => (qrRef.current = r)} />
       </View>
+
+      {coachOpen ? <CoachSheet bankName={selected.name} onConfirm={confirmCoach} onClose={closeCoach} /> : null}
 
       <CategoryPicker
         visible={picker}

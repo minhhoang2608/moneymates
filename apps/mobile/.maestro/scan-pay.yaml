@@ -21,6 +21,12 @@ appId: com.moneymates.app
     id: "pay-submit"
 - extendedWaitUntil:
     visible:
+      id: "coach-sheet"
+    timeout: 10000
+- tapOn:
+    id: "coach-confirm"
+- extendedWaitUntil:
+    visible:
       id: "handoff-return-banner"
     timeout: 10000
 - assertVisible: "Đã lưu 55\\.000đ.*"

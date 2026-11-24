@@ -1,0 +1,44 @@
+# One-time coach sheet for a bank without autofill (TPBank fixture): shown once, then only a toast.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- assertVisible:
+    id: "screen-pay-confirm"
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible:
+      id: "coach-sheet"
+    timeout: 10000
+- assertVisible: "Trong TPBank: bấm Quét QR → biểu tượng Ảnh → chọn ảnh đầu tiên"
+- tapOn:
+    id: "coach-dont-show"
+- tapOn:
+    id: "coach-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "handoff-return-banner"
+    timeout: 10000
+# Second payment to the same bank: no sheet, only the toast.
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- assertVisible:
+    id: "screen-pay-confirm"
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible:
+      id: "handoff-coach-toast"
+    timeout: 10000
+- assertNotVisible:
+    id: "coach-sheet"

@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import qr from "../../e2e/fixtures/qr.json";
-import { createCategoryRepository, createTransactionRepository } from "@/db/repositories";
+import { createAppSettingRepository, createCategoryRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
@@ -68,7 +68,7 @@ const idOf = async (name: string) =>
   (await createCategoryRepository(testDb()).listByKind("expense")).find((c) => c.name === name)!.id;
 const selected = (id: string) => screen.getByTestId(`pay-category-${id}`).props.accessibilityState.selected;
 
-beforeEach(() => {
+beforeEach(async () => {
   fetchMock.mockReset();
   global.fetch = fetchMock as unknown as typeof fetch;
   process.env.EXPO_PUBLIC_API_URL = "https://api.test/";
@@ -77,6 +77,8 @@ beforeEach(() => {
   mockHandOff.mockImplementation(async () => ({ opened: true }));
   const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-paycat-")), "test.db");
   global.__PAY_TEST_DB__ = openTestDb(file).db;
+  // These tests are not about the coach sheet: the default bank (TPBank) has it dismissed.
+  await createAppSettingRepository(global.__PAY_TEST_DB__ as unknown as AnyDb).set("pay.coach_dismissed", ["tpb"]);
 });
 afterEach(() => {
   global.fetch = original;

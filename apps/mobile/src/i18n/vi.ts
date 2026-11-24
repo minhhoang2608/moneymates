@@ -59,6 +59,11 @@ export const vi = {
     shareQr: "Chia sẻ mã QR",
     noBankMatch: "Không tìm thấy ngân hàng",
   },
+  coach: {
+    text: (bank: string) => `Trong ${bank}: bấm Quét QR → biểu tượng Ảnh → chọn ảnh đầu tiên`,
+    dontShow: "Không hiện lại",
+    confirm: (bank: string) => `Thanh toán qua ${bank}`,
+  },
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
     delete: "Xóa",

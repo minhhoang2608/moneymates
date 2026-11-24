@@ -8,6 +8,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { Stack } from "expo-router";
 
+import { Toast } from "@/components/Toast";
 import { AppLockGate } from "@/components/appLock/AppLockGate";
 import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
@@ -44,6 +45,7 @@ export default function RootLayout() {
               <Stack.Screen name="transaction/new" options={{ presentation: "modal" }} />
             </Stack>
             <ReturnBanner />
+            <Toast />
           </AppLockGate>
         </RepositoriesProvider>
       </DatabaseProvider>
