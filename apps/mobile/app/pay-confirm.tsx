@@ -1,11 +1,15 @@
 import { haptics } from "@/lib/haptics";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
 import { Platform, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
+import { AppPickerSheet } from "@/components/payConfirm/AppPickerSheet";
 import { CoachSheet } from "@/components/payConfirm/CoachSheet";
+import { PayAppRow } from "@/components/payConfirm/PayAppRow";
+import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
+import { preselectApp, type LastUsedByBank } from "@/lib/payConfirm/preselect";
 import { TargetLine } from "@/components/target/TargetLine";
 import { useTargetDefault } from "@/components/target/useTargetDefault";
 import { CategoryPicker } from "@/components/transaction/CategoryPicker";
@@ -16,7 +20,7 @@ import { useCategorySuggestion } from "@/api/parseText";
 import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
 import { useBankApps } from "@/api/bankApps";
-import { buildPayApps, defaultAppId, filterApps, normalizeAppId, orderPickerApps } from "@/lib/payConfirm/apps";
+import { buildPayApps, normalizeAppId } from "@/lib/payConfirm/apps";
 import { createCoachStore, needsCoach } from "@/lib/payConfirm/coach";
 import { QrImageTemplate } from "@/components/share/QrImageTemplate";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
@@ -40,15 +44,7 @@ export default function PayConfirmScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<Record<string, string>>();
   const model = useMemo(() => parsePayConfirmParams(params), [params]);
-  const {
-    transactions,
-    categories,
-    appSettings,
-    groups: groupRepo,
-    groupExpenses,
-    paymentAppPrefs,
-    handOffMemory,
-  } = useRepositories();
+  const { transactions, categories, appSettings, groups: groupRepo, groupExpenses, handOffMemory } = useRepositories();
   const targetState = useTargetDefault();
   const { target } = targetState;
 
@@ -59,9 +55,10 @@ export default function PayConfirmScreen() {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [picker, setPicker] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
-  const [savedOrder, setSavedOrder] = useState<string[]>([]);
+  const [lastUsed, setLastUsed] = useState<LastUsedByBank>({});
+  const { enabled: enabledApps, reload: reloadEnabled } = useEnabledPayApps();
   const [appId, setAppId] = useState<string | null>(null);
-  const [appQuery, setAppQuery] = useState("");
+  const [appSheet, setAppSheet] = useState(false);
   const [failed, setFailed] = useState(false);
   const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
   const [coachOpen, setCoachOpen] = useState(false);
@@ -104,25 +101,27 @@ export default function PayConfirmScreen() {
 
   useEffect(() => {
     let alive = true;
-    paymentAppPrefs.getAppOrder().then((keys) => alive && setSavedOrder(keys));
+    handOffMemory
+      .getLastUsedByBank()
+      .then((map) => alive && setLastUsed(map))
+      .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [paymentAppPrefs]);
+  }, [handOffMemory]);
+
+  // Changes made on the "App thanh toán" page apply when this screen is shown again.
+  useFocusEffect(
+    useCallback(() => {
+      reloadEnabled().catch(() => {});
+    }, [reloadEnabled]),
+  );
 
   const recentIds = useMemo(() => recent.map(normalizeAppId), [recent]);
   const bankApps = useBankApps();
   const payApps = useMemo(() => buildPayApps(bankApps, Platform.OS === "ios" ? "ios" : "android"), [bankApps]);
-  const apps = useMemo(
-    () => orderPickerApps(payApps, { preferred: savedOrder, recent: recentIds, scannedBin: model.bankBin }),
-    [payApps, savedOrder, recentIds, model.bankBin],
-  );
-  const selectedId = appId ?? defaultAppId(apps, recentIds, model.bankBin);
-  const selected = apps.find((a) => a.id === selectedId) ?? apps[0];
-  const shownApps = useMemo(() => {
-    const hits = filterApps(apps, appQuery);
-    return hits.some((a) => a.id === selected.id) ? hits : [selected, ...hits];
-  }, [apps, appQuery, selected]);
+  const selectedId = appId ?? preselectApp(model.bankBin, enabledApps, lastUsed, payApps);
+  const selected = payApps.find((a) => a.id === selectedId) ?? payApps[0];
 
   const parsed = parseAmount(amountText);
   const enabled = canSubmit(amountText) && categoryId !== null;
@@ -181,6 +180,7 @@ export default function PayConfirmScreen() {
       return;
     }
     try {
+      if (model.kind === "vietqr") await handOffMemory.setLastUsedForBank(model.bankBin, selected.id).catch(() => {});
       await appSettings.set(RECENT_KEY, [selected.id, ...recent.filter((id) => id !== selected.id)].slice(0, 10));
       usePendingHandOff.getState().set({ txId, amount: parsed.vnd, label: note });
       const mode = needsCoach(selected, await createCoachStore(appSettings).list());
@@ -343,44 +343,7 @@ export default function PayConfirmScreen() {
         ) : null}
 
         <Text style={styles.section}>{vi.payConfirm.payWith}</Text>
-        <TextInput
-          testID="pay-app-search"
-          value={appQuery}
-          onChangeText={setAppQuery}
-          placeholder={vi.bankAccounts.searchBank}
-          placeholderTextColor={colors.neutral}
-          autoCorrect={false}
-          style={styles.search}
-        />
-        {appQuery.trim() && filterApps(apps, appQuery).length === 0 ? (
-          <Text testID="pay-app-empty" style={styles.muted}>
-            {vi.payConfirm.noBankMatch}
-          </Text>
-        ) : null}
-        <View style={styles.appList}>
-          {shownApps.map((a, i) => {
-            const on = a.id === selected.id;
-            return (
-              <PressableScale
-                key={a.id}
-                testID={`app-${a.id}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-                onPress={() => setAppId(a.id)}
-                style={[styles.appRow, on && styles.appRowOn, i > 0 && styles.appRowBorder]}
-              >
-                <View style={styles.appBadge}>
-                  <Text style={styles.appBadgeText}>{a.short}</Text>
-                </View>
-                <Text style={[styles.appName, on && styles.appNameOn]}>{a.name}</Text>
-                <Text testID={`app-badge-${a.id}`} style={styles.appMode}>
-                  {a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.scanQr}
-                </Text>
-                {on ? <Text style={styles.check}>✓</Text> : null}
-              </PressableScale>
-            );
-          })}
-        </View>
+        <PayAppRow app={selected} onChange={() => setAppSheet(true)} />
         {failed ? (
           <Text testID="pay-error" style={styles.error}>
             {vi.payConfirm.saveFailed}
@@ -436,6 +399,26 @@ export default function PayConfirmScreen() {
           />
         )}
       </View>
+
+      {appSheet ? (
+        <AppPickerSheet
+          enabled={enabledApps}
+          qrBin={model.bankBin}
+          recentIds={recentIds}
+          lastUsedId={model.bankBin ? lastUsed[model.bankBin] : undefined}
+          selectedId={selected.id}
+          catalogue={payApps}
+          onSelect={(id) => {
+            setAppId(id);
+            setAppSheet(false);
+          }}
+          onManage={() => {
+            setAppSheet(false);
+            router.push("/payment-apps");
+          }}
+          onClose={() => setAppSheet(false)}
+        />
+      ) : null}
 
       {coachOpen ? <CoachSheet bankName={selected.name} onConfirm={confirmCoach} onClose={closeCoach} /> : null}
 
@@ -500,35 +483,7 @@ const styles = StyleSheet.create({
   chipOn: { borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.primarySoft },
   chipText: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.text },
   chipTextOn: { fontFamily: fontFamily.semibold, color: colors.primaryDark },
-  search: {
-    height: 40,
-    paddingHorizontal: 12,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.body,
-    color: colors.text,
-  },
-  appList: { backgroundColor: colors.surface, borderRadius: radii.card, overflow: "hidden" },
-  appRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
-  appRowOn: { backgroundColor: colors.primarySoft },
-  appRowBorder: { borderTopWidth: 1, borderTopColor: colors.divider },
-  appBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.sm,
-    backgroundColor: colors.divider,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  appBadgeText: { fontFamily: fontFamily.bold, fontSize: fontSize.tab, color: colors.textMuted },
-  appName: { flex: 1, fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.text },
-  appNameOn: { fontFamily: fontFamily.semibold },
-  appMode: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
   hiddenQr: { position: "absolute", left: -1000, top: -1000, opacity: 0 },
-  check: { fontSize: 18, color: colors.primary },
   error: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.expense },
   footer: {
     backgroundColor: colors.surface,

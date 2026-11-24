@@ -52,6 +52,13 @@ const urlFor = (text: string) => {
   return `/pay-confirm?${new URLSearchParams(r.href.params).toString()}`;
 };
 
+/** Opens the app sheet, searches the whole catalogue for the id and picks that app. */
+async function pickApp(id: string) {
+  await fireEvent.press(await screen.findByTestId("pay-app-change"));
+  await fireEvent.changeText(await screen.findByTestId("pay-app-search"), id);
+  await fireEvent.press(await screen.findByTestId(`app-${id}`));
+}
+
 describe("pay-confirm share memory", () => {
   beforeEach(async () => {
     mockHandOff.mockReset();
@@ -65,7 +72,7 @@ describe("pay-confirm share memory", () => {
   it("asks 'Đã thanh toán xong chưa?' after a direct share, never for autofill", async () => {
     mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "shared" });
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    await fireEvent.press(await screen.findByTestId("app-tcb"));
+    await pickApp("tcb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(usePendingHandOff.getState().pending?.askPaid).toBe(true));
     expect(usePendingHandOff.getState().pending?.appId).toBe("tcb");
@@ -74,7 +81,7 @@ describe("pay-confirm share memory", () => {
   it("autofill hand-off does not ask", async () => {
     mockHandOff.mockResolvedValue({ opened: true, mode: "autofill", decision: "autofill-link" });
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    await fireEvent.press(await screen.findByTestId("app-mb"));
+    await pickApp("mb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(mockHandOff).toHaveBeenCalled());
     expect(usePendingHandOff.getState().pending?.askPaid).toBeUndefined();
@@ -84,7 +91,7 @@ describe("pay-confirm share memory", () => {
     await createHandOffMemoryRepository(testDb()).setShareResult("vcb", false);
     mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "share_failed" });
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    await fireEvent.press(await screen.findByTestId("app-vcb"));
+    await pickApp("vcb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(mockHandOff).toHaveBeenCalled());
     expect(mockHandOff.mock.calls[0][1].knownResult).toBe("share_failed");
@@ -93,7 +100,7 @@ describe("pay-confirm share memory", () => {
   it("stores a rejected share as failed", async () => {
     mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "share_failed" });
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    await fireEvent.press(await screen.findByTestId("app-tcb"));
+    await pickApp("tcb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(async () =>
       expect(await createHandOffMemoryRepository(testDb()).getShareMemory()).toEqual({ tcb: "share_failed" }),

@@ -1,0 +1,44 @@
+# Pay-confirm shows one preselected app; "Đổi ›" opens the picker sheet with search and a link to manage apps.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- assertVisible:
+    id: "screen-pay-confirm"
+- assertVisible:
+    id: "pay-app-row-name"
+    text: "TPBank"
+- assertVisible:
+    id: "pay-app-row-badge"
+    text: "Quét ảnh QR"
+- tapOn:
+    id: "pay-app-change"
+- assertVisible:
+    id: "pay-app-sheet"
+- tapOn:
+    id: "pay-app-search"
+- inputText: "vietcom"
+- assertVisible: "Vietcombank"
+- clearText
+- tapOn:
+    id: "app-mb"
+- assertVisible:
+    id: "pay-app-row-name"
+    text: "MBBank"
+- assertVisible:
+    id: "pay-app-row-badge"
+    text: "Tự điền"
+- assertVisible: "Thanh toán 55.000đ qua MBBank"
+- tapOn:
+    id: "pay-app-change"
+- tapOn:
+    id: "pay-app-manage"
+- assertVisible:
+    id: "screen-payment-apps"

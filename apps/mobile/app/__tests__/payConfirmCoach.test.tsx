@@ -43,9 +43,16 @@ const urlFor = (text: string) => {
 
 const TEXT = "Trong Techcombank: bấm Quét QR → biểu tượng Ảnh → chọn ảnh đầu tiên";
 
+/** Opens the app sheet, searches the whole catalogue for the id and picks that app. */
+async function pickApp(id: string) {
+  await fireEvent.press(await screen.findByTestId("pay-app-change"));
+  await fireEvent.changeText(await screen.findByTestId("pay-app-search"), id);
+  await fireEvent.press(await screen.findByTestId(`app-${id}`));
+}
+
 async function open(appId: string) {
   await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-  await fireEvent.press(await screen.findByTestId(`app-${appId}`));
+  await pickApp(appId);
   await fireEvent.press(screen.getByTestId("pay-submit"));
 }
 

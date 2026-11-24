@@ -71,9 +71,11 @@ describe("pay-confirm with the live bank apps list", () => {
     );
     global.fetch = fetchFn as unknown as typeof fetch;
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    expect(await screen.findByTestId("app-zzz")).toBeTruthy();
-    expect(fetchFn.mock.calls.map((c) => c[0])).toContain("https://api.test/banks/apps");
-    await fireEvent.press(screen.getByTestId("app-zzz"));
+    await screen.findByTestId("pay-submit");
+    await waitFor(() => expect(fetchFn.mock.calls.map((c) => c[0])).toContain("https://api.test/banks/apps"));
+    await fireEvent.press(await screen.findByTestId("pay-app-change"));
+    await fireEvent.changeText(await screen.findByTestId("pay-app-search"), "zzz");
+    await fireEvent.press(await screen.findByTestId("app-zzz"));
     await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua ZZZ Bank")).toBeTruthy());
   });
 
@@ -87,7 +89,13 @@ describe("pay-confirm with the live bank apps list", () => {
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
     await screen.findByTestId("pay-submit");
     await waitFor(() => expect(fetchFn.mock.calls.map((c) => c[0])).toContain("https://api.test/banks/apps"));
-    for (const a of SNAPSHOT.apps) expect(screen.getByTestId(`app-${a.app_id}`)).toBeTruthy();
+    await fireEvent.press(await screen.findByTestId("pay-app-change"));
+    const search = await screen.findByTestId("pay-app-search");
+    for (const a of SNAPSHOT.apps) {
+      await fireEvent.changeText(search, a.app_id);
+      expect(await screen.findByTestId(`app-${a.app_id}`)).toBeTruthy();
+    }
+    await fireEvent.changeText(search, "zzz");
     expect(screen.queryByTestId("app-zzz")).toBeNull();
     expect(screen.queryByText("banks_unavailable")).toBeNull();
     expect(screen.queryByText("503")).toBeNull();
