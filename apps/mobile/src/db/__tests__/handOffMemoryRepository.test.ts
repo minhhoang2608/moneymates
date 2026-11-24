@@ -27,4 +27,15 @@ describe("handOffMemoryRepository", () => {
     await r.dismissDefaultSuggestion();
     expect(await r.getDefaultSuggestionDismissed()).toBe(true);
   });
+  it("remembers the last app per QR bank", async () => {
+    const r = repo();
+    expect(await r.getLastUsedByBank()).toEqual({});
+    await r.setLastUsedForBank("970423", "tpbank");
+    await r.setLastUsedForBank("970436", "momo");
+    expect(await r.getLastUsedByBank()).toEqual({ "970423": "tpb", "970436": "momo" });
+    await r.setLastUsedForBank("970423", "vcb");
+    expect((await r.getLastUsedByBank())["970423"]).toBe("vcb");
+    await r.setLastUsedForBank("", "vcb");
+    expect(Object.keys(await r.getLastUsedByBank())).toHaveLength(2);
+  });
 });

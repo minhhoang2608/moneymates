@@ -19,6 +19,7 @@ export const PREF_KEYS = {
   directShareMemory: "direct_share_memory",
   defaultBankSuggestionDismissed: "default_bank_suggestion_dismissed",
   recentPayApps: "pay.recent_apps",
+  lastPayAppByBank: "pay.last_app_by_bank",
 } as const;
 
 export class PreferencesError extends Error {
