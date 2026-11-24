@@ -1,5 +1,5 @@
 import type { PayApp } from "./apps";
-import { buildAutofillUrl, buildPlatformOpenUrl } from "./deeplink";
+import { buildAutofillUrl, buildOpenCandidates } from "./deeplink";
 import { decideHandOff, type HandOffDecision, type HandOffPlatform, type KnownShareResult } from "./decideHandOff";
 import type { PayConfirmModel } from "./params";
 
@@ -48,6 +48,14 @@ export function createHandOff(deps: HandOffDeps) {
     }
   }
 
+  /** Tries each way to open the app until one works. */
+  async function openApp(app: PayApp): Promise<boolean> {
+    for (const url of buildOpenCandidates(app, deps.platform)) {
+      if (await open(url)) return true;
+    }
+    return false;
+  }
+
   return async function handOff(app: PayApp, input: HandOffInput): Promise<HandOffResult> {
     const { model, amount, note } = input;
     let decision = decideHandOff(app, deps.platform, input.knownResult);
@@ -74,10 +82,10 @@ export function createHandOff(deps: HandOffDeps) {
         return { opened: true, mode: "direct", decision, share: "shared" };
       } catch (e) {
         console.warn("direct share failed", e);
-        const opened = await open(buildPlatformOpenUrl(app, deps.platform));
+        const opened = await openApp(app);
         return { opened, mode: "direct", decision, share: "share_failed" };
       }
     }
-    return { opened: await open(buildPlatformOpenUrl(app, deps.platform)), mode: "direct", decision };
+    return { opened: await openApp(app), mode: "direct", decision };
   };
 }

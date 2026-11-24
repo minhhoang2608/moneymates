@@ -119,13 +119,37 @@ describe("handOff", () => {
     expect(deps.setClipboard).not.toHaveBeenCalled();
   });
 
-  it("share and open both fail → resolves {opened:false}, clipboard and image still done", async () => {
+  it("launch intent fails → falls back to the scheme, then the VietQR link", async () => {
+    const opened: string[] = [];
+    const { handOff } = setup({
+      shareToPackage: async () => {
+        throw new Error("x");
+      },
+      openIntent: async () => {
+        throw new Error("package not visible");
+      },
+      openUrl: async (u) => {
+        opened.push(u);
+        if (u === "tcb://") throw new Error("no handler");
+      },
+    });
+    expect(await handOff(tcb, { model: vietqr, amount: 1, note: "" })).toMatchObject({
+      opened: true,
+      share: "share_failed",
+    });
+    expect(opened).toEqual(["tcb://", "https://dl.vietqr.io/pay?app=tcb"]);
+  });
+
+  it("share and every open fail → resolves {opened:false}, clipboard and image still done", async () => {
     const { deps, handOff } = setup({
       shareToPackage: async () => {
         throw new Error("x");
       },
       openIntent: async () => {
         throw new Error("not installed");
+      },
+      openUrl: async () => {
+        throw new Error("no handler");
       },
     });
     expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toMatchObject({

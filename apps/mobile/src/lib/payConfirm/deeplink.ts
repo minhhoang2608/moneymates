@@ -59,6 +59,19 @@ export function buildAndroidIntentUrl(pkg: string): string {
   return `intent://#Intent;package=${pkg};end`;
 }
 
+/**
+ * Ways to open an app without data, most direct first: Android launch intent, custom scheme, then the plain
+ * VietQR deeplink (a browser hop, but it resolves the app on every device). The hand-off tries them in order,
+ * because a launch intent fails when Android hides the package from MoneyMates.
+ */
+export function buildOpenCandidates(app: PayApp, platform: "android" | "ios"): string[] {
+  const urls: string[] = [];
+  if (platform === "android" && app.androidPackage) urls.push(buildAndroidIntentUrl(app.androidPackage));
+  if (app.scheme) urls.push(`${app.scheme}://`);
+  urls.push(`${DEEPLINK_BASE}?app=${encodeURIComponent(app.deeplinkCode)}`);
+  return [...new Set(urls)];
+}
+
 /** URL used to open an app without data: Android intent when the package is known, else scheme / VietQR link. */
 export function buildPlatformOpenUrl(app: PayApp, platform: "android" | "ios"): string {
   if (platform === "android" && app.androidPackage) return buildAndroidIntentUrl(app.androidPackage);
