@@ -14,7 +14,7 @@ const HIDE_AFTER_MS = 8000;
 
 /** Shown when the user comes back from the bank app: confirms the saved payment, with quick delete. */
 export function ReturnBanner() {
-  const { transactions, handOffMemory } = useRepositories();
+  const { transactions, handOffMemory, handOffs } = useRepositories();
   const pending = usePendingHandOff((s) => s.pending);
   const visible = usePendingHandOff((s) => s.visible);
 
@@ -24,11 +24,15 @@ export function ReturnBanner() {
       if (state === "background" || state === "inactive") sawBackground = true;
       else if (state === "active" && sawBackground) {
         sawBackground = false;
+        const handOffId = usePendingHandOff.getState().pending?.handOffId;
+        if (handOffId) {
+          handOffs.recordReturn(handOffId, new Date()).catch((e) => console.warn("could not record return", e));
+        }
         usePendingHandOff.getState().reveal();
       }
     });
     return () => sub.remove();
-  }, []);
+  }, [handOffs]);
 
   useEffect(() => {
     if (!visible || !pending || pending.askPaid) return;

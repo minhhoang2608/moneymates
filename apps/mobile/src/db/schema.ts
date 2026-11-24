@@ -210,3 +210,36 @@ export const moneySources = sqliteTable(
     check("money_sources_kind_check", sql`${t.kind} in ('cash', 'bank', 'wallet', 'card')`),
   ],
 );
+
+export const HAND_OFF_METHODS = ["autofill", "share", "gallery", "paste"] as const;
+export const PAID_SIGNALS = ["time", "notification", "receipt"] as const;
+
+/** One hand-off to a bank/wallet app for a saved transaction. `paid_signal` stays null until a signal arrives. */
+export const handOffs = sqliteTable(
+  "hand_offs",
+  {
+    ...baseColumns(),
+    transaction_id: text("transaction_id")
+      .notNull()
+      .references(() => transactions.id),
+    app_id: text("app_id").notNull(),
+    method: text("method", { enum: HAND_OFF_METHODS }).notNull(),
+    qr_asset_id: text("qr_asset_id"),
+    started_at: text("started_at").notNull(),
+    returned_at: text("returned_at"),
+    paid_signal: text("paid_signal", { enum: PAID_SIGNALS }),
+    qr_deleted_at: text("qr_deleted_at"),
+  },
+  (t) => [
+    index("hand_offs_transaction_id_idx").on(t.transaction_id),
+    check("hand_offs_method_check", sql`${t.method} in ('autofill', 'share', 'gallery', 'paste')`),
+    check(
+      "hand_offs_paid_signal_check",
+      sql`${t.paid_signal} is null or ${t.paid_signal} in ('time', 'notification', 'receipt')`,
+    ),
+  ],
+);
+
+export type HandOffMethod = (typeof HAND_OFF_METHODS)[number];
+export type PaidSignal = (typeof PAID_SIGNALS)[number];
+export type HandOffRow = typeof handOffs.$inferSelect;

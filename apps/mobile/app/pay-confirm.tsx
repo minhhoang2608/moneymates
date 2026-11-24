@@ -24,6 +24,7 @@ import { QrImageTemplate } from "@/components/share/QrImageTemplate";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { buildClipboardText } from "@/lib/payConfirm/deeplink";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
+import { methodFromResult } from "@/lib/payConfirm/paidRule";
 import { parsePayConfirmParams } from "@/lib/payConfirm/params";
 import { buildConfirmedQrPayload } from "@/lib/payConfirm/qrPayload";
 import { shareConfirmedQr } from "@/lib/payConfirm/shareQr";
@@ -41,7 +42,15 @@ export default function PayConfirmScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<Record<string, string>>();
   const model = useMemo(() => parsePayConfirmParams(params), [params]);
-  const { transactions, categories, appSettings, groups: groupRepo, groupExpenses, handOffMemory } = useRepositories();
+  const {
+    transactions,
+    categories,
+    appSettings,
+    groups: groupRepo,
+    groupExpenses,
+    handOffMemory,
+    handOffs,
+  } = useRepositories();
   const targetState = useTargetDefault();
   const { target } = targetState;
 
@@ -190,6 +199,7 @@ export default function PayConfirmScreen() {
   const runHandOff = async (amount: number, text: string) => {
     try {
       const handOff = makeHandOff(getQrBase64);
+      const started_at = new Date();
       const memory = await handOffMemory.getShareMemory().catch(() => ({}));
       const { opened, mode, decision, share } = await handOff(selected, {
         model,
@@ -197,7 +207,20 @@ export default function PayConfirmScreen() {
         note: text,
         knownResult: knownResultFor(memory, selected.id),
       });
-      if (decision === "direct-share" && share === "shared") usePendingHandOff.getState().askPaid(selected.id);
+      const pendingTx = usePendingHandOff.getState().pending?.txId;
+      if (pendingTx) {
+        try {
+          const row = await handOffs.create({
+            transaction_id: pendingTx,
+            app_id: selected.id,
+            method: methodFromResult({ mode, decision, share }),
+            started_at,
+          });
+          usePendingHandOff.getState().setHandOffId(row.id);
+        } catch (e) {
+          console.warn("could not record hand-off", e);
+        }
+      }
       if (share === "share_failed") await handOffMemory.setShareResult(selected.id, false).catch(() => {});
       if (mode === "direct") usePendingHandOff.getState().showQrHint();
       if (!opened) usePendingHandOff.getState().reveal();

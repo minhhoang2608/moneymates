@@ -7,6 +7,7 @@ export type Pending = {
   qrHint?: boolean;
   appId?: string;
   askPaid?: boolean;
+  handOffId?: string;
 };
 
 type State = {
@@ -15,6 +16,7 @@ type State = {
   deletedVersion: number;
   set: (p: Pending) => void;
   showQrHint: () => void;
+  setHandOffId: (id: string) => void;
   askPaid: (appId: string) => void;
   answerPaid: () => void;
   reveal: () => void;
@@ -28,6 +30,7 @@ export const usePendingHandOff = create<State>((set) => ({
   deletedVersion: 0,
   set: (pending) => set({ pending, visible: false }),
   showQrHint: () => set((s) => (s.pending ? { pending: { ...s.pending, qrHint: true } } : s)),
+  setHandOffId: (handOffId) => set((s) => (s.pending ? { pending: { ...s.pending, handOffId } } : s)),
   askPaid: (appId) => set((s) => (s.pending ? { pending: { ...s.pending, appId, askPaid: true } } : s)),
   answerPaid: () => set((s) => (s.pending ? { pending: { ...s.pending, askPaid: false } } : s)),
   reveal: () => set((s) => (s.pending ? { visible: true } : s)),

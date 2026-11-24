@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import qr from "../../e2e/fixtures/qr.json";
-import { createAppSettingRepository, createHandOffMemoryRepository } from "@/db/repositories";
+import { createHandOffMemoryRepository, createHandOffRepository } from "@/db/repositories";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
@@ -67,13 +67,21 @@ describe("pay-confirm share memory", () => {
     global.__PAY_TEST_DB__ = openTestDb(file).db;
   });
 
-  it("asks 'Đã thanh toán xong chưa?' after a direct share, never for autofill", async () => {
+  it("records a hand-off, never asks, and a 75 s return marks it paid and remembers share_ok", async () => {
     mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "shared" });
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
     await pickApp("tcb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
-    await waitFor(() => expect(usePendingHandOff.getState().pending?.askPaid).toBe(true));
-    expect(usePendingHandOff.getState().pending?.appId).toBe("tcb");
+    await waitFor(() => expect(usePendingHandOff.getState().pending?.handOffId).toBeTruthy());
+    expect(usePendingHandOff.getState().pending?.askPaid).toBeUndefined();
+    const repo = createHandOffRepository(testDb());
+    const id = usePendingHandOff.getState().pending?.handOffId as string;
+    const row = await repo.get(id);
+    expect(row?.method).toBe("share");
+    expect(row?.paid_signal).toBeNull();
+    await repo.recordReturn(id, new Date(new Date(row?.started_at as string).getTime() + 75_000));
+    expect((await repo.get(id))?.paid_signal).toBe("time");
+    expect(await createHandOffMemoryRepository(testDb()).getShareMemory()).toEqual({ tcb: "share_ok" });
   });
 
   it("autofill hand-off does not ask", async () => {

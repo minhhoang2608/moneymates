@@ -52,3 +52,5 @@ export { createHandOffMemoryRepository } from "./handOffMemoryRepository";
 export type { HandOffMemoryRepository } from "./handOffMemoryRepository";
 export { createPreferencesRepository } from "./preferencesRepository";
 export type { PreferencesRepository } from "./preferencesRepository";
+export { createHandOffRepository } from "./handOffRepository";
+export type { HandOffRepository, NewHandOff } from "./handOffRepository";

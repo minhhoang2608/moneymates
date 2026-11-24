@@ -1,7 +1,7 @@
 import type { PayApp } from "./apps";
 
 export type HandOffPlatform = "android" | "ios";
-/** What the user last reported about sharing the QR straight to this app. */
+/** What we learned about sharing the QR straight to this app (share_ok comes from the paid signal). */
 export type KnownShareResult = "share_ok" | "share_failed";
 export type HandOffDecision = "autofill-link" | "direct-share" | "open-only";
 

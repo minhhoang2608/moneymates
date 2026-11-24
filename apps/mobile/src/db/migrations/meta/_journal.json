@@ -64,6 +64,13 @@
       "when": 1795528444529,
       "tag": "0008_payment_app_enabled",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1795538323242,
+      "tag": "0009_hand_offs",
+      "breakpoints": true
     }
   ]
 }
