@@ -1,9 +1,16 @@
 import { readFileSync } from "fs";
 import { join } from "path";
+import { SNAPSHOT } from "../../vietqr/bankApps";
 import {
   FEATURED_APP_IDS,
   PAY_APPS,
+  badgeKind,
+  buildPayApps,
   defaultAppId,
+  defaultEnabled,
+  groupApps,
+  searchApps,
+  type PayApp,
   filterApps,
   normalizeAppId,
   orderAppsBySaved,
@@ -112,5 +119,77 @@ describe("buildPayApps (live list)", () => {
   });
   it("resolves a BIN on the live list", () => {
     expect(binLookup("970999", buildPayApps(live, "android"))).toBe("zzz");
+  });
+});
+
+describe("catalogue (#305)", () => {
+  const ids = (l: PayApp[]) => l.map((a) => a.id);
+
+  it("only MB, BIDV, VietinBank, ACB and OCB autofill; everything else is scan", () => {
+    for (const os of ["ios", "android"] as const) {
+      const apps = buildPayApps(SNAPSHOT, os);
+      expect(ids(apps.filter((a) => a.supportsAutofill)).sort()).toEqual(["acb", "bidv", "icb", "mb", "ocb"]);
+      apps.filter((a) => !a.supportsAutofill).forEach((a) => expect(badgeKind(a)).toBe("scan"));
+      apps.filter((a) => a.supportsAutofill).forEach((a) => expect(badgeKind(a)).toBe("autofill"));
+    }
+  });
+
+  it("groups wallets (MoMo, ZaloPay, VNPay) apart from banks", () => {
+    const { banks, wallets } = groupApps(PAY_APPS);
+    expect(ids(wallets)).toEqual(["momo", "zalopay", "vnpay"]);
+    expect(banks.every((a) => a.type === "bank")).toBe(true);
+    expect(banks.length + wallets.length).toBe(PAY_APPS.length);
+    expect(new Set(ids(PAY_APPS)).size).toBe(PAY_APPS.length);
+  });
+
+  it("does not duplicate a wallet that the registry already has", () => {
+    const data = {
+      ...SNAPSHOT,
+      apps: [...SNAPSHOT.apps, { ...SNAPSHOT.apps[0], app_id: "momo", name: "MoMo", bin: null, bank_code: null }],
+    };
+    const apps = buildPayApps(data, "ios");
+    expect(ids(apps).filter((i) => i === "momo")).toHaveLength(1);
+  });
+
+  it("searchApps finds apps regardless of case, accents and spaces", () => {
+    expect(ids(searchApps(PAY_APPS, "vnp"))).toEqual(["vnpay"]);
+    expect(ids(searchApps(PAY_APPS, "  VNP "))).toEqual(["vnpay"]);
+    expect(ids(searchApps(PAY_APPS, "zalo"))).toEqual(["zalopay"]);
+    expect(searchApps(PAY_APPS, "zzzz")).toEqual([]);
+    expect(searchApps(PAY_APPS, "")).toEqual(PAY_APPS);
+    expect(searchApps(PAY_APPS, "   ")).toEqual(PAY_APPS);
+  });
+
+  it("defaultEnabled keeps installed apps in catalogue order", () => {
+    const got = defaultEnabled(["momo", "tcb"]);
+    expect(got.sort()).toEqual(["momo", "tcb"]);
+    expect(ids(PAY_APPS.filter((a) => got.includes(a.id)))).toEqual(ids(PAY_APPS).filter((i) => got.includes(i)));
+  });
+
+  it("defaultEnabled orders by catalogue", () => {
+    const order = ids(PAY_APPS);
+    const got = defaultEnabled(["momo", "tcb"]);
+    expect(got).toEqual(["tcb", "momo"].sort((a, b) => order.indexOf(a) - order.indexOf(b)));
+  });
+
+  it("defaultEnabled falls back to the legacy list, normalizes ids, dedupes and returns a copy", () => {
+    expect(defaultEnabled([])).toEqual(FEATURED_APP_IDS);
+    expect(defaultEnabled([])).not.toBe(FEATURED_APP_IDS);
+    expect(defaultEnabled(["com.foo"])).toEqual(FEATURED_APP_IDS);
+    expect(defaultEnabled(["tpbank", "tpb"])).toEqual(["tpb"]);
+  });
+
+  it("works offline: the catalogue is built from the bundled snapshot", () => {
+    const original = global.fetch;
+    global.fetch = jest.fn(() => {
+      throw new Error("offline");
+    }) as unknown as typeof fetch;
+    try {
+      const apps = buildPayApps(SNAPSHOT, "android");
+      expect(ids(groupApps(apps).wallets)).toEqual(["momo", "zalopay", "vnpay"]);
+      expect(apps.length).toBeGreaterThan(3);
+    } finally {
+      global.fetch = original;
+    }
   });
 });

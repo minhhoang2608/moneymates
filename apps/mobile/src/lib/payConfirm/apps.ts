@@ -4,6 +4,8 @@ import { SNAPSHOT, registryPayApps, type BankAppsResponse } from "../vietqr/bank
 
 export type PayApp = {
   id: string;
+  /** Bank app or e-wallet. */
+  type: "bank" | "wallet";
   name: string;
   short: string;
   /** NAPAS BIN of the bank, when the registry knows it. */
@@ -22,6 +24,7 @@ const platform = Platform.OS === "ios" ? "ios" : "android";
 
 const MOMO: PayApp = {
   id: "momo",
+  type: "wallet",
   name: "MoMo",
   short: "MoMo",
   scheme: "momo",
@@ -30,16 +33,36 @@ const MOMO: PayApp = {
   supportsAutofill: false,
 };
 
-/** Bank apps from the bundled VietQR registry snapshot, plus MoMo (a wallet, not in the bank registry). */
+/**
+ * E-wallets, in display order. ZaloPay and VNPay have no scheme/package on purpose: the values are not guessed
+ * and are added once verified on a real phone (see #101). They are always handed off by scanning the QR image.
+ */
+export const WALLET_APPS: PayApp[] = [
+  MOMO,
+  {
+    id: "zalopay",
+    type: "wallet",
+    name: "ZaloPay",
+    short: "ZaloPay",
+    deeplinkCode: "zalopay",
+    supportsAutofill: false,
+  },
+  { id: "vnpay", type: "wallet", name: "VNPay", short: "VNPay", deeplinkCode: "vnpay", supportsAutofill: false },
+];
+
+/** Bank apps from the bundled VietQR registry snapshot, plus the e-wallets (not in the bank registry). */
 export function buildPayApps(data: BankAppsResponse, os: "android" | "ios" = platform): PayApp[] {
   const apps = registryPayApps(os, data);
-  return apps.some((a) => a.id === MOMO.id) ? apps : [...apps, MOMO];
+  return [...apps, ...WALLET_APPS.filter((w) => !apps.some((a) => a.id === w.id))];
 }
 
 export const PAY_APPS: PayApp[] = buildPayApps(SNAPSHOT);
 
 /** Apps shown in the Cài đặt reorder list: the hand-off apps verified in #206 plus MoMo. */
 export const FEATURED_APP_IDS = ["tpb", "tcb", "vcb", "mb", "momo", "icb", "bidv", "acb", "ocb"];
+
+/** The default enabled list before detection existed. */
+export const DEFAULT_ENABLED_APP_IDS = FEATURED_APP_IDS;
 
 /** Ids saved by earlier versions. */
 export const LEGACY_APP_IDS: Record<string, string> = { tpbank: "tpb" };
@@ -58,11 +81,35 @@ const fold = (s: string) =>
     .replace(/Đ/g, "D")
     .toLowerCase();
 
-/** Case- and diacritic-insensitive match on name, bank code or app id. Blank query returns everything. */
-export function filterApps(apps: PayApp[], query: string): PayApp[] {
+/** Case- and diacritic-insensitive match on name, bank code or app id. Blank query returns everything. Ignores enabled state. */
+export function searchApps(apps: PayApp[], query: string): PayApp[] {
   const q = fold(query.trim());
   if (!q) return apps;
   return apps.filter((a) => [a.name, a.short, a.id].some((f) => fold(f).includes(q)));
+}
+
+export const filterApps = searchApps;
+
+/** Splits into banks and wallets, keeping the input order. */
+export function groupApps(apps: PayApp[]): { banks: PayApp[]; wallets: PayApp[] } {
+  return {
+    banks: apps.filter((a) => a.type === "bank"),
+    wallets: apps.filter((a) => a.type === "wallet"),
+  };
+}
+
+/** Badge for the app row: "autofill" (Tự điền) or "scan" (Quét ảnh QR). */
+export const badgeKind = (app: PayApp): "autofill" | "scan" => (app.supportsAutofill ? "autofill" : "scan");
+
+/** Default enabled apps: the detected installed ones (catalogue order), or the legacy default when none match. */
+export function defaultEnabled(
+  installedIds: string[],
+  legacyDefault: string[] = DEFAULT_ENABLED_APP_IDS,
+  catalogue: PayApp[] = PAY_APPS,
+): string[] {
+  const installed = new Set(installedIds.map(normalizeAppId));
+  const ids = catalogue.filter((a) => installed.has(a.id)).map((a) => a.id);
+  return ids.length > 0 ? ids : [...legacyDefault];
 }
 
 /** Picker order: preferred (Cài đặt), then recent, then the scanned bank's app, then the rest by name. No duplicates. */

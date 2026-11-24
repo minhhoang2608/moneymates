@@ -64,6 +64,7 @@ export type Platform = "android" | "ios";
 export function toPayApp(dto: BankAppDto, platform: Platform): PayApp {
   return {
     id: dto.app_id,
+    type: "bank",
     bin: dto.bin ?? undefined,
     name: dto.name,
     short: dto.bank_code ?? dto.app_id.toUpperCase(),
