@@ -39,4 +39,65 @@ describe("paymentAppPrefsRepository", () => {
     expect(second.sort_order).toBe(1);
     expect(second.updated_at > first.updated_at).toBe(true);
   });
+
+  describe("enabled flag (#306)", () => {
+    it("AC1: enabling vcb adds it, disabling removes it, count updates", async () => {
+      const { db } = openTestDb();
+      const repo = repoFor(db);
+      await repo.setEnabledOrder(["mb", "tpb", "tcb", "momo"]);
+      await tick();
+      await repo.setEnabled("vcb", true);
+      const list = await repo.getEnabledApps();
+      expect(list).toEqual(["mb", "tpb", "tcb", "momo", "vcb"]);
+      expect(list).toHaveLength(5);
+      const before = (await db.select().from(paymentAppPrefs)).find((r) => r.app_key === "vcb")!;
+      await tick();
+      await repo.setEnabled("vcb", false);
+      expect(await repo.getEnabledApps()).toEqual(["mb", "tpb", "tcb", "momo"]);
+      const row = (await db.select().from(paymentAppPrefs)).find((r) => r.app_key === "vcb")!;
+      expect(row.enabled).toBe(false);
+      expect(row.deleted_at).toBeNull();
+      expect(row.updated_at > before.updated_at).toBe(true);
+    });
+
+    it("AC2: enabled order survives reopen", async () => {
+      const file = tmpDbFile();
+      const a = openTestDb(file);
+      await repoFor(a.db).setEnabledOrder(["momo", "mb", "tpb", "tcb"]);
+      a.sqlite.close();
+      const b = openTestDb(file);
+      expect(await repoFor(b.db).getEnabledApps()).toEqual(["momo", "mb", "tpb", "tcb"]);
+      b.sqlite.close();
+    });
+
+    it("AC2: keys left out are disabled and legacy tpbank is normalised", async () => {
+      const { db } = openTestDb();
+      const repo = repoFor(db);
+      await repo.setEnabledOrder(["mb", "vcb", "momo"]);
+      await repo.setEnabledOrder(["tpbank", "mb"]);
+      expect(await repo.getEnabledApps()).toEqual(["tpb", "mb"]);
+      const rows = await db.select().from(paymentAppPrefs);
+      expect(rows.find((r) => r.app_key === "vcb")!.enabled).toBe(false);
+    });
+
+    it("AC3: fresh DB has not chosen", async () => {
+      const { db } = openTestDb();
+      const repo = repoFor(db);
+      expect(await repo.hasChosen()).toBe(false);
+      expect(await repo.getEnabledApps()).toEqual([]);
+      await repo.setEnabled("vcb", false);
+      expect(await repo.hasChosen()).toBe(true);
+    });
+
+    it("AC4: setAppOrder does not change enabled flags", async () => {
+      const { db } = openTestDb();
+      const repo = repoFor(db);
+      await repo.setEnabledOrder(["mb", "momo"]);
+      await repo.setEnabled("momo", false);
+      await repo.setAppOrder(["momo", "mb"]);
+      const rows = await db.select().from(paymentAppPrefs);
+      expect(rows.find((r) => r.app_key === "momo")!.enabled).toBe(false);
+      expect(rows.find((r) => r.app_key === "mb")!.enabled).toBe(true);
+    });
+  });
 });

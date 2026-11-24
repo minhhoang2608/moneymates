@@ -187,6 +187,7 @@ export const paymentAppPrefs = sqliteTable(
     ...baseColumns(),
     app_key: text("app_key").notNull(),
     sort_order: integer("sort_order").notNull(),
+    enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   },
   (t) => [
     uniqueIndex("payment_app_prefs_app_key_idx")

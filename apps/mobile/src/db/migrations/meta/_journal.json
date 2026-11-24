@@ -57,6 +57,13 @@
       "when": 1795446304117,
       "tag": "0007_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1795528444529,
+      "tag": "0008_payment_app_enabled",
+      "breakpoints": true
     }
   ]
 }

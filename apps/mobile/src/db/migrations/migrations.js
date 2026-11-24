@@ -9,6 +9,7 @@ import m0004 from "./0004_groups.sql";
 import m0005 from "./0005_expense_shares.sql";
 import m0006 from "./0006_settlement_payments.sql";
 import m0007 from "./0007_preferences.sql";
+import m0008 from "./0008_payment_app_enabled.sql";
 
 export default {
   journal,
@@ -21,5 +22,6 @@ export default {
     m0005,
     m0006,
     m0007,
+    m0008,
   },
 };
