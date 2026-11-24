@@ -50,9 +50,11 @@ export function ReturnBanner() {
         <Text style={styles.text} numberOfLines={1}>
           {vi.handOff.saved(formatVnd(pending.amount), pending.label)}
         </Text>
-        <Text style={styles.hint} testID="handoff-qr-hint">
-          {vi.handOff.qrHint}
-        </Text>
+        {pending.qrHint ? (
+          <Text style={styles.hint} testID="handoff-qr-hint">
+            {vi.handOff.qrHint}
+          </Text>
+        ) : null}
       </View>
       <Pressable testID="handoff-delete" accessibilityRole="button" onPress={remove} hitSlop={8}>
         <Text style={styles.action}>{vi.handOff.delete}</Text>
