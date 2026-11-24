@@ -2,11 +2,10 @@ import { haptics } from "@/lib/haptics";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
-import { Platform, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { AppPickerSheet } from "@/components/payConfirm/AppPickerSheet";
-import { CoachSheet } from "@/components/payConfirm/CoachSheet";
 import { PayAppRow } from "@/components/payConfirm/PayAppRow";
 import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { preselectApp, type LastUsedByBank } from "@/lib/payConfirm/preselect";
@@ -21,7 +20,6 @@ import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
 import { useBankApps } from "@/api/bankApps";
 import { buildPayApps, normalizeAppId } from "@/lib/payConfirm/apps";
-import { createCoachStore, needsCoach } from "@/lib/payConfirm/coach";
 import { QrImageTemplate } from "@/components/share/QrImageTemplate";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { buildClipboardText } from "@/lib/payConfirm/deeplink";
@@ -35,7 +33,6 @@ import { formatVnd, parseAmount } from "@/lib/money";
 import { PREF_KEYS } from "@/lib/preferences/defaults";
 import { knownResultFor } from "@/lib/payConfirm/shareMemory";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
-import { useToast } from "@/stores/toast";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 const RECENT_KEY = PREF_KEYS.recentPayApps;
@@ -61,9 +58,7 @@ export default function PayConfirmScreen() {
   const [appSheet, setAppSheet] = useState(false);
   const [failed, setFailed] = useState(false);
   const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
-  const [coachOpen, setCoachOpen] = useState(false);
   const busy = useRef(false);
-  const pendingTx = useRef<{ amount: number; note: string } | null>(null);
   const qrRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
   useEffect(() => {
@@ -183,18 +178,6 @@ export default function PayConfirmScreen() {
       if (model.kind === "vietqr") await handOffMemory.setLastUsedForBank(model.bankBin, selected.id).catch(() => {});
       await appSettings.set(RECENT_KEY, [selected.id, ...recent.filter((id) => id !== selected.id)].slice(0, 10));
       usePendingHandOff.getState().set({ txId, amount: parsed.vnd, label: note });
-      const mode = needsCoach(selected, await createCoachStore(appSettings).list());
-      if (mode === "sheet") {
-        pendingTx.current = { amount: parsed.vnd, note };
-        setCoachOpen(true);
-        return;
-      }
-      if (mode === "toast") {
-        const text = vi.coach.text(selected.name);
-        useToast.getState().show(text);
-        if (Platform.OS === "android" && process.env.EXPO_PUBLIC_E2E !== "1")
-          ToastAndroid.show(text, ToastAndroid.SHORT);
-      }
     } catch {
       usePendingHandOff.getState().reveal();
       busy.current = false;
@@ -223,28 +206,6 @@ export default function PayConfirmScreen() {
     } finally {
       router.back();
     }
-  };
-
-  const confirmCoach = async ({ dontShow }: { dontShow: boolean }) => {
-    haptics.light();
-    const tx = pendingTx.current;
-    setCoachOpen(false);
-    if (!tx) return;
-    if (dontShow) {
-      try {
-        await createCoachStore(appSettings).dismiss(selected.id);
-      } catch {
-        // The hint just shows again next time.
-      }
-    }
-    await runHandOff(tx.amount, tx.note);
-  };
-
-  const closeCoach = () => {
-    setCoachOpen(false);
-    pendingTx.current = null;
-    usePendingHandOff.getState().reveal();
-    router.back();
   };
 
   return (
@@ -366,6 +327,13 @@ export default function PayConfirmScreen() {
               : vi.payConfirm.submitNoAmount(selected.name)}
           </Text>
         </PressableScale>
+        {!selected.supportsAutofill ? (
+          <Text testID="pay-howto" style={styles.howTo}>
+            {vi.payConfirm.howTo.prefix(selected.name)}
+            <Text style={styles.howToBold}>{vi.payConfirm.howTo.steps}</Text>
+            {vi.payConfirm.howTo.suffix}
+          </Text>
+        ) : null}
         {Platform.OS === "android" && model.kind === "vietqr" ? (
           <PressableScale testID="pay-share-qr" accessibilityRole="button" onPress={share} style={styles.shareBtn}>
             <Text style={styles.shareText}>{vi.payConfirm.shareQr}</Text>
@@ -419,8 +387,6 @@ export default function PayConfirmScreen() {
           onClose={() => setAppSheet(false)}
         />
       ) : null}
-
-      {coachOpen ? <CoachSheet bankName={selected.name} onConfirm={confirmCoach} onClose={closeCoach} /> : null}
 
       <CategoryPicker
         visible={picker}
@@ -505,6 +471,14 @@ const styles = StyleSheet.create({
   shareBtn: { alignItems: "center", paddingVertical: 10 },
   shareText: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.primaryDark },
   submitText: { fontFamily: fontFamily.semibold, fontSize: 16, color: colors.onPrimary },
+  howTo: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.caption,
+    lineHeight: 17,
+    color: colors.textMuted,
+    textAlign: "center",
+  },
+  howToBold: { fontFamily: fontFamily.semibold, color: colors.text },
   footNote: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.caption,

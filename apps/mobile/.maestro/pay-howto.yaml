@@ -1,0 +1,23 @@
+# Bank without autofill (TPBank fixture): a how-to line under the pay button, and no sheet on the first payment.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- extendedWaitUntil:
+    visible:
+      id: "screen-pay-confirm"
+    timeout: 10000
+- assertVisible: "Trong TPBank: Quét QR → Ảnh → chọn ảnh đầu tiên.*"
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible:
+      id: "handoff-return-banner"
+    timeout: 10000

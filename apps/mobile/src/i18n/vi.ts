@@ -44,6 +44,13 @@ export const vi = {
     openSettings: "Mở Cài đặt",
   },
   payConfirm: {
+    howTo: {
+      prefix: (bank: string) => `Trong ${bank}: `,
+      steps: "Quét QR → Ảnh → chọn ảnh đầu tiên",
+      suffix: ". Ảnh QR tạm tự xoá khi bạn quay lại.",
+    },
+    howToText: (bank: string) =>
+      `Trong ${bank}: Quét QR → Ảnh → chọn ảnh đầu tiên. Ảnh QR tạm tự xoá khi bạn quay lại.`,
     title: "Xác nhận thanh toán",
     back: "Quay lại",
     amount: "Số tiền",
@@ -73,11 +80,6 @@ export const vi = {
     lastUsed: "dùng lần trước",
     recent: "Dùng gần đây",
     manage: "Quản lý app thanh toán ›",
-  },
-  coach: {
-    text: (bank: string) => `Trong ${bank}: bấm Quét QR → biểu tượng Ảnh → chọn ảnh đầu tiên`,
-    dontShow: "Không hiện lại",
-    confirm: (bank: string) => `Thanh toán qua ${bank}`,
   },
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),

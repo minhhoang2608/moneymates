@@ -18,6 +18,8 @@ appId: com.moneymates.app
 - assertVisible:
     id: "pay-app-row-badge"
     text: "Quét ảnh QR"
+- assertVisible:
+    id: "pay-howto"
 - tapOn:
     id: "pay-app-change"
 - assertVisible:
@@ -36,6 +38,8 @@ appId: com.moneymates.app
     id: "pay-app-row-badge"
     text: "Tự điền"
 - assertVisible: "Thanh toán 55.000đ qua MBBank"
+- assertNotVisible:
+    id: "pay-howto"
 - tapOn:
     id: "pay-app-change"
 - tapOn:

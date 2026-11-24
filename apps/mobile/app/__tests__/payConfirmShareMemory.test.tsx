@@ -65,8 +65,6 @@ describe("pay-confirm share memory", () => {
     usePendingHandOff.setState({ pending: null, visible: false });
     const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-pay-")), "test.db");
     global.__PAY_TEST_DB__ = openTestDb(file).db;
-    // The coach sheet has its own tests: here the banks used are dismissed.
-    await createAppSettingRepository(testDb()).set("pay.coach_dismissed", ["tcb", "vcb", "tpb"]);
   });
 
   it("asks 'Đã thanh toán xong chưa?' after a direct share, never for autofill", async () => {

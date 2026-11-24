@@ -16,13 +16,13 @@ describe("Toast", () => {
 
   it("shows the text and auto-hides", async () => {
     await render(<Toast />);
-    expect(screen.queryByTestId("handoff-coach-toast")).toBeNull();
+    expect(screen.queryByTestId("app-toast")).toBeNull();
     await act(async () => useToast.getState().show("Xin chào"));
-    expect(screen.getByTestId("handoff-coach-toast")).toHaveTextContent("Xin chào");
+    expect(screen.getByTestId("app-toast")).toHaveTextContent("Xin chào");
     await act(async () => {
       jest.advanceTimersByTime(TOAST_MS + 10);
     });
-    expect(screen.queryByTestId("handoff-coach-toast")).toBeNull();
+    expect(screen.queryByTestId("app-toast")).toBeNull();
   });
 
   it("keeps the toast visible for the longer duration in E2E mode", async () => {
@@ -34,11 +34,11 @@ describe("Toast", () => {
       await act(async () => {
         jest.advanceTimersByTime(TOAST_MS + 10);
       });
-      expect(screen.getByTestId("handoff-coach-toast")).toBeTruthy();
+      expect(screen.getByTestId("app-toast")).toBeTruthy();
       await act(async () => {
         jest.advanceTimersByTime(E2E_TOAST_MS - TOAST_MS);
       });
-      expect(screen.queryByTestId("handoff-coach-toast")).toBeNull();
+      expect(screen.queryByTestId("app-toast")).toBeNull();
     } finally {
       (isE2E as jest.Mock).mockReturnValue(false);
     }
@@ -47,7 +47,7 @@ describe("Toast", () => {
   it("is an accessible live region", async () => {
     await render(<Toast />);
     await act(async () => useToast.getState().show("Xin chào"));
-    const bar = screen.getByTestId("handoff-coach-toast");
+    const bar = screen.getByTestId("app-toast");
     expect(bar.props.accessible).toBe(true);
     expect(bar.props.accessibilityLiveRegion).toBe("polite");
   });
@@ -55,7 +55,7 @@ describe("Toast", () => {
   it("AC2: renders with entering and exiting animation props", async () => {
     await render(<Toast />);
     await act(async () => useToast.getState().show("Xin chào"));
-    const bar = screen.getByTestId("handoff-coach-toast");
+    const bar = screen.getByTestId("app-toast");
     expect(bar.props.entering).toBeDefined();
     expect(bar.props.exiting).toBeDefined();
   });

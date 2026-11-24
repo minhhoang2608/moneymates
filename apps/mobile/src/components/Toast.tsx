@@ -32,7 +32,7 @@ export function Toast() {
       <Animated.View
         {...motion}
         style={styles.bar}
-        testID="handoff-coach-toast"
+        testID="app-toast"
         accessible
         accessibilityRole="alert"
         accessibilityLiveRegion="polite"
