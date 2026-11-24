@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react-native";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 
 import { SNAPSHOT, type BankAppsResponse } from "@/lib/vietqr/bankApps";
@@ -76,6 +76,31 @@ describe("useBankApps", () => {
     await waitFor(() => expect(fetchFn).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 20));
     expect(result.current).toBe(SNAPSHOT);
+  });
+
+  it("AC3: a fetch that never resolves times out after 5 s and falls back to the snapshot", async () => {
+    jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] });
+    const fetchFn = mockFetch(() => new Promise(() => undefined));
+    const { result } = await renderHook(() => useBankApps(), { wrapper: wrapper() });
+    await waitFor(() => expect(fetchFn).toHaveBeenCalled());
+    expect(result.current).toBe(SNAPSHOT);
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(5100);
+    });
+    expect(result.current).toBe(SNAPSHOT);
+  });
+
+  it("AC4: in E2E mode it returns the snapshot and never calls fetch", async () => {
+    process.env.EXPO_PUBLIC_E2E = "1";
+    try {
+      const fetchFn = mockFetch(async () => ({ ok: true, status: 200, json: async () => LIVE }));
+      const { result } = await renderHook(() => useBankApps(), { wrapper: wrapper() });
+      await new Promise((r) => setTimeout(r, 20));
+      expect(result.current).toBe(SNAPSHOT);
+      expect(fetchFn).not.toHaveBeenCalled();
+    } finally {
+      delete process.env.EXPO_PUBLIC_E2E;
+    }
   });
 
   it("AC3: no API URL falls back to the snapshot", async () => {
