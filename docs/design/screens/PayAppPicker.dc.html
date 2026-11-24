@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Chọn app thanh toán</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0E7C66}a:hover{color:#0A5E4D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F7F9; font-family: Inter, sans-serif; color: #111827">
+  <div aria-hidden="true" style="padding: 20px; display: flex; flex-direction: column; gap: 12px">
+    <div style="height: 40px"></div>
+    <div style="height: 200px; border-radius: 16px; background: #FFFFFF"></div>
+    <div style="height: 60px; border-radius: 16px; background: #FFFFFF"></div>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(17,24,39,0.45)"></div>
+  <section role="dialog" aria-label="Chọn app thanh toán" style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFFFFF; border-radius: 24px 24px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 12px">
+    <span aria-hidden="true" style="align-self: center; width: 40px; height: 4px; border-radius: 2px; background: #E6E8EC"></span>
+    <h2 style="margin: 0; font-size: 17px; font-weight: 600">Thanh toán bằng</h2>
+    <label style="height: 44px; border-radius: 12px; border: 1px solid #E6E8EC; background: #F6F7F9; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: #5B6472">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input aria-label="Tìm ngân hàng" placeholder="Tìm cả app đang ẩn" style="flex: 1; border: 0; background: transparent; font-family: Inter, sans-serif; font-size: 14px; outline: none">
+    </label>
+    <div style="border: 1px solid #EEF0F3; border-radius: 16px; overflow: hidden">
+      <button style="width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 0; border-bottom: 1px solid #EEF0F3; background: #F2FAF7; font-family: Inter, sans-serif; text-align: left">
+        <span style="width: 36px; height: 36px; flex: none; border-radius: 10px; background: #F3E8FF; color: #6B2FB3; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">TP</span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600; color: #111827">TPBank</span><span style="font-size: 12px; color: #5B6472">Ngân hàng trong mã QR · dùng lần trước</span></span><span style="font-size: 11px; font-weight: 600; color: #5B6472; background: #EEF0F3; padding: 3px 8px; border-radius: 6px">Quét ảnh QR</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0E7C66" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+      </button>
+      <button style="width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 0; border-bottom: 1px solid #EEF0F3; background: #FFFFFF; font-family: Inter, sans-serif; text-align: left">
+        <span style="width: 36px; height: 36px; flex: none; border-radius: 10px; background: #E0ECFF; color: #1D4E9E; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">MB</span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 500; color: #111827">MB Bank</span><span style="font-size: 12px; color: #5B6472">Dùng gần đây</span></span><span style="font-size: 11px; font-weight: 600; color: #0A5E4D; background: #D3EEE6; padding: 3px 8px; border-radius: 6px">Tự điền</span>
+      </button>
+      <button style="width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 0; border-bottom: 1px solid #EEF0F3; background: #FFFFFF; font-family: Inter, sans-serif; text-align: left">
+        <span style="width: 36px; height: 36px; flex: none; border-radius: 10px; background: #FDE8E8; color: #A3161A; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">TCB</span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 500; color: #111827">Techcombank</span></span><span style="font-size: 11px; font-weight: 600; color: #5B6472; background: #EEF0F3; padding: 3px 8px; border-radius: 6px">Quét ảnh QR</span>
+      </button>
+      <button style="width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 0; background: #FFFFFF; font-family: Inter, sans-serif; text-align: left">
+        <span style="width: 36px; height: 36px; flex: none; border-radius: 10px; background: #FCE7F3; color: #9D174D; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">MoMo</span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 500; color: #111827">MoMo</span></span><span style="font-size: 11px; font-weight: 600; color: #5B6472; background: #EEF0F3; padding: 3px 8px; border-radius: 6px">Quét ảnh QR</span>
+      </button>
+    </div>
+    <a href="PaymentApps.dc.html" style="min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; text-decoration: none">Quản lý app thanh toán ›</a>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
