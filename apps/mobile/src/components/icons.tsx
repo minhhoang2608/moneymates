@@ -92,3 +92,10 @@ export const PlusIcon = (p: IconProps) => (
     <Path d="M12 5v14M5 12h14" />
   </Base>
 );
+
+export const WarningIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M12 3 2 21h20L12 3z" />
+    <Path d="M12 10v5M12 18h.01" />
+  </Base>
+);
