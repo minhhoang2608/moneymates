@@ -25,6 +25,9 @@ const mb = PAY_APPS.find((a) => a.id === "mb")!;
 function setup(over: Partial<HandOffDeps> = {}) {
   const calls: string[] = [];
   const deps: HandOffDeps = {
+    platform: "android",
+    openIntent: jest.fn(async (u) => void calls.push(`intent:${u}`)),
+    shareToPackage: jest.fn(async (p) => void calls.push(`share:${p}`)),
     openUrl: jest.fn(async (u) => void calls.push(`open:${u}`)),
     setClipboard: jest.fn(async (t) => void calls.push(`clip:${t}`)),
     saveQrImage: jest.fn(async () => void calls.push("image")),
@@ -33,24 +36,58 @@ function setup(over: Partial<HandOffDeps> = {}) {
   return { calls, deps, handOff: createHandOff(deps) };
 }
 
+const TCB_INTENT = "intent://#Intent;package=vn.com.techcombank.bb.app;end";
+const tcb = PAY_APPS.find((x) => x.id === "tcb")!;
+
 describe("handOff", () => {
-  it("VietQR: clipboard (account, amount, note) → image → open the scheme, in order", async () => {
-    const tcb = PAY_APPS.find((x) => x.id === "tcb")!;
+  beforeEach(() => jest.spyOn(console, "warn").mockImplementation(() => {}));
+
+  it("android direct-share: bare account → album image → share to the package, no open", async () => {
     const { calls, handOff } = setup();
-    expect(await handOff(tcb, { model: vietqr, amount: 60000, note: "PHO" })).toEqual({ opened: true, mode: "direct" });
-    expect(calls).toEqual(["clip:0123456789 60000 PHO", "image", "open:tcb://"]);
+    expect(await handOff(tcb, { model: vietqr, amount: 60000, note: "PHO" })).toEqual({
+      opened: true,
+      mode: "direct",
+      decision: "direct-share",
+      share: "shared",
+    });
+    expect(calls).toEqual(["clip:0123456789", "image", "share:vn.com.techcombank.bb.app"]);
   });
 
-  it("VietQR without note: clipboard has account and amount only", async () => {
-    const { calls, handOff } = setup();
-    await handOff(tpb, { model: vietqr, amount: 55000, note: "" });
-    expect(calls).toEqual(["clip:0123456789 55000", "image", "open:hydro://"]);
+  it("share throws → opens the app by intent, share_failed", async () => {
+    const { calls, handOff } = setup({
+      shareToPackage: async () => {
+        throw new Error("no image/png handler");
+      },
+    });
+    expect(await handOff(tcb, { model: vietqr, amount: 1, note: "" })).toEqual({
+      opened: true,
+      mode: "direct",
+      decision: "direct-share",
+      share: "share_failed",
+    });
+    expect(calls).toEqual(["clip:0123456789", "image", `intent:${TCB_INTENT}`]);
+  });
+
+  it("remembered share_failed → open-only through the intent", async () => {
+    const { calls, deps, handOff } = setup();
+    const res = await handOff(tcb, { model: vietqr, amount: 1, note: "", knownResult: "share_failed" });
+    expect(res).toEqual({ opened: true, mode: "direct", decision: "open-only" });
+    expect(deps.shareToPackage).not.toHaveBeenCalled();
+    expect(calls).toEqual(["clip:0123456789", "image", `intent:${TCB_INTENT}`]);
+  });
+
+  it("ios non-autofill: open-only with the scheme", async () => {
+    const { calls, deps, handOff } = setup({ platform: "ios" });
+    const res = await handOff(tcb, { model: vietqr, amount: 1, note: "" });
+    expect(res).toEqual({ opened: true, mode: "direct", decision: "open-only" });
+    expect(calls).toEqual(["clip:0123456789", "image", "open:tcb://"]);
+    expect(deps.shareToPackage).not.toHaveBeenCalled();
   });
 
   it("autofill app: opens dl.vietqr.io with the confirmed values, no clipboard or image", async () => {
     const { calls, deps, handOff } = setup();
     const res = await handOff(mb, { model: vietqr, amount: 70000, note: "Cafe" });
-    expect(res).toEqual({ opened: true, mode: "autofill" });
+    expect(res).toEqual({ opened: true, mode: "autofill", decision: "autofill-link" });
     expect(calls).toEqual([
       "open:https://dl.vietqr.io/pay?app=mb&ba=0123456789%40tpb&am=70000&tn=Cafe&url=https%3A%2F%2Fwww.vietqr.io",
     ]);
@@ -58,39 +95,54 @@ describe("handOff", () => {
     expect(deps.saveQrImage).not.toHaveBeenCalled();
   });
 
-  it("autofill app with a non-VietQR code falls back to the direct scheme", async () => {
+  it("autofill app with a non-VietQR code falls back to direct share", async () => {
     const { calls, handOff } = setup();
-    expect(await handOff(mb, { model: other, amount: 1, note: "" })).toEqual({ opened: true, mode: "direct" });
-    expect(calls).toEqual(["image", "open:mbbank://"]);
+    const res = await handOff(mb, { model: other, amount: 1, note: "" });
+    expect(res).toMatchObject({ opened: true, mode: "direct", decision: "direct-share", share: "shared" });
+    expect(calls).toEqual(["image", "share:com.mbmobile"]);
   });
 
-  it("image save fails → still opens", async () => {
+  it("image save fails → still shares", async () => {
     const { calls, handOff } = setup({
       saveQrImage: async () => {
         throw new Error("denied");
       },
     });
-    jest.spyOn(console, "warn").mockImplementation(() => {});
-    expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toEqual({ opened: true, mode: "direct" });
-    expect(calls).toContain("open:hydro://");
+    expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toMatchObject({ opened: true });
+    expect(calls).toContain("share:com.tpb.mb.gprsandroid");
   });
 
-  it("non-VietQR: saves image, opens app, no clipboard", async () => {
-    const { calls, deps, handOff } = setup();
+  it("non-VietQR: saves image, no clipboard", async () => {
+    const { deps, handOff } = setup();
     await handOff(tpb, { model: other, amount: 1, note: "" });
-    expect(calls).toEqual(["image", "open:hydro://"]);
+    expect(deps.saveQrImage).toHaveBeenCalled();
     expect(deps.setClipboard).not.toHaveBeenCalled();
   });
 
-  it("openUrl throws → resolves {opened:false}", async () => {
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+  it("share and open both fail → resolves {opened:false}, clipboard and image still done", async () => {
     const { deps, handOff } = setup({
+      shareToPackage: async () => {
+        throw new Error("x");
+      },
+      openIntent: async () => {
+        throw new Error("not installed");
+      },
+    });
+    expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toMatchObject({
+      opened: false,
+      share: "share_failed",
+    });
+    expect(deps.setClipboard).toHaveBeenCalledWith("0123456789");
+    expect(deps.saveQrImage).toHaveBeenCalled();
+  });
+
+  it("open-only open throws → {opened:false}", async () => {
+    const { handOff } = setup({
+      platform: "ios",
       openUrl: async () => {
         throw new Error("no app");
       },
     });
-    expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toEqual({ opened: false, mode: "direct" });
-    expect(deps.setClipboard).toHaveBeenCalled();
-    expect(deps.saveQrImage).toHaveBeenCalled();
+    expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toMatchObject({ opened: false });
   });
 });

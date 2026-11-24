@@ -54,6 +54,17 @@ export function buildOpenUrl(app: PayApp): string {
   return app.scheme ? `${app.scheme}://` : `${DEEPLINK_BASE}?app=${encodeURIComponent(app.deeplinkCode)}`;
 }
 
+/** Android intent URI that launches an installed package (needs the native module: RN Linking can't resolve it). */
+export function buildAndroidIntentUrl(pkg: string): string {
+  return `intent://#Intent;package=${pkg};end`;
+}
+
+/** URL used to open an app without data: Android intent when the package is known, else scheme / VietQR link. */
+export function buildPlatformOpenUrl(app: PayApp, platform: "android" | "ios"): string {
+  if (platform === "android" && app.androidPackage) return buildAndroidIntentUrl(app.androidPackage);
+  return buildOpenUrl(app);
+}
+
 export type ClipboardInput = { account: string; amount?: number; message?: string };
 
 /** "<account> <amount> <message>": amount and message are left out when empty or invalid. */
