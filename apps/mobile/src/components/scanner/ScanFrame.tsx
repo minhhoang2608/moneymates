@@ -56,13 +56,19 @@ export function ScanFrame({ detected = false }: Props) {
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
 
   return (
-    <View style={styles.frame} pointerEvents="none" testID={animating ? "scan-frame-animated" : "scan-frame-static"}>
-      {detected ? <Animated.View testID="scan-flash" style={[styles.flash, flashStyle]} /> : null}
-      <View style={[corner, styles.tl]} />
-      <View style={[corner, styles.tr]} />
-      <View style={[corner, styles.bl]} />
-      <View style={[corner, styles.br]} />
-      <Animated.View testID="scan-line" style={[styles.line, lineStyle]} />
+    <View style={styles.frame} pointerEvents="none" testID="scan-frame">
+      <View
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+        testID={animating ? "scan-frame-animated" : "scan-frame-static"}
+      >
+        {detected ? <Animated.View testID="scan-flash" style={[styles.flash, flashStyle]} /> : null}
+        <View style={[corner, styles.tl]} />
+        <View style={[corner, styles.tr]} />
+        <View style={[corner, styles.bl]} />
+        <View style={[corner, styles.br]} />
+        <Animated.View testID="scan-line" style={[styles.line, lineStyle]} />
+      </View>
     </View>
   );
 }

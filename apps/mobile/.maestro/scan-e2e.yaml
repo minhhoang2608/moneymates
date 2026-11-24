@@ -11,7 +11,7 @@ appId: com.moneymates.app
 - assertVisible:
     id: "screen-scan"
 - assertVisible:
-    id: "scan-frame-animated"
+    id: "scan-frame"
 - tapOn:
     id: "scan-e2e-feed"
 - assertVisible:
