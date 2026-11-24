@@ -55,6 +55,7 @@ export const vi = {
     submit: (amount: string, app: string) => `Thanh toán ${amount} qua ${app}`,
     submitNoAmount: (app: string) => `Thanh toán qua ${app}`,
     groupHint: (n: number) => `Trong nhóm: người chi là Tôi, chia đều ${n} người.`,
+    qrImageFooter: "Ảnh tạm của MoneyMates · tự xoá sau khi dùng",
     saveNote: "Giao dịch được lưu ngay khi bấm. Không chuyển thì vào Lịch sử để xóa.",
     saveFailed: "Không lưu được giao dịch. Vui lòng thử lại.",
     autofill: "Tự điền",

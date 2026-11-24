@@ -18,6 +18,7 @@ import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
 import { useBankApps } from "@/api/bankApps";
 import { buildPayApps, defaultAppId, filterApps, normalizeAppId, orderPickerApps } from "@/lib/payConfirm/apps";
 import { createCoachStore, needsCoach } from "@/lib/payConfirm/coach";
+import { QrImageTemplate } from "@/components/share/QrImageTemplate";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { buildClipboardText } from "@/lib/payConfirm/deeplink";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
@@ -412,15 +413,28 @@ export default function PayConfirmScreen() {
 
       <View style={styles.hiddenQr} pointerEvents="none" accessibilityElementsHidden>
         {/* Bank apps decode the saved PNG from the gallery: large, white background, 4-module quiet zone. */}
-        <QRCode
-          value={qrPayload || " "}
-          size={640}
-          quietZone={64}
-          ecl="M"
-          color="black"
-          backgroundColor="white"
-          getRef={(r) => (qrRef.current = r)}
-        />
+        {model.kind === "vietqr" ? (
+          <QrImageTemplate
+            name={model.name}
+            bankBin={model.bankBin}
+            bankName={model.bankName}
+            account={model.account}
+            amount={confirmedAmount}
+            message={note}
+            fallbackPayload={model.payload}
+            getRef={(r) => (qrRef.current = r)}
+          />
+        ) : (
+          <QRCode
+            value={qrPayload || " "}
+            size={640}
+            quietZone={64}
+            ecl="M"
+            color="black"
+            backgroundColor="white"
+            getRef={(r) => (qrRef.current = r)}
+          />
+        )}
       </View>
 
       {coachOpen ? <CoachSheet bankName={selected.name} onConfirm={confirmCoach} onClose={closeCoach} /> : null}
