@@ -1,7 +1,9 @@
 import { useEffect } from "react";
+import Animated from "react-native-reanimated";
 import { StyleSheet, Text, View } from "react-native";
 
 import { isE2E } from "@/e2e/isE2E";
+import { toastMotionProps, useReduceMotion } from "@/lib/motion";
 import { useToast } from "@/stores/toast";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
@@ -16,6 +18,7 @@ export function toastDuration(): number {
 /** A small in-app toast driven by the toast store. Mount once in the root layout. */
 export function Toast() {
   const text = useToast((s) => s.text);
+  const motion = toastMotionProps(useReduceMotion());
 
   useEffect(() => {
     if (!text) return;
@@ -26,7 +29,8 @@ export function Toast() {
   if (!text) return null;
   return (
     <View style={styles.wrap} pointerEvents="none">
-      <View
+      <Animated.View
+        {...motion}
         style={styles.bar}
         testID="handoff-coach-toast"
         accessible
@@ -34,7 +38,7 @@ export function Toast() {
         accessibilityLiveRegion="polite"
       >
         <Text style={styles.text}>{text}</Text>
-      </View>
+      </Animated.View>
     </View>
   );
 }

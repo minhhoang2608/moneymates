@@ -1,6 +1,7 @@
 import { haptics } from "@/lib/haptics";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { useState } from "react";
-import { FlatList, Modal, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
@@ -23,7 +24,7 @@ export function BankPicker({
     (b) => !q || toAsciiText(b.shortName).toLowerCase().includes(q) || b.code.toLowerCase().includes(q),
   );
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <AnimatedSheet visible={visible} onClose={onClose} variant="fullscreen" testID="bank-picker-modal">
       <View style={styles.root}>
         <Text style={styles.title}>{vi.bankAccounts.bankPlaceholder}</Text>
         <TextInput
@@ -55,7 +56,7 @@ export function BankPicker({
           <Text style={styles.rowText}>{vi.bankAccounts.cancel}</Text>
         </PressableScale>
       </View>
-    </Modal>
+    </AnimatedSheet>
   );
 }
 

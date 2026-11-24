@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Alert, Modal, StyleSheet, Text, View } from "react-native";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import QRCode from "react-native-qrcode-svg";
 
@@ -63,8 +64,8 @@ export function QrPopup({
   const title = mode === "member" && memberName ? t.title(memberName) : t.titleGroup;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
-      <View style={styles.backdrop}>
+    <AnimatedSheet visible={visible} onClose={close} variant="popup" testID="qr-popup-modal" backdropLabel={t.close}>
+      <>
         <View style={styles.card} testID="qr-popup" accessibilityLabel={t.a11y}>
           <View style={styles.head}>
             <Text style={styles.title}>{title}</Text>
@@ -153,13 +154,12 @@ export function QrPopup({
             </>
           )}
         </View>
-      </View>
-    </Modal>
+      </>
+    </AnimatedSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(17,24,39,0.6)", justifyContent: "center", padding: 20 },
   card: { backgroundColor: colors.surface, borderRadius: 24, padding: 20, alignItems: "center", gap: 16 },
   head: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text },

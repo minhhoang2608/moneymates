@@ -1,5 +1,6 @@
 import { haptics } from "@/lib/haptics";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
@@ -24,9 +25,13 @@ export function SheetPicker({
   onClose: () => void;
 }) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      {/* bare-pressable-ok: modal backdrop, not a visual button */}
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={vi.txn.close} />
+    <AnimatedSheet
+      visible={visible}
+      onClose={onClose}
+      variant="sheet"
+      testID="sheet-picker"
+      backdropLabel={vi.txn.close}
+    >
       <View style={styles.sheet}>
         <Text style={styles.title}>{title}</Text>
         <ScrollView>
@@ -46,12 +51,11 @@ export function SheetPicker({
           ))}
         </ScrollView>
       </View>
-    </Modal>
+    </AnimatedSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1 },
   sheet: {
     maxHeight: "60%",
     backgroundColor: colors.surface,

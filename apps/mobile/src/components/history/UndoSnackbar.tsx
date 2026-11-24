@@ -1,7 +1,9 @@
 import { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
+import { StyleSheet, Text } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
+import { toastMotionProps, useReduceMotion } from "@/lib/motion";
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
@@ -22,13 +24,14 @@ export function UndoSnackbar({
     return () => clearTimeout(t);
   }, [token, onHide]);
 
+  const motion = toastMotionProps(useReduceMotion());
   return (
-    <View style={styles.bar} testID="undo-snackbar">
+    <Animated.View style={styles.bar} testID="undo-snackbar" {...motion}>
       <Text style={styles.text}>{vi.history.deleted}</Text>
       <PressableScale testID="undo" accessibilityRole="button" onPress={onUndo} hitSlop={8}>
         <Text style={styles.action}>{vi.history.undo}</Text>
       </PressableScale>
-    </View>
+    </Animated.View>
   );
 }
 

@@ -1,4 +1,5 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { PressableScale } from "@/components/PressableScale";
 
 import type { MemberExpense } from "@/db/repositories";
@@ -22,9 +23,13 @@ export function MemberExpensesSheet({
   onClose: () => void;
 }) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      {/* bare-pressable-ok: modal backdrop, not a visual button */}
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={t.close} />
+    <AnimatedSheet
+      visible={visible}
+      onClose={onClose}
+      variant="sheet"
+      testID="member-expenses-modal"
+      backdropLabel={t.close}
+    >
       <View style={styles.sheet} testID="member-expenses-sheet">
         <Text style={styles.title}>{t.memberExpenses(name)}</Text>
         <ScrollView>
@@ -56,12 +61,11 @@ export function MemberExpensesSheet({
           <Text style={styles.closeText}>{t.close}</Text>
         </PressableScale>
       </View>
-    </Modal>
+    </AnimatedSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1 },
   sheet: {
     maxHeight: "70%",
     backgroundColor: colors.surface,

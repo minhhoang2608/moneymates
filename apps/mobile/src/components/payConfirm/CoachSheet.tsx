@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
+import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
@@ -17,9 +18,14 @@ export function CoachSheet({
 }) {
   const [dontShow, setDontShow] = useState(false);
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      {/* bare-pressable-ok: modal backdrop, not a visual button */}
-      <Pressable style={styles.backdrop} onPress={onClose} testID="coach-close" accessibilityLabel={vi.txn.close} />
+    <AnimatedSheet
+      visible
+      onClose={onClose}
+      variant="sheet"
+      testID="coach-modal"
+      backdropTestID="coach-close"
+      backdropLabel={vi.txn.close}
+    >
       <View style={styles.sheet} testID="coach-sheet">
         <Text style={styles.text} testID="coach-text">
           {vi.coach.text(bankName)}
@@ -45,12 +51,11 @@ export function CoachSheet({
           <Text style={styles.confirmText}>{vi.coach.confirm(bankName)}</Text>
         </PressableScale>
       </View>
-    </Modal>
+    </AnimatedSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1 },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.sheet,
