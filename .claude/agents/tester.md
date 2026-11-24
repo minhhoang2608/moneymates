@@ -32,6 +32,10 @@ For **every** acceptance criterion, find the evidence:
 
 - General test failures on `dev` are reported automatically as a regression bug. Don't duplicate that; only judge the criteria.
 
+## UI audit against the design
+
+When a ticket changes a screen, also compare it with its export in `docs/design/screens/` (map in `docs/design/README.md`). A real deviation (missing element, wrong colour, size, string or state) is a UI bug: report it right away in `regressions[]` of the result (`"title": "UI: <Screen> – <defect>"`, area `area:mobile`), even if the ticket itself passes. The manual `ui-audit.yml` workflow does this for every screen.
+
 ## Allowed GitHub commands
 
 `gh issue view`, `gh pr view`, `gh pr list`, `git log|show|diff`. Read-only. The workflow creates bugs and closes tickets.
