@@ -4,9 +4,20 @@ import type { TransactionRow } from "@/db/repositories";
 import { signedAmountLabel } from "@/lib/transaction/form";
 import { colors, fontFamily, fontSize } from "@/theme";
 
-export function TransactionListItem({ txn, categoryName }: { txn: TransactionRow; categoryName: string }) {
+export function TransactionListItem({
+  txn,
+  categoryName,
+  divider = "bottom",
+}: {
+  txn: TransactionRow;
+  categoryName: string;
+  divider?: "top" | "bottom";
+}) {
   return (
-    <View style={styles.row} testID={`txn-item-${txn.id}`}>
+    <View
+      style={[styles.row, divider === "top" ? styles.dividerTop : styles.dividerBottom]}
+      testID={`txn-item-${txn.id}`}
+    >
       <View style={styles.main}>
         <Text style={styles.category}>{categoryName}</Text>
         {txn.note ? <Text style={styles.note}>{txn.note}</Text> : null}
@@ -25,9 +36,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
   },
+  dividerBottom: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+  dividerTop: { borderTopWidth: 1, borderTopColor: colors.divider },
   main: { flex: 1, paddingRight: 12 },
   category: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.text },
   note: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },

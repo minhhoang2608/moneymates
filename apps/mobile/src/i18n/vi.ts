@@ -289,8 +289,16 @@ export const vi = {
     groupShareNote: (amount: string) => `Gồm ${amount} phần của bạn trong nhóm`,
     income: "Thu",
     lastMonthSpent: "Tháng trước đã chi",
-    bannerUp: (percent: number) => `Chi tiêu tháng này đang cao hơn tháng trước ${percent}%. Mức cảnh báo là 20%.`,
-    bannerDown: (percent: number) => `Chi tiêu tháng này đang thấp hơn tháng trước ${percent}%. Mức cảnh báo là 20%.`,
+    bannerUpParts: (percent: number) => ({
+      before: "Chi tiêu tháng này đang cao hơn tháng trước ",
+      percent: `${percent}%`,
+      after: ". Mức cảnh báo là 20%.",
+    }),
+    bannerDownParts: (percent: number) => ({
+      before: "Chi tiêu tháng này đang thấp hơn tháng trước ",
+      percent: `${percent}%`,
+      after: ". Mức cảnh báo là 20%.",
+    }),
     topCategories: "Top danh mục",
     seeAll: "Xem tất cả",
     statsLink: "Thống kê",

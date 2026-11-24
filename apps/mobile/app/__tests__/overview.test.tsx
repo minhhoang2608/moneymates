@@ -14,7 +14,7 @@ import {
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { catId } from "@/testing/repoTestUtils";
-import { colors } from "@/theme";
+import { colors, overlays } from "@/theme";
 
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
 jest.mock("@/db/DatabaseProvider", () => ({
@@ -227,5 +227,64 @@ describe("Tổng quan screen", () => {
     });
     await fireEvent.press(fab);
     expect(await screen.findByTestId("entry-menu-manual")).toBeTruthy();
+  });
+
+  it("design: hero, tiles, cards and spacing match the CSS", async () => {
+    await add(1_000_000, "2026-10-05T03:00:00Z");
+    await add(1_250_000, "2026-11-05T03:00:00Z");
+    await renderOverview();
+    const flat = (el: { props: { style?: unknown } }) =>
+      StyleSheet.flatten(el.props.style as never) as Record<string, unknown>;
+    await screen.findByTestId("overview-banner");
+    expect(flat(screen.getByTestId("overview-hero"))).toMatchObject({ gap: 14 });
+    const amount = flat(screen.getByTestId("overview-expense"));
+    expect(amount).toMatchObject({ fontSize: 32, letterSpacing: -0.5 });
+    expect(amount.fontFamily).toMatch(/bold/i);
+    const label = flat(screen.getByText("Đã chi tháng này"));
+    expect(label).toMatchObject({ fontSize: 13, opacity: 0.85 });
+    const income = screen.getByTestId("overview-income");
+    expect(flat(income)).toMatchObject({ fontSize: 16 });
+    expect(flat(income).fontFamily).toMatch(/semibold/i);
+    const tile = flat(income.parent as never);
+    expect(tile).toMatchObject({
+      backgroundColor: overlays.button,
+      borderRadius: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      gap: 2,
+    });
+    expect(flat(screen.getByTestId("overview-banner"))).toMatchObject({
+      borderRadius: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      gap: 10,
+    });
+    const pct = screen.getByText("25%");
+    expect(flat(pct).fontFamily).toMatch(/bold/i);
+    expect(screen.getByText(/cao hơn tháng trước 25%/)).toBeTruthy();
+  });
+
+  it("design: card titles 15px, legend 2-column grid with compact amounts, recent rows with top dividers", async () => {
+    await add(3_200_000, "2026-11-02T03:00:00Z", "expense", "Ăn uống");
+    await add(1_800_000, "2026-11-03T03:00:00Z", "expense", "Mua sắm");
+    await add(1_450_000, "2026-11-04T03:00:00Z", "expense", "Di chuyển");
+    await add(950_000, "2026-11-05T03:00:00Z", "expense", "Lưu trú");
+    await renderOverview();
+    await screen.findByTestId("overview-top-0");
+    const flat = (el: { props: { style?: unknown } }) =>
+      StyleSheet.flatten(el.props.style as never) as Record<string, unknown>;
+    for (const t of ["Top danh mục", "Giao dịch gần đây"]) {
+      const s = flat(screen.getByText(t));
+      expect(s.fontSize).toBe(15);
+      expect(s.fontFamily).toMatch(/semibold/i);
+    }
+    expect(screen.getByTestId("overview-top-0")).toHaveTextContent(/3,2tr$/);
+    expect(screen.getByTestId("overview-top-3")).toHaveTextContent(/0,95tr$/);
+    expect(screen.getByTestId("overview-top-0").parent).toBe(screen.getByTestId("overview-top-1").parent);
+    expect(screen.getByTestId("overview-top-0").parent).not.toBe(screen.getByTestId("overview-top-2").parent);
+    expect(flat(screen.getByTestId("overview-top-0"))).toMatchObject({ gap: 8 });
+    expect(flat(screen.getByTestId("overview-recent"))).toMatchObject({ paddingVertical: 8, paddingHorizontal: 16 });
+    const row = flat(screen.getAllByTestId(/^txn-item-/)[0]);
+    expect(row).toMatchObject({ borderTopWidth: 1, borderTopColor: "#EEF0F3" });
   });
 });
