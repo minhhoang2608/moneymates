@@ -35,6 +35,13 @@ export function createPreferencesRepository(db: AnyDb) {
       if (!/^[A-Z]{3}$/.test(clean)) throw new PreferencesError("invalid_currency");
       await settings.set(PREF_KEYS.defaultCurrency, clean);
     },
+    async getAutoDetectTransfers(): Promise<boolean> {
+      const v = await settings.get<boolean>(PREF_KEYS.autoDetectTransfers);
+      return v === true;
+    },
+    async setAutoDetectTransfers(on: boolean): Promise<void> {
+      await settings.set(PREF_KEYS.autoDetectTransfers, on);
+    },
     async getNonAutofillMode(): Promise<NonAutofillMode> {
       return normalizeNonAutofillMode(await settings.get<unknown>(PREF_KEYS.nonAutofillMode));
     },

@@ -62,6 +62,13 @@ export const vi = {
         label: "Micro & giọng nói",
         description: "Nói “ăn phở 50 nghìn” để nhập nhanh. Nhận dạng trên máy.",
       },
+      bankNotif: {
+        label: "Thông báo ngân hàng",
+        description: (names: string[]) =>
+          names.length > 0
+            ? `Chỉ Android, tuỳ chọn. Chỉ đọc thông báo của ${names.join(", ")} để biết đã chuyển xong.`
+            : "Chỉ Android, tuỳ chọn. Chỉ đọc thông báo của app ngân hàng bạn đã bật để biết đã chuyển xong.",
+      },
     },
   },
   payConfirm: {
@@ -129,6 +136,20 @@ export const vi = {
     avatarA11y: "Đổi ảnh đại diện",
     rows: { bankAccounts: "Tài khoản nhận tiền", categories: "Danh mục", settings: "Cài đặt" },
   },
+  notifAccess: {
+    title: "Tự nhận biết chuyển khoản xong",
+    body: "Khi app ngân hàng báo trừ tiền đúng số tiền vừa thanh toán, MoneyMates tự đánh dấu đã trả và xoá ảnh QR tạm. Bạn không phải trả lời “Đã thanh toán xong chưa?”.",
+    appsLine: (names: string[]) => `Chỉ đọc thông báo của app bạn đã bật: ${names.join(", ")}.`,
+    onDevice: "Xử lý ngay trên máy. Không lưu, không gửi nội dung thông báo đi đâu.",
+    turnOff: "Tắt được bất cứ lúc nào trong Cài đặt.",
+    continue: "Tiếp tục",
+    later: "Để sau",
+    footnote: "“Tiếp tục” mở trang Truy cập thông báo của Android.",
+    close: "Đóng",
+    sampleTitle: "TPBank · bây giờ",
+    sampleBody: "TK …4567 -55,000 VND lúc 12:03 24/11. ND: PHO HOA BAN 12",
+    sampleMatch: "Khớp: QUAN PHO HOA · 55.000đ → đã trả, xoá ảnh QR",
+  },
   settings: {
     title: "Cài đặt",
     back: "Quay lại",
@@ -140,6 +161,8 @@ export const vi = {
     paymentAppsRow: "App thanh toán",
     enabledCount: (n: number) => `${n} đang bật ›`,
     nonAutofillRow: "Khi app không tự điền",
+    autoDetect: "Tự nhận biết chuyển khoản",
+    autoDetectHint: "Android · đọc thông báo app ngân hàng",
     nonAutofillHint: "iOS · “Không lưu ảnh” = copy STK để dán",
     nonAutofillQrImage: "Ảnh QR, tự xoá",
     nonAutofillNoImage: "Không lưu ảnh",

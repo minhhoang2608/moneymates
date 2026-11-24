@@ -1,17 +1,23 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { AppState, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PressableScale } from "@/components/PressableScale";
-import { CameraIcon, ImageIcon, MicIcon } from "@/components/icons";
+import { BellIcon, CameraIcon, ImageIcon, MicIcon } from "@/components/icons";
 import { PermissionRow } from "@/components/onboarding/PermissionRow";
 import { usePermissionRows } from "@/hooks/usePermissionRows";
 import { vi } from "@/i18n/vi";
+import { isAccessGranted } from "../../../modules/notification-listener";
 import { openAppSettings, type PermissionKind } from "@/lib/permissions";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
 type Props = {
   onNext: () => void;
   onSkip: () => void;
+  /** Opens the bank-notification explainer (Android only). */
+  onOpenBankNotif?: () => void;
+  /** Names of the enabled pay apps, shown in the bank-notification row. */
+  bankNotifAppNames?: string[];
 };
 
 const ROWS: { kind: PermissionKind; Icon: typeof CameraIcon }[] = [
@@ -20,10 +26,26 @@ const ROWS: { kind: PermissionKind; Icon: typeof CameraIcon }[] = [
   { kind: "microphone", Icon: MicIcon },
 ];
 
-/** Onboarding step 3/4 (the Android bank-notification row is added by #340): each permission is requested only when its own "Tiếp tục" is tapped. */
-export function PermissionsStep({ onNext, onSkip }: Props) {
+/** Onboarding step 3/4 (Android adds a bank-notification row): each permission is requested only when its own "Tiếp tục" is tapped. */
+export function PermissionsStep({ onNext, onSkip, onOpenBankNotif, bankNotifAppNames = [] }: Props) {
   const t = vi.onboarding.permissions;
   const { rows, ask } = usePermissionRows();
+  const isAndroid = Platform.OS === "android";
+  const [notifGranted, setNotifGranted] = useState(false);
+  useEffect(() => {
+    if (!isAndroid) return;
+    let alive = true;
+    const check = () =>
+      void isAccessGranted()
+        .catch(() => false)
+        .then((g) => alive && setNotifGranted(g));
+    check();
+    const sub = AppState.addEventListener("change", (s) => s === "active" && check());
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, [isAndroid]);
   return (
     <SafeAreaView style={styles.screen} testID="onboarding-permissions">
       <View style={styles.header}>
@@ -49,11 +71,23 @@ export function PermissionsStep({ onNext, onSkip }: Props) {
               label={t[kind].label}
               description={t[kind].description}
               state={rows[kind]?.state}
-              last={i === ROWS.length - 1}
+              last={!isAndroid && i === ROWS.length - 1}
               onAsk={() => void ask(kind)}
               onOpenSettings={() => void openAppSettings()}
             />
           ))}
+          {isAndroid ? (
+            <PermissionRow
+              id="bank-notif"
+              icon={<BellIcon color={colors.primary} size={22} />}
+              label={t.bankNotif.label}
+              description={t.bankNotif.description(bankNotifAppNames)}
+              state={notifGranted ? "granted" : undefined}
+              last
+              onAsk={() => onOpenBankNotif?.()}
+              onOpenSettings={() => onOpenBankNotif?.()}
+            />
+          ) : null}
         </View>
         <Text style={styles.footnote}>{t.footnote}</Text>
       </ScrollView>

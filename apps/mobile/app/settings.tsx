@@ -1,13 +1,14 @@
 import Constants from "expo-constants";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { DefaultBankSuggestion } from "@/components/settings/DefaultBankSuggestion";
 import { MoneySourceSection } from "@/components/settings/MoneySourceSection";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { MoneySourceRow } from "@/db/repositories/moneySourceRepository";
+import { isAccessGranted } from "../modules/notification-listener";
 import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { vi } from "@/i18n/vi";
 import { getAppLockAuth } from "@/lib/appLock/auth";
@@ -33,6 +34,8 @@ export default function SettingsScreen() {
   const [dismissed, setDismissed] = useState(true);
   const [nonAutofill, setNonAutofill] = useState<NonAutofillMode>(DEFAULT_NON_AUTOFILL_MODE);
   const [modeOpen, setModeOpen] = useState(false);
+  const [autoDetect, setAutoDetect] = useState(false);
+  const isAndroid = Platform.OS === "android";
   const modeLabel = (m: NonAutofillMode) =>
     m === "no_image" ? vi.settings.nonAutofillNoImage : vi.settings.nonAutofillQrImage;
 
@@ -68,6 +71,15 @@ export default function SettingsScreen() {
     }
   };
 
+  const onAutoDetectChange = (v: boolean) => {
+    if (v) {
+      router.push("/notif-access");
+      return;
+    }
+    setAutoDetect(false);
+    void preferences.setAutoDetectTransfers(false);
+  };
+
   useFocusEffect(
     useCallback(() => {
       let alive = true;
@@ -86,6 +98,12 @@ export default function SettingsScreen() {
           handOffMemory.getDefaultSuggestionDismissed(),
           preferences.getNonAutofillMode(),
         ]);
+        if (isAndroid) {
+          const saved = await preferences.getAutoDetectTransfers();
+          const granted = saved ? await isAccessGranted().catch(() => false) : false;
+          if (saved && !granted) await preferences.setAutoDetectTransfers(false);
+          if (alive) setAutoDetect(saved && granted);
+        }
         if (!alive) return;
         setSources(s);
         setCurrency(c);
@@ -100,7 +118,7 @@ export default function SettingsScreen() {
       return () => {
         alive = false;
       };
-    }, [reload, moneySources, preferences, appSettings, bankAccounts, handOffMemory]),
+    }, [reload, moneySources, preferences, appSettings, bankAccounts, handOffMemory, isAndroid]),
   );
 
   const suggestedId = suggestDefaultApp({ order: enabled, recent, accountBins, dismissed });
@@ -150,7 +168,7 @@ export default function SettingsScreen() {
             testID="settings-non-autofill-row"
             accessibilityRole="button"
             onPress={() => setModeOpen(true)}
-            style={styles.row}
+            style={[styles.row, isAndroid && styles.divider]}
           >
             <View style={styles.flex}>
               <Text style={styles.label}>{vi.settings.nonAutofillRow}</Text>
@@ -160,6 +178,21 @@ export default function SettingsScreen() {
               {`${modeLabel(nonAutofill)} ›`}
             </Text>
           </PressableScale>
+          {isAndroid ? (
+            <View style={styles.row} testID="settings-auto-detect-row">
+              <View style={styles.flex}>
+                <Text style={styles.label}>{vi.settings.autoDetect}</Text>
+                <Text style={styles.hint}>{vi.settings.autoDetectHint}</Text>
+              </View>
+              <Switch
+                testID="settings-auto-detect-toggle"
+                accessibilityLabel={vi.settings.autoDetect}
+                value={autoDetect}
+                trackColor={{ true: colors.primary }}
+                onValueChange={onAutoDetectChange}
+              />
+            </View>
+          ) : null}
         </View>
 
         <Text testID="settings-general-heading" style={[styles.section, styles.sectionGap]}>

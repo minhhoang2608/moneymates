@@ -19,6 +19,16 @@ describe("preferencesRepository", () => {
     expect(tx.currency).toBe("VND");
   });
 
+  it("auto-detect transfers defaults to false and round-trips", async () => {
+    const { db } = openTestDb();
+    const repo = createPreferencesRepository(db as unknown as AnyDb);
+    expect(await repo.getAutoDetectTransfers()).toBe(false);
+    await repo.setAutoDetectTransfers(true);
+    expect(await repo.getAutoDetectTransfers()).toBe(true);
+    await repo.setAutoDetectTransfers(false);
+    expect(await repo.getAutoDetectTransfers()).toBe(false);
+  });
+
   it("rejects an invalid currency code", async () => {
     const { db } = openTestDb();
     const repo = createPreferencesRepository(db as unknown as AnyDb);

@@ -21,6 +21,7 @@ export const PREF_KEYS = {
   recentPayApps: "pay.recent_apps",
   lastPayAppByBank: "pay.last_app_by_bank",
   nonAutofillMode: "non_autofill_mode",
+  autoDetectTransfers: "auto_detect_transfers",
 } as const;
 
 export type NonAutofillMode = "qr_image" | "no_image";
