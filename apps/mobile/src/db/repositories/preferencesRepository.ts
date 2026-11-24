@@ -1,4 +1,11 @@
-import { DEFAULT_CURRENCY, PREF_KEYS, PreferencesError } from "../../lib/preferences/defaults";
+import {
+  DEFAULT_CURRENCY,
+  NON_AUTOFILL_MODES,
+  PREF_KEYS,
+  PreferencesError,
+  normalizeNonAutofillMode,
+  type NonAutofillMode,
+} from "../../lib/preferences/defaults";
 import { createAppSettingRepository } from "./appSettingRepository";
 import type { AnyDb } from "../seed";
 
@@ -27,6 +34,13 @@ export function createPreferencesRepository(db: AnyDb) {
       const clean = code.trim().toUpperCase();
       if (!/^[A-Z]{3}$/.test(clean)) throw new PreferencesError("invalid_currency");
       await settings.set(PREF_KEYS.defaultCurrency, clean);
+    },
+    async getNonAutofillMode(): Promise<NonAutofillMode> {
+      return normalizeNonAutofillMode(await settings.get<unknown>(PREF_KEYS.nonAutofillMode));
+    },
+    async setNonAutofillMode(mode: NonAutofillMode): Promise<void> {
+      if (!NON_AUTOFILL_MODES.includes(mode)) throw new PreferencesError("invalid_mode");
+      await settings.set(PREF_KEYS.nonAutofillMode, mode);
     },
   };
 }
