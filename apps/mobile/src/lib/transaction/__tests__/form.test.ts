@@ -39,6 +39,7 @@ describe("validateForm", () => {
 describe("signedAmountLabel", () => {
   it("uses U+2212 for expenses and + for income", () => {
     expect(signedAmountLabel("expense", 50000)).toBe("−50.000đ");
+    expect(signedAmountLabel("expense", 345000)).toBe("−345.000đ");
     expect(signedAmountLabel("income", 25000000)).toBe("+25.000.000đ");
   });
 });

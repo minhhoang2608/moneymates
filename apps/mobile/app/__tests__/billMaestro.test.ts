@@ -12,7 +12,7 @@ describe("bill maestro flows", () => {
     const src = read("bill-fill-form");
     expect(src).toMatch(/scrollUntilVisible:\s*\n\s*element:\s*\n\s*id: "photo-thumbnail"/);
     expect(src.indexOf("scrollUntilVisible")).toBeLessThan(src.indexOf('assertVisible:\n    id: "photo-thumbnail"'));
-    expect(src.trimEnd().endsWith('- assertVisible: "345.000đ"')).toBe(true);
+    expect(src.trimEnd().endsWith('- assertVisible: "−345.000đ"')).toBe(true);
   });
 
   it.each(FLOWS)("%s waits on the bill-done id, not heading text", (f) => {
