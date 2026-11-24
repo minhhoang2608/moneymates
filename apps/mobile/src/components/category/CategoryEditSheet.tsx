@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import type { CategoryRow } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
@@ -40,7 +40,9 @@ export function CategoryEditSheet({
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={vi.txn.close} />
       <View style={styles.sheet} testID="category-sheet">
-        <Text style={styles.title}>{item ? vi.categories.editTitle : vi.categories.addTitle}</Text>
+        <Pressable testID="category-sheet-title" accessible accessibilityRole="header" onPress={Keyboard.dismiss}>
+          <Text style={styles.title}>{item ? vi.categories.editTitle : vi.categories.addTitle}</Text>
+        </Pressable>
         <Text style={styles.label}>{vi.categories.name}</Text>
         <TextInput
           testID="category-name-input"

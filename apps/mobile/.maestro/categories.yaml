@@ -14,7 +14,9 @@ appId: com.moneymates.app
 - tapOn:
     id: "category-name-input"
 - inputText: "Cà phê"
-- hideKeyboard
+- tapOn:
+    id: "category-sheet-title"
+- waitForAnimationToEnd
 - tapOn:
     id: "category-save"
 - assertVisible: "Cà phê"

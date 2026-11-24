@@ -167,7 +167,15 @@ export default function GroupEditScreen() {
         <Pressable testID="group-close" accessibilityLabel={t.close} style={styles.close} onPress={() => router.back()}>
           <Text style={styles.closeGlyph}>✕</Text>
         </Pressable>
-        <Text style={styles.title}>{id ? t.edit : t.create}</Text>
+        <Pressable
+          testID="group-edit-title"
+          accessible
+          accessibilityRole="header"
+          style={styles.titleWrap}
+          onPress={Keyboard.dismiss}
+        >
+          <Text style={styles.title}>{id ? t.edit : t.create}</Text>
+        </Pressable>
       </View>
 
       <ScrollView ref={scrollRef} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -367,7 +375,8 @@ const styles = StyleSheet.create({
   header: { height: 64, marginTop: 40, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   close: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   closeGlyph: { fontSize: 20, color: colors.text },
-  title: { fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text, flex: 1 },
+  title: { fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text },
+  titleWrap: { flex: 1 },
   body: { paddingHorizontal: layout.screenPadding, gap: 14, paddingBottom: 140 },
   card: {
     backgroundColor: colors.surface,
