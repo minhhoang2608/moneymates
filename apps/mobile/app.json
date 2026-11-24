@@ -60,6 +60,7 @@
         "./plugins/withAndroidQueries",
         { "schemes": ["hydro", "mbbank", "momo", "tcb", "vietcombankmobile", "vietinbankipay"] }
       ],
+      "./plugins/withNotificationListener",
       "@react-native-community/datetimepicker",
       "expo-sharing",
       [
