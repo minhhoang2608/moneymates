@@ -1,4 +1,3 @@
-import { SNAPSHOT } from "@/lib/vietqr/bankApps";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import fs from "node:fs";
@@ -9,6 +8,7 @@ import qr from "../../e2e/fixtures/qr.json";
 import {
   createAppSettingRepository,
   createCategoryRepository,
+  createHandOffMemoryRepository,
   createPaymentAppPrefsRepository,
   createTransactionRepository,
 } from "@/db/repositories";
@@ -145,6 +145,7 @@ describe("pay-confirm screen", () => {
     });
 
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("pay-app-change"));
     await fireEvent.press(await screen.findByTestId("app-mb"));
     await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy());
     await fireEvent.press(screen.getByTestId("pay-submit"));
@@ -169,6 +170,7 @@ describe("pay-confirm screen", () => {
 
     // AC5: remembered, and listed first on the next visit.
     expect(await createAppSettingRepository(testDb()).get("pay.recent_apps")).toEqual(["mb"]);
+    expect(await createHandOffMemoryRepository(testDb()).getLastUsedByBank()).toEqual({ "970423": "mb" });
   });
 
   it.each([
@@ -188,41 +190,47 @@ describe("pay-confirm screen", () => {
     expect(await txRepo.list()).toHaveLength(1);
   });
 
-  it("AC5: a remembered app is preselected, the list follows the saved order", async () => {
-    await createAppSettingRepository(testDb()).set("pay.recent_apps", ["mb"]);
-    await createPaymentAppPrefsRepository(testDb()).setAppOrder(["momo", "tpb", "tcb", "vcb", "mb"]);
+  it("AC1: the QR bank is preselected as one row with no extra choice", async () => {
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy());
-    const ids = screen.getAllByTestId(/^app-(?!badge-)/).map((n) => n.props.testID);
-    expect(ids.slice(0, 9)).toEqual([
-      "app-momo",
-      "app-tpb",
-      "app-tcb",
-      "app-vcb",
-      "app-mb",
-      "app-icb",
-      "app-bidv",
-      "app-acb",
-      "app-ocb",
-    ]);
-    expect(screen.getByTestId("app-badge-mb")).toHaveTextContent("Tự điền");
-    expect(screen.getByTestId("app-badge-tcb")).toHaveTextContent("Quét ảnh QR");
+    expect(await screen.findByTestId("pay-app-row-name")).toHaveTextContent("TPBank");
+    expect(screen.getByTestId("pay-app-row-badge")).toHaveTextContent("Quét ảnh QR");
+    expect(screen.getByTestId("pay-app-change")).toHaveTextContent("Đổi ›");
+    expect(screen.getByText("Thanh toán 55.000đ qua TPBank")).toBeTruthy();
+    expect(screen.queryAllByTestId(/^app-/)).toHaveLength(0);
+    expect(screen.queryByTestId("pay-app-sheet")).toBeNull();
   });
 
-  it("AC1: the picker lists every bundled registry app without network", async () => {
+  it("AC1: the app last used for this bank is preselected", async () => {
+    await createHandOffMemoryRepository(testDb()).setLastUsedForBank("970423", "mb");
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    await screen.findByTestId("pay-submit");
-    for (const a of SNAPSHOT.apps) expect(screen.getByTestId(`app-${a.app_id}`)).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId("pay-app-row-name")).toHaveTextContent("MBBank"));
+    expect(screen.getByTestId("pay-app-row-badge")).toHaveTextContent("Tự điền");
+    expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy();
   });
 
-  it("AC3: search filters the list and shows an empty state", async () => {
+  it("AC2: the sheet searches hidden apps and picking one updates the row and the button", async () => {
+    await createPaymentAppPrefsRepository(testDb()).setEnabledOrder(["tpb", "mb"]);
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
-    const search = await screen.findByTestId("pay-app-search");
-    await fireEvent.changeText(search, "tech");
-    await waitFor(() => expect(screen.queryByTestId("app-vcb")).toBeNull());
-    expect(screen.getByTestId("app-tcb")).toBeTruthy();
-    await fireEvent.changeText(search, "zzzz");
+    await fireEvent.press(await screen.findByTestId("pay-app-change"));
+    expect(await screen.findByTestId("pay-app-sheet")).toBeTruthy();
+    expect(screen.queryByTestId("app-vcb")).toBeNull();
+    await fireEvent.changeText(screen.getByTestId("pay-app-search"), "vietcom");
+    expect(await screen.findByTestId("app-vcb")).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("pay-app-search"), "zzzz");
     expect(await screen.findByTestId("pay-app-empty")).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId("pay-app-search"), "");
+    await fireEvent.press(await screen.findByTestId("app-mb"));
+    await waitFor(() => expect(screen.queryByTestId("pay-app-sheet")).toBeNull());
+    expect(screen.getByTestId("pay-app-row-name")).toHaveTextContent("MBBank");
+    expect(screen.getByTestId("pay-app-row-badge")).toHaveTextContent("Tự điền");
+    expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy();
+  });
+
+  it("AC3: the manage link opens the payment apps page", async () => {
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("pay-app-change"));
+    await fireEvent.press(await screen.findByTestId("pay-app-manage"));
+    expect(await screen.findByTestId("screen-payment-apps")).toBeTruthy();
   });
 
   it("the saved QR is regenerated from the confirmed amount and note", async () => {

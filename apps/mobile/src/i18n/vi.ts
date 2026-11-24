@@ -63,6 +63,16 @@ export const vi = {
     scanQr: "Quét ảnh QR",
     shareQr: "Chia sẻ mã QR",
     noBankMatch: "Không tìm thấy ngân hàng",
+    change: "Đổi ›",
+  },
+  appSheet: {
+    title: "Chọn app thanh toán",
+    heading: "Thanh toán bằng",
+    search: "Tìm cả app đang ẩn",
+    qrBank: "Ngân hàng trong mã QR",
+    lastUsed: "dùng lần trước",
+    recent: "Dùng gần đây",
+    manage: "Quản lý app thanh toán ›",
   },
   coach: {
     text: (bank: string) => `Trong ${bank}: bấm Quét QR → biểu tượng Ảnh → chọn ảnh đầu tiên`,
