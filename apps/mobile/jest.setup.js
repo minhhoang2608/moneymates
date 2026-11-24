@@ -103,3 +103,10 @@ jest.mock("./modules/bank-hand-off", () => ({
   openIntentUri: jest.fn(async () => {}),
   sharePng: jest.fn(async () => {}),
 }));
+
+// expo-share-intent has no native module under Jest.
+jest.mock("expo-share-intent", () => ({
+  ShareIntentModule: null,
+  getShareExtensionKey: () => "moneymatesShareKey",
+  parseShareIntent: (v) => v,
+}));

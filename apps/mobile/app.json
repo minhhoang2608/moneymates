@@ -67,6 +67,18 @@
         {
           "faceIDPermission": "MoneyMates dùng Face ID để mở khóa ứng dụng."
         }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsImageWithMaxCount": 1
+          },
+          "androidIntentFilters": ["image/*"],
+          "androidMultiIntentFilters": [],
+          "disableIOS": false,
+          "iosAppGroupIdentifier": "group.com.moneymates.app"
+        }
       ]
     ]
   }
