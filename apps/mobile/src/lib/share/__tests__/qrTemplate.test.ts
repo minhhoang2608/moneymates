@@ -3,7 +3,15 @@ import { parseVietQr } from "@/lib/vietqr";
 import { hasValidCrc } from "@/lib/vietqr/crc16";
 import { decodeTlv } from "@/lib/vietqr/tlv";
 
-import { buildQrImageContent, CANVAS_H, CANVAS_W, computeQrImageLayout, groupAccount, qrMatrix } from "../qrTemplate";
+import {
+  buildQrImageContent,
+  CANVAS_H,
+  CANVAS_W,
+  computeQrImageLayout,
+  groupAccount,
+  qrMatrix,
+  stripShopPrefix,
+} from "../qrTemplate";
 
 function hasTag(payload: string, tag: string): boolean {
   const r = decodeTlv(payload);
@@ -44,6 +52,18 @@ describe("AC1 content", () => {
   });
 });
 
+describe("shop prefix", () => {
+  it("drops a leading Cua hang / Cửa hàng", () => {
+    expect(stripShopPrefix("Cua hang LE MINH HOANG")).toBe("LE MINH HOANG");
+    expect(stripShopPrefix("CỬA HÀNG Minh Hoàng")).toBe("Minh Hoàng");
+    expect(buildQrImageContent({ ...PHO, name: "Cua hang LE MINH HOANG" }).title).toBe("LE MINH HOANG");
+  });
+  it("keeps names that only contain it, or are just the prefix", () => {
+    expect(stripShopPrefix("Tiem Cua hang A")).toBe("Tiem Cua hang A");
+    expect(stripShopPrefix("Cua hang")).toBe("Cua hang");
+  });
+});
+
 describe("AC2 payload", () => {
   it("is a valid VietQR without tag 59", () => {
     for (const name of [undefined, "QUAN PHO HOA"]) {
@@ -68,7 +88,7 @@ describe("AC3 layout math", () => {
     const L = computeQrImageLayout(n, { hasAmount: true, hasMessage: true });
     expect(L.width).toBe(CANVAS_W);
     expect(L.height).toBe(CANVAS_H);
-    expect(L.box.size).toBeGreaterThanOrEqual(0.7 * CANVAS_W);
+    expect(L.box.size).toBeGreaterThanOrEqual(0.8 * CANVAS_W);
     expect(L.quietZone).toBeCloseTo(4 * L.moduleSize);
     expect(L.box.x + L.box.size).toBeLessThanOrEqual(CANVAS_W);
     const boxBottom = L.box.y + L.box.size;

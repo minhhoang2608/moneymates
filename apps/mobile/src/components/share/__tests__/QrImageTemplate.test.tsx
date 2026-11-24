@@ -29,8 +29,6 @@ describe("QrImageTemplate", () => {
   it("renders every text of the template", async () => {
     await render(<QrImageTemplate {...base} message="PHO HOA BAN 12" />);
     for (const t of [
-      "Money",
-      "Mates",
       "QUAN PHO HOA",
       "TPBank · 0123 4567 89",
       "55.000đ",
@@ -39,6 +37,11 @@ describe("QrImageTemplate", () => {
     ]) {
       expect(screen.getByText(t)).toBeTruthy();
     }
+  });
+  it("draws no logo wordmark", async () => {
+    await render(<QrImageTemplate {...base} />);
+    expect(screen.queryByText("Money")).toBeNull();
+    expect(screen.queryByText("Mates")).toBeNull();
   });
   it("omits the temporary footer when temporary is false", async () => {
     await render(<QrImageTemplate {...base} temporary={false} />);
@@ -61,7 +64,7 @@ describe("QrImageTemplate", () => {
       ["an invalid account", { account: "bad account!" }],
     ])("renders with %s", async (_n, extra) => {
       await render(<QrImageTemplate {...base} {...extra} fallbackPayload={fallbackPayload} />);
-      expect(screen.getByText("Mates")).toBeTruthy();
+      expect(screen.getByText(/TPBank/)).toBeTruthy();
     });
     it("uses the fallback payload and hides an invalid amount", () => {
       const c = buildQrImageContent({ ...base, amount: 0, fallbackPayload });

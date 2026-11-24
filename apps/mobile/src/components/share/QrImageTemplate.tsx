@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import Svg, { Circle, ClipPath, Defs, G, Rect, Text as SvgText, TSpan } from "react-native-svg";
+import Svg, { G, Rect, Text as SvgText } from "react-native-svg";
 
 import { buildQrImageContent, computeQrImageLayout, qrMatrix, type QrImageInput } from "@/lib/share/qrTemplate";
 
@@ -47,7 +47,6 @@ export function QrImageTemplate({ getRef, ...input }: Props) {
   }
 
   const common = { x: L.centerX, textAnchor: "middle" as const };
-  const logoX = L.centerX - 83;
 
   return (
     <Svg
@@ -58,24 +57,6 @@ export function QrImageTemplate({ getRef, ...input }: Props) {
       viewBox={`0 0 ${L.width} ${L.height}`}
     >
       <Rect x={0} y={0} width={L.width} height={L.height} fill="#FFFFFF" />
-      <G x={logoX} y={L.logoY}>
-        <Defs>
-          <ClipPath id="lc36">
-            <Circle cx={14.4} cy={18} r={7.92} />
-          </ClipPath>
-        </Defs>
-        <Rect width={36} height={36} rx={8.3} fill={GREEN} />
-        <Circle cx={14.4} cy={18} r={7.92} fill="#FFFFFF" />
-        <Circle cx={21.6} cy={18} r={7.92} fill="#3DD6B0" />
-        <Circle cx={21.6} cy={18} r={7.92} fill="#0A5E4D" clipPath="url(#lc36)" />
-        <SvgText x={10.4} y={21} textAnchor="middle" fontFamily="Inter_800ExtraBold" fontSize={8.6} fill={GREEN}>
-          $
-        </SvgText>
-        <SvgText x={46} y={26} fontFamily="Inter_800ExtraBold" fontSize={24} letterSpacing={-1}>
-          <TSpan fill={INK}>Money</TSpan>
-          <TSpan fill={GREEN}>Mates</TSpan>
-        </SvgText>
-      </G>
       <Rect x={L.box.x} y={L.box.y} width={L.box.size} height={L.box.size} fill="#FFFFFF" />
       <G shapeRendering="crispEdges">{cells}</G>
       {content.title && L.title ? (
