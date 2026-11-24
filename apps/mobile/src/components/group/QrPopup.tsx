@@ -3,6 +3,7 @@ import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import QRCode from "react-native-qrcode-svg";
+import { QrImageTemplate } from "@/components/share/QrImageTemplate";
 
 import { vi } from "@/i18n/vi";
 import type { PaybackQr } from "@/lib/group/paybackQr";
@@ -116,11 +117,19 @@ export function QrPopup({
           ) : (
             <>
               <View testID="qr-popup-code" accessibilityLabel={qr.payload} style={styles.qrBox}>
-                <QRCode
-                  value={qr.payload}
-                  size={200}
-                  quietZone={20}
-                  backgroundColor="white"
+                <QRCode value={qr.payload} size={200} quietZone={20} backgroundColor="white" />
+              </View>
+              <View style={styles.hiddenQr} pointerEvents="none" accessibilityElementsHidden>
+                {/* Exported image: same 600x900 template as pay-confirm, without the temporary footer. */}
+                <QrImageTemplate
+                  temporary={false}
+                  name={qr.holder}
+                  bankBin={qr.bankBin}
+                  bankName={qr.bankName}
+                  account={qr.accountNo}
+                  amount={qr.amount ?? undefined}
+                  message={qr.message}
+                  fallbackPayload={qr.payload}
                   getRef={(c) => {
                     ref.current = c;
                   }}
@@ -185,6 +194,7 @@ const styles = StyleSheet.create({
   segText: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.textMuted },
   segTextActive: { fontFamily: fontFamily.semibold, color: colors.text },
   qrBox: { padding: 14, borderWidth: 1, borderColor: colors.border, borderRadius: 18, backgroundColor: colors.surface },
+  hiddenQr: { position: "absolute", left: -1000, top: -1000, opacity: 0 },
   info: { alignItems: "center", gap: 4 },
   amount: { fontFamily: fontFamily.bold, fontSize: 28, color: colors.text },
   holder: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.text },

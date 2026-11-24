@@ -27,6 +27,16 @@ jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
 jest.mock("@/db/DatabaseProvider", () => ({
   DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
+// The hidden transfer image: no real SVG export in Jest.
+jest.mock("@/components/share/QrImageTemplate", () => {
+  const { View } = require("react-native");
+  return {
+    QrImageTemplate: ({ getRef }: { getRef?: (r: unknown) => void }) => {
+      getRef?.({ toDataURL: (cb: (d: string) => void) => cb("BASE64PNG") });
+      return <View testID="qr-image-template" />;
+    },
+  };
+});
 jest.mock("@/db/client", () => {
   const db = new Proxy({}, { get: (_t, key) => (global.__GSUM_TEST_DB__ as never)[key] });
   return { db };
