@@ -1,5 +1,5 @@
 import type { PayApp } from "./apps";
-import { buildAutofillUrl, buildOpenUrl } from "./deeplink";
+import { buildAutofillUrl, buildClipboardText, buildOpenUrl } from "./deeplink";
 import type { PayConfirmModel } from "./params";
 
 export type HandOffDeps = {
@@ -19,25 +19,40 @@ async function attempt(step: () => Promise<void>): Promise<void> {
   }
 }
 
+export type HandOffResult = {
+  opened: boolean;
+  /** autofill: dl.vietqr.io with the transfer prefilled. direct: scheme open, the user scans the saved QR. */
+  mode: "autofill" | "direct";
+};
+
 /** Opens the chosen bank/wallet app. Never throws: `opened:false` tells the caller it failed. */
 export function createHandOff(deps: HandOffDeps) {
-  return async function handOff(app: PayApp, input: HandOffInput): Promise<{ opened: boolean }> {
-    const { model, amount, note } = input;
-    let url = buildOpenUrl(app);
-    if (model.kind === "vietqr" && app.supportsAutofill) {
-      url = buildAutofillUrl(app, { account: model.account, bin: model.bankBin, amount, message: note || undefined });
-    } else if (model.kind === "vietqr") {
-      await attempt(() => deps.setClipboard(`${model.account} ${amount}`));
-      await attempt(deps.saveQrImage);
-    } else {
-      await attempt(deps.saveQrImage);
-    }
+  async function open(url: string, mode: HandOffResult["mode"]): Promise<HandOffResult> {
     try {
       await deps.openUrl(url);
-      return { opened: true };
+      return { opened: true, mode };
     } catch (e) {
       console.warn("could not open bank app", e);
-      return { opened: false };
+      return { opened: false, mode };
     }
+  }
+
+  return async function handOff(app: PayApp, input: HandOffInput): Promise<HandOffResult> {
+    const { model, amount, note } = input;
+    if (app.supportsAutofill && model.kind === "vietqr") {
+      const url = buildAutofillUrl(app, {
+        account: model.account,
+        bin: model.bankBin,
+        amount,
+        message: note,
+        name: model.name,
+      });
+      if (url) return open(url, "autofill");
+    }
+    if (model.kind === "vietqr") {
+      await attempt(() => deps.setClipboard(buildClipboardText({ account: model.account, amount, message: note })));
+    }
+    await attempt(deps.saveQrImage);
+    return open(buildOpenUrl(app), "direct");
   };
 }

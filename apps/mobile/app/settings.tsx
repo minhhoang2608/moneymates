@@ -108,7 +108,6 @@ export default function SettingsScreen() {
             void paymentAppPrefs.setAppOrder(keys);
           }}
         />
-        <Text style={styles.note}>{vi.settings.appsNote}</Text>
 
         <Text testID="settings-general-heading" style={[styles.section, styles.sectionGap]}>
           {vi.settings.general}
@@ -184,7 +183,6 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: layout.screenPadding, gap: 10, paddingBottom: 32 },
   section: { fontFamily: fontFamily.semibold, fontSize: fontSize.secondary, color: colors.textMuted },
   sectionGap: { marginTop: 8 },
-  note: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
   card: { backgroundColor: colors.surface, borderRadius: radii.card, paddingHorizontal: 16 },
   divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   row: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },

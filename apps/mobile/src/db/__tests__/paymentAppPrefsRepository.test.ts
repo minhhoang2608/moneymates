@@ -10,21 +10,31 @@ describe("paymentAppPrefsRepository", () => {
   it("AC1: saved order survives close and reopen", async () => {
     const file = tmpDbFile();
     const a = openTestDb(file);
-    await repoFor(a.db).setAppOrder(["tpbank", "tcb", "momo", "vcb", "mb"]);
-    await repoFor(a.db).setAppOrder(["momo", "tpbank", "tcb", "vcb", "mb"]);
+    await repoFor(a.db).setAppOrder(["tpbank", "tcb", "momo", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
+    await repoFor(a.db).setAppOrder(["momo", "tpbank", "tcb", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
     a.sqlite.close();
     const b = openTestDb(file);
-    expect(await repoFor(b.db).getAppOrder()).toEqual(["momo", "tpbank", "tcb", "vcb", "mb"]);
-    expect(await b.db.select().from(paymentAppPrefs)).toHaveLength(5);
+    expect(await repoFor(b.db).getAppOrder()).toEqual([
+      "momo",
+      "tpbank",
+      "tcb",
+      "vcb",
+      "mb",
+      "icb",
+      "bidv",
+      "acb",
+      "ocb",
+    ]);
+    expect(await b.db.select().from(paymentAppPrefs)).toHaveLength(9);
     b.sqlite.close();
   });
 
   it("defaults to catalogue order, appends missing apps, ignores unknown keys", async () => {
     const { db } = openTestDb();
     const repo = repoFor(db);
-    expect(await repo.getAppOrder()).toEqual(["tpbank", "tcb", "vcb", "mb", "momo"]);
+    expect(await repo.getAppOrder()).toEqual(["tpbank", "tcb", "vcb", "mb", "momo", "icb", "bidv", "acb", "ocb"]);
     await repo.setAppOrder(["momo", "unknown", "mb"]);
-    expect(await repo.getAppOrder()).toEqual(["momo", "mb", "tpbank", "tcb", "vcb"]);
+    expect(await repo.getAppOrder()).toEqual(["momo", "mb", "tpbank", "tcb", "vcb", "icb", "bidv", "acb", "ocb"]);
   });
 
   it("bumps updated_at and revives soft-deleted rows", async () => {
@@ -33,7 +43,7 @@ describe("paymentAppPrefsRepository", () => {
     await repo.setAppOrder(["mb", "momo"]);
     const first = (await db.select().from(paymentAppPrefs)).find((r) => r.app_key === "mb")!;
     await tick();
-    await repo.setAppOrder(["momo", "mb"]);
+    await repo.setAppOrder(["momo", "mb", "icb", "bidv", "acb", "ocb"]);
     const second = (await db.select().from(paymentAppPrefs)).find((r) => r.app_key === "mb")!;
     expect(second.id).toBe(first.id);
     expect(second.sort_order).toBe(1);

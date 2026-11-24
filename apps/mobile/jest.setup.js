@@ -72,9 +72,9 @@ jest.mock("react-native-qrcode-svg", () => {
   const { View } = require("react-native");
   return {
     __esModule: true,
-    default: ({ getRef }) => {
+    default: ({ getRef, value }) => {
       if (getRef) getRef({ toDataURL: (cb) => cb("BASE64PNG") });
-      return React.createElement(View, { testID: "qr-svg" });
+      return React.createElement(View, { testID: "qr-svg", value });
     },
   };
 });

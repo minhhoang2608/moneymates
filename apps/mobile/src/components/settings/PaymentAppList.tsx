@@ -68,7 +68,7 @@ function Row({
       </View>
       <Text style={styles.name}>{app.name}</Text>
       <Text style={[styles.mode, app.supportsAutofill && styles.modeAuto]}>
-        {app.supportsAutofill ? vi.settings.autofill : vi.settings.copyOpen}
+        {app.supportsAutofill ? vi.settings.autofill : vi.settings.scanQr}
       </Text>
       <Pressable
         testID={`settings-app-up-${id}`}

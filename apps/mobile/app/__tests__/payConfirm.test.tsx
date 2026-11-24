@@ -13,6 +13,7 @@ import {
 } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
+import { hasValidCrc, parseVietQr } from "@/lib/vietqr";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
 
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
@@ -157,6 +158,49 @@ describe("pay-confirm screen", () => {
     await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy());
     const ids = screen.getAllByTestId(/^app-/).map((n) => n.props.testID);
     expect(ids[0]).toBe("app-momo");
-    expect(ids).toEqual(["app-momo", "app-tpbank", "app-tcb", "app-vcb", "app-mb"]);
+    expect(ids).toEqual([
+      "app-momo",
+      "app-tpbank",
+      "app-tcb",
+      "app-vcb",
+      "app-mb",
+      "app-icb",
+      "app-bidv",
+      "app-acb",
+      "app-ocb",
+    ]);
+    expect(screen.getAllByText("Tự điền")).toHaveLength(5);
+    expect(screen.getAllByText("Quét ảnh QR")).toHaveLength(4);
+  });
+
+  it("the saved QR is regenerated from the confirmed amount and note", async () => {
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.changeText(await screen.findByTestId("pay-amount"), "80000");
+    await fireEvent.changeText(screen.getByTestId("pay-note"), "Ca phe");
+    const value = screen.getByTestId("qr-svg", { includeHiddenElements: true }).props.value as string;
+    expect(value).not.toBe(qr.dynamic);
+    expect(hasValidCrc(value)).toBe(true);
+    expect(parseVietQr(value)).toMatchObject({ kind: "vietqr", amount: 80000, message: "Ca phe" });
+  });
+
+  it("the saved QR carries the confirmed amount when the scanned QR had none", async () => {
+    await renderRouter("./app", { initialUrl: urlFor(qr.static) });
+    await fireEvent.changeText(await screen.findByTestId("pay-amount"), "30000");
+    const value = screen.getByTestId("qr-svg", { includeHiddenElements: true }).props.value as string;
+    expect(parseVietQr(value)).toMatchObject({ kind: "vietqr", amount: 30000 });
+  });
+
+  it("share option shows on Android only", async () => {
+    const rn = jest.requireActual("react-native");
+    const prev = rn.Platform.OS;
+    rn.Platform.OS = "android";
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    expect(await screen.findByTestId("pay-share-qr")).toBeTruthy();
+    rn.Platform.OS = "ios";
+    screen.unmount();
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await screen.findByTestId("pay-submit");
+    expect(screen.queryByTestId("pay-share-qr")).toBeNull();
+    rn.Platform.OS = prev;
   });
 });

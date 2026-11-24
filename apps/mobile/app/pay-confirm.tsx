@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { TargetLine } from "@/components/target/TargetLine";
 import { useTargetDefault } from "@/components/target/useTargetDefault";
@@ -14,8 +14,13 @@ import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
 import { PAY_APPS, defaultAppId, orderAppsBySaved } from "@/lib/payConfirm/apps";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
+import { buildClipboardText } from "@/lib/payConfirm/deeplink";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
 import { parsePayConfirmParams } from "@/lib/payConfirm/params";
+import { buildConfirmedQrPayload } from "@/lib/payConfirm/qrPayload";
+import { shareConfirmedQr } from "@/lib/payConfirm/shareQr";
+import { shareQr } from "@/lib/share/qrImage";
+import * as Clipboard from "expo-clipboard";
 import { formatVnd, parseAmount } from "@/lib/money";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
@@ -104,6 +109,32 @@ export default function PayConfirmScreen() {
     return chosen && !first.includes(chosen) ? [...first.slice(0, 2), chosen] : first;
   }, [cats, categoryId]);
 
+  const confirmedAmount = parsed.ok ? parsed.vnd : undefined;
+  const qrPayload = buildConfirmedQrPayload(model, confirmedAmount, note);
+
+  const getQrBase64 = () =>
+    new Promise<string | null>((resolve) => {
+      if (!qrRef.current) return resolve(null);
+      qrRef.current.toDataURL((data) => resolve(data || null));
+    });
+
+  const share = async () => {
+    if (model.kind !== "vietqr") return;
+    const text = buildClipboardText({
+      account: model.account,
+      amount: parsed.ok ? parsed.vnd : undefined,
+      message: note,
+    });
+    try {
+      await shareConfirmedQr(
+        { getQrBase64, setClipboard: (t) => Clipboard.setStringAsync(t).then(() => {}), share: shareQr },
+        text,
+      );
+    } catch (e) {
+      console.warn("share failed", e);
+    }
+  };
+
   const submit = async () => {
     if (busy.current || !parsed.ok || !categoryId) return;
     busy.current = true;
@@ -128,14 +159,9 @@ export default function PayConfirmScreen() {
     try {
       await appSettings.set(RECENT_KEY, [selected.id, ...recent.filter((id) => id !== selected.id)].slice(0, 10));
       usePendingHandOff.getState().set({ txId, amount: parsed.vnd, label: note });
-      const handOff = makeHandOff(
-        () =>
-          new Promise<string | null>((resolve) => {
-            if (!qrRef.current) return resolve(null);
-            qrRef.current.toDataURL((data) => resolve(data || null));
-          }),
-      );
-      const { opened } = await handOff(selected, { model, amount: parsed.vnd, note });
+      const handOff = makeHandOff(getQrBase64);
+      const { opened, mode } = await handOff(selected, { model, amount: parsed.vnd, note });
+      if (mode === "direct") usePendingHandOff.getState().showQrHint();
       if (!opened) usePendingHandOff.getState().reveal();
     } catch {
       usePendingHandOff.getState().reveal();
@@ -256,9 +282,7 @@ export default function PayConfirmScreen() {
                   <Text style={styles.appBadgeText}>{a.short}</Text>
                 </View>
                 <Text style={[styles.appName, on && styles.appNameOn]}>{a.name}</Text>
-                <Text style={styles.appMode}>
-                  {a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.copyOpen}
-                </Text>
+                <Text style={styles.appMode}>{a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.scanQr}</Text>
                 {on ? <Text style={styles.check}>✓</Text> : null}
               </Pressable>
             );
@@ -286,11 +310,16 @@ export default function PayConfirmScreen() {
               : vi.payConfirm.submitNoAmount(selected.name)}
           </Text>
         </Pressable>
+        {Platform.OS === "android" && model.kind === "vietqr" ? (
+          <Pressable testID="pay-share-qr" accessibilityRole="button" onPress={share} style={styles.shareBtn}>
+            <Text style={styles.shareText}>{vi.payConfirm.shareQr}</Text>
+          </Pressable>
+        ) : null}
         <Text style={styles.footNote}>{vi.payConfirm.saveNote}</Text>
       </View>
 
       <View style={styles.hiddenQr} pointerEvents="none" accessibilityElementsHidden>
-        <QRCode value={model.payload || " "} size={300} getRef={(r) => (qrRef.current = r)} />
+        <QRCode value={qrPayload || " "} size={300} getRef={(r) => (qrRef.current = r)} />
       </View>
 
       <CategoryPicker
@@ -390,6 +419,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   submitOff: { opacity: 0.4 },
+  shareBtn: { alignItems: "center", paddingVertical: 10 },
+  shareText: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.primaryDark },
   submitText: { fontFamily: fontFamily.semibold, fontSize: 16, color: colors.onPrimary },
   footNote: {
     fontFamily: fontFamily.regular,

@@ -48,15 +48,28 @@ describe("ReturnBanner", () => {
   it("is hidden until the app returns from background, then Xóa soft-deletes", async () => {
     const { repo, tx } = await setup();
     await act(async () => usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" }));
+    await act(async () => usePendingHandOff.getState().showQrHint());
     expect(screen.queryByTestId("handoff-return-banner")).toBeNull();
     await act(async () => handler("background"));
     await act(async () => handler("active"));
     expect(await screen.findByText("Đã lưu 55.000đ · PHO 24")).toBeTruthy();
+    expect(screen.getByTestId("handoff-qr-hint").props.children).toBe(
+      "Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.",
+    );
     expect(await repo.list()).toHaveLength(1);
     await act(async () => fireEvent.press(screen.getByTestId("handoff-delete")));
     await waitFor(() => expect(screen.queryByTestId("handoff-return-banner")).toBeNull());
     expect(await repo.list()).toHaveLength(0);
     expect(usePendingHandOff.getState().deletedVersion).toBe(1);
+  });
+
+  it("autofill hand-off: no QR hint in the banner", async () => {
+    const { tx } = await setup();
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
+      usePendingHandOff.getState().reveal();
+    });
+    expect(screen.queryByTestId("handoff-qr-hint")).toBeNull();
   });
 
   it("shows right away when revealed (open failed)", async () => {
