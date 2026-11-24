@@ -7,11 +7,21 @@ from .client import BanksUnavailable
 from .service import get_apps
 
 
+class _Respond(Exception):
+    def __init__(self, response):
+        self.response = response
+
+
 class BankAppsView(APIView):
     permission_classes = [AppSecretPermission]
 
     def permission_denied(self, request, message=None, code=None):
-        return Response({"error": "unauthorized"}, status=401)
+        raise _Respond(Response({"error": "unauthorized"}, status=401))
+
+    def handle_exception(self, exc):
+        if isinstance(exc, _Respond):
+            return exc.response
+        return super().handle_exception(exc)
 
     def get(self, request):
         device_id = request.headers.get("X-Device-Id", "").strip()

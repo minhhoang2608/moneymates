@@ -48,6 +48,15 @@ DATABASES = {
     )
 }
 
+DB_CONNECT_TIMEOUT_S = int(os.environ.get("DB_CONNECT_TIMEOUT_S", "5"))
+DB_CACHE_MAX_ENTRIES = int(os.environ.get("DB_CACHE_MAX_ENTRIES", "1000"))
+
+if DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
+    # Fail fast when the database is unreachable; a connect_timeout in the URL wins.
+    DATABASES["default"].setdefault("OPTIONS", {}).setdefault(
+        "connect_timeout", DB_CONNECT_TIMEOUT_S
+    )
+
 
 def _caches():
     backend = os.environ.get("CACHE_BACKEND", "").strip().lower()
@@ -57,6 +66,7 @@ def _caches():
             "default": {
                 "BACKEND": "django.core.cache.backends.db.DatabaseCache",
                 "LOCATION": "django_cache",
+                "OPTIONS": {"MAX_ENTRIES": DB_CACHE_MAX_ENTRIES, "CULL_FREQUENCY": 3},
             }
         }
     return {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
