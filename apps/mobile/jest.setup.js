@@ -57,6 +57,11 @@ jest.mock("expo-sharing", () => ({
 }));
 jest.mock("expo-media-library/legacy", () => ({
   requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  getPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  createAssetAsync: jest.fn(async () => ({ id: "asset-1" })),
+  getAlbumAsync: jest.fn(async () => null),
+  createAlbumAsync: jest.fn(async () => ({})),
+  addAssetsToAlbumAsync: jest.fn(async () => true),
   saveToLibraryAsync: jest.fn(async () => undefined),
 }));
 jest.mock("expo-speech-recognition", () => ({

@@ -95,3 +95,13 @@ describe("preferencesRepository app lock", () => {
     });
   });
 });
+
+describe("preferencesRepository QR auto-delete", () => {
+  it("defaults to true and round-trips", async () => {
+    const { db } = openTestDb();
+    const repo = createPreferencesRepository(db as unknown as AnyDb);
+    expect(await repo.getQrAutoDelete()).toBe(true);
+    await repo.setQrAutoDelete(false);
+    expect(await repo.getQrAutoDelete()).toBe(false);
+  });
+});

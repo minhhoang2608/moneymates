@@ -19,6 +19,14 @@ export function createPreferencesRepository(db: AnyDb) {
     async setAlertOverLastMonth(on: boolean): Promise<void> {
       await settings.set(PREF_KEYS.alertOverLastMonth, on);
     },
+    /** Whether MoneyMates deletes the temporary QR image after use. Defaults to on. */
+    async getQrAutoDelete(): Promise<boolean> {
+      const v = await settings.get<boolean>(PREF_KEYS.qrAutoDelete);
+      return typeof v === "boolean" ? v : true;
+    },
+    async setQrAutoDelete(on: boolean): Promise<void> {
+      await settings.set(PREF_KEYS.qrAutoDelete, on);
+    },
     async getAppLockEnabled(): Promise<boolean> {
       const v = await settings.get<boolean>(PREF_KEYS.appLockEnabled);
       return v === true;

@@ -30,7 +30,10 @@ function setup(over: Partial<HandOffDeps> = {}) {
     shareToPackage: jest.fn(async (p) => void calls.push(`share:${p}`)),
     openUrl: jest.fn(async (u) => void calls.push(`open:${u}`)),
     setClipboard: jest.fn(async (t) => void calls.push(`clip:${t}`)),
-    saveQrImage: jest.fn(async () => void calls.push("image")),
+    saveQrImage: jest.fn(async () => {
+      calls.push("image");
+      return { assetId: "a1", access: "read-write" as const };
+    }),
     ...over,
   };
   return { calls, deps, handOff: createHandOff(deps) };
@@ -44,7 +47,7 @@ describe("handOff", () => {
 
   it("android direct-share: bare account → album image → share to the package, no open", async () => {
     const { calls, handOff } = setup();
-    expect(await handOff(tcb, { model: vietqr, amount: 60000, note: "PHO" })).toEqual({
+    expect(await handOff(tcb, { model: vietqr, amount: 60000, note: "PHO" })).toMatchObject({
       opened: true,
       mode: "direct",
       decision: "direct-share",
@@ -59,7 +62,7 @@ describe("handOff", () => {
         throw new Error("no image/png handler");
       },
     });
-    expect(await handOff(tcb, { model: vietqr, amount: 1, note: "" })).toEqual({
+    expect(await handOff(tcb, { model: vietqr, amount: 1, note: "" })).toMatchObject({
       opened: true,
       mode: "direct",
       decision: "direct-share",
@@ -71,7 +74,7 @@ describe("handOff", () => {
   it("remembered share_failed → open-only through the intent", async () => {
     const { calls, deps, handOff } = setup();
     const res = await handOff(tcb, { model: vietqr, amount: 1, note: "", knownResult: "share_failed" });
-    expect(res).toEqual({ opened: true, mode: "direct", decision: "open-only" });
+    expect(res).toMatchObject({ opened: true, mode: "direct", decision: "open-only" });
     expect(deps.shareToPackage).not.toHaveBeenCalled();
     expect(calls).toEqual(["clip:0123456789", "image", `intent:${TCB_INTENT}`]);
   });
@@ -79,7 +82,7 @@ describe("handOff", () => {
   it("ios non-autofill: open-only with the scheme", async () => {
     const { calls, deps, handOff } = setup({ platform: "ios" });
     const res = await handOff(tcb, { model: vietqr, amount: 1, note: "" });
-    expect(res).toEqual({ opened: true, mode: "direct", decision: "open-only" });
+    expect(res).toMatchObject({ opened: true, mode: "direct", decision: "open-only" });
     expect(calls).toEqual(["clip:0123456789", "image", "open:tcb://"]);
     expect(deps.shareToPackage).not.toHaveBeenCalled();
   });
@@ -87,7 +90,8 @@ describe("handOff", () => {
   it("autofill app: opens dl.vietqr.io with the confirmed values, no clipboard or image", async () => {
     const { calls, deps, handOff } = setup();
     const res = await handOff(mb, { model: vietqr, amount: 70000, note: "Cafe" });
-    expect(res).toEqual({ opened: true, mode: "autofill", decision: "autofill-link" });
+    expect(res).toEqual({ opened: true, mode: "autofill", decision: "autofill-link", qrStorage: "none" });
+    expect(res.qrAssetId).toBeUndefined();
     expect(calls).toEqual([
       "open:https://dl.vietqr.io/pay?app=mb&ba=0123456789%40tpb&am=70000&tn=Cafe&url=https%3A%2F%2Fwww.vietqr.io",
     ]);
@@ -168,5 +172,21 @@ describe("handOff", () => {
       },
     });
     expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toMatchObject({ opened: false });
+  });
+
+  it("known direct share on Android uses the private cache: no album save, no asset id", async () => {
+    const { calls, deps, handOff } = setup();
+    const res = await handOff(tpb, { model: vietqr, amount: 1, note: "", knownResult: "share_ok" });
+    expect(res).toMatchObject({ qrStorage: "cache", share: "shared" });
+    expect(res.qrAssetId).toBeUndefined();
+    expect(deps.saveQrImage).not.toHaveBeenCalled();
+    expect(calls).toContain("share:com.tpb.mb.gprsandroid");
+  });
+
+  it("unknown share result saves to the album and returns the asset id", async () => {
+    const { deps, handOff } = setup();
+    const res = await handOff(tcb, { model: vietqr, amount: 1, note: "" });
+    expect(deps.saveQrImage).toHaveBeenCalledTimes(1);
+    expect(res).toMatchObject({ qrStorage: "album", qrAssetId: "a1", photoAccess: "read-write" });
   });
 });
