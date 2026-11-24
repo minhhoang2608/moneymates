@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "core",
     "ai",
+    "banks",
 ]
 
 MIDDLEWARE = [
@@ -84,3 +85,7 @@ APP_SHARED_SECRET = os.environ.get("APP_SHARED_SECRET", "")
 OPENROUTER_TIMEOUT_S = float(os.environ.get("OPENROUTER_TIMEOUT_S", "10"))
 AI_LIMIT_PER_MINUTE = int(os.environ.get("AI_LIMIT_PER_MINUTE", "20"))
 AI_LIMIT_PER_DAY = int(os.environ.get("AI_LIMIT_PER_DAY", "50"))
+
+VIETQR_API_BASE = os.environ.get("VIETQR_API_BASE", "https://api.vietqr.io")
+BANKS_CACHE_TTL_S = int(os.environ.get("BANKS_CACHE_TTL_S", "86400"))
+BANKS_TIMEOUT_S = float(os.environ.get("BANKS_TIMEOUT_S", "10"))
