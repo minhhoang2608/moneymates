@@ -1,4 +1,4 @@
-import { asc, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 
 import { FEATURED_APP_IDS, normalizeAppId } from "../../lib/payConfirm/apps";
 import { nowUtc } from "../columns";
@@ -41,6 +41,82 @@ export function createPaymentAppPrefsRepository(db: AnyDb) {
             .run();
         });
       });
+    },
+
+    /** Enabled apps ("Đang bật") in saved order. Empty on a fresh DB. Not filtered against the catalogue. */
+    async getEnabledApps(): Promise<string[]> {
+      const rows = await db
+        .select()
+        .from(paymentAppPrefs)
+        .where(and(isNull(paymentAppPrefs.deleted_at), eq(paymentAppPrefs.enabled, true)))
+        .orderBy(asc(paymentAppPrefs.sort_order));
+      return rows.map((r) => normalizeAppId(r.app_key)).filter((k, i, arr) => arr.indexOf(k) === i);
+    },
+
+    /** Enables or disables one app. Enabling appends it to the end of the enabled list. The row is kept. */
+    async setEnabled(key: string, enabled: boolean): Promise<void> {
+      const app_key = normalizeAppId(key);
+      const now = nowUtc();
+      (db as unknown as SyncTxDb).transaction((tx) => {
+        const live = tx.select().from(paymentAppPrefs).where(isNull(paymentAppPrefs.deleted_at)).all() as {
+          app_key: string;
+          sort_order: number;
+          enabled: boolean;
+        }[];
+        const existing = live.find((r) => r.app_key === app_key);
+        const maxOrder = live.filter((r) => r.enabled).reduce((m, r) => Math.max(m, r.sort_order), -1);
+        const sort_order = enabled
+          ? existing?.enabled
+            ? existing.sort_order
+            : maxOrder + 1
+          : (existing?.sort_order ?? maxOrder + 1);
+        tx.insert(paymentAppPrefs)
+          .values({ id: newId(), created_at: now, updated_at: now, app_key, sort_order, enabled })
+          .onConflictDoUpdate({
+            target: paymentAppPrefs.app_key,
+            targetWhere: isNull(paymentAppPrefs.deleted_at),
+            set: { sort_order, enabled, updated_at: now, deleted_at: null },
+          })
+          .run();
+      });
+    },
+
+    /** Makes the enabled list exactly `keys` (in order). Other live rows are disabled and placed after. */
+    async setEnabledOrder(keys: string[]): Promise<void> {
+      const unique = keys.map(normalizeAppId).filter((k, i, arr) => arr.indexOf(k) === i);
+      const now = nowUtc();
+      (db as unknown as SyncTxDb).transaction((tx) => {
+        const others = (
+          tx.select().from(paymentAppPrefs).where(isNull(paymentAppPrefs.deleted_at)).all() as {
+            app_key: string;
+            sort_order: number;
+          }[]
+        )
+          .filter((r) => !unique.includes(normalizeAppId(r.app_key)))
+          .sort((a, b) => a.sort_order - b.sort_order);
+        unique.forEach((app_key, sort_order) => {
+          tx.insert(paymentAppPrefs)
+            .values({ id: newId(), created_at: now, updated_at: now, app_key, sort_order, enabled: true })
+            .onConflictDoUpdate({
+              target: paymentAppPrefs.app_key,
+              targetWhere: isNull(paymentAppPrefs.deleted_at),
+              set: { sort_order, enabled: true, updated_at: now, deleted_at: null },
+            })
+            .run();
+        });
+        others.forEach((r, i) => {
+          tx.update(paymentAppPrefs)
+            .set({ enabled: false, sort_order: unique.length + i, updated_at: now })
+            .where(and(eq(paymentAppPrefs.app_key, r.app_key), isNull(paymentAppPrefs.deleted_at)))
+            .run();
+        });
+      });
+    },
+
+    /** True once any live preference row exists (the user has chosen). */
+    async hasChosen(): Promise<boolean> {
+      const rows = await db.select().from(paymentAppPrefs).where(isNull(paymentAppPrefs.deleted_at)).limit(1);
+      return rows.length > 0;
     },
   };
 }

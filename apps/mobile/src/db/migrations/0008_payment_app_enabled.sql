@@ -1,0 +1,1 @@
+ALTER TABLE `payment_app_prefs` ADD `enabled` integer DEFAULT true NOT NULL;

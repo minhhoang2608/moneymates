@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import Database from "better-sqlite3";
@@ -116,5 +118,38 @@ describe("local migrations", () => {
     );
     for (const r of seed) ins.run(r.id, now, now, r.name, r.kind);
     expect(count()).toBe(4);
+  });
+
+  it("AC4: payment_app_prefs enabled migration is additive and idempotent", () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "mig-"));
+    fs.cpSync(folder, tmp, { recursive: true });
+    const journalPath = path.join(tmp, "meta", "_journal.json");
+    const journal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+    const full = { ...journal };
+    fs.writeFileSync(journalPath, JSON.stringify({ ...journal, entries: journal.entries.slice(0, 8) }));
+
+    const sqlite = new Database(":memory:");
+    const db = drizzle(sqlite);
+    migrate(db, { migrationsFolder: tmp });
+    const before = (sqlite.pragma("table_info(payment_app_prefs)") as { name: string }[]).map((c) => c.name);
+    expect(before).not.toContain("enabled");
+    const ts = "2026-01-01T00:00:00.000Z";
+    sqlite
+      .prepare("insert into payment_app_prefs (id, created_at, updated_at, app_key, sort_order) values (?,?,?,?,?)")
+      .run("a", ts, ts, "momo", 0);
+    sqlite
+      .prepare("insert into payment_app_prefs (id, created_at, updated_at, app_key, sort_order) values (?,?,?,?,?)")
+      .run("b", ts, ts, "mb", 1);
+
+    migrate(db, { migrationsFolder: folder });
+    migrate(db, { migrationsFolder: folder });
+    expect(full.entries.length).toBeGreaterThan(8);
+    const after = (sqlite.pragma("table_info(payment_app_prefs)") as { name: string }[]).map((c) => c.name);
+    expect(after).toContain("enabled");
+    const rows = sqlite.prepare("select app_key, enabled from payment_app_prefs order by sort_order").all();
+    expect(rows).toEqual([
+      { app_key: "momo", enabled: 1 },
+      { app_key: "mb", enabled: 1 },
+    ]);
   });
 });
