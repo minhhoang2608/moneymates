@@ -6,7 +6,8 @@ import {
   Inter_800ExtraBold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
+import { useEffect } from "react";
 
 import { Toast } from "@/components/Toast";
 import { AppLockGate } from "@/components/appLock/AppLockGate";
@@ -14,6 +15,7 @@ import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
+import { setCurrentPath } from "@/lib/receipt/currentPath";
 import { stackScreenOptions, useReduceMotion } from "@/lib/motion";
 
 export default function RootLayout() {
@@ -25,6 +27,10 @@ export default function RootLayout() {
     Inter_800ExtraBold,
   });
   const reduceMotion = useReduceMotion();
+  const pathname = usePathname();
+  useEffect(() => {
+    setCurrentPath(pathname);
+  }, [pathname]);
   if (!loaded && !error) return null;
 
   return (

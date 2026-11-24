@@ -21,6 +21,9 @@ export function firstImageUri(payload: SharedPayload): string | null {
   return file?.path ?? null;
 }
 
+/** Cold-start read and warm-start event of the same share arrive within this window. */
+export const DUPLICATE_WINDOW_MS = 2000;
+
 let e2eSource: ShareSource | null = null;
 
 function defaultSource(): ShareSource {
@@ -36,18 +39,25 @@ function defaultSource(): ShareSource {
  * Subscribe to images shared into the app from another app (bank, wallet, gallery).
  * Delivers the uri to `cb` only. It never navigates: this module must not import expo-router.
  */
-export function subscribeIncomingImage(cb: (uri: string) => void, deps: { source?: ShareSource } = {}): () => void {
+export function subscribeIncomingImage(
+  cb: (uri: string) => void,
+  deps: { source?: ShareSource; now?: () => number } = {},
+): () => void {
   const source = deps.source ?? defaultSource();
+  const now = deps.now ?? Date.now;
   let active = true;
-  let last: string | null = null;
+  let last: { uri: string; at: number } | null = null;
 
   const deliver = (payload: SharedPayload) => {
     if (!active) return;
     const uri = firstImageUri(payload);
     if (!uri) return;
     source.reset();
-    if (uri === last) return;
-    last = uri;
+    // Dedupe only the cold/warm double delivery of one share. Re-sharing the same file later
+    // (Android and iOS often reuse the same cache path) must deliver again.
+    const at = now();
+    if (last && last.uri === uri && at - last.at < DUPLICATE_WINDOW_MS) return;
+    last = { uri, at };
     cb(uri);
   };
 

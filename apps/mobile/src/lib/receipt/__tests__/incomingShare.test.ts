@@ -1,6 +1,18 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { emitE2eSharedImage, getE2eShareSource } from "@/e2e/incomingShare";
 
-import { firstImageUri, subscribeIncomingImage, type ShareSource, type SharedPayload } from "../incomingShare";
+import {
+  DUPLICATE_WINDOW_MS,
+  firstImageUri,
+  subscribeIncomingImage,
+  type ShareSource,
+  type SharedPayload,
+} from "../incomingShare";
+
+const mockRouter = { push: jest.fn(), replace: jest.fn(), navigate: jest.fn(), back: jest.fn() };
+jest.mock("expo-router", () => ({ router: mockRouter, useRouter: () => mockRouter, usePathname: () => "/" }));
 
 const flush = () => new Promise((r) => setImmediate(r));
 const img = (path: string): SharedPayload => ({ files: [{ path, mimeType: "image/png" }] });
@@ -74,16 +86,32 @@ describe("subscribeIncomingImage", () => {
     expect(cb).not.toHaveBeenCalled();
   });
 
+  it("delivers the same uri again after the duplicate window", async () => {
+    const { source, emit } = fakeSource();
+    const cb = jest.fn();
+    let t = 1000;
+    subscribeIncomingImage(cb, { source, now: () => t });
+    await flush();
+    emit(img("file:///a.png"));
+    t += DUPLICATE_WINDOW_MS + 1;
+    emit(img("file:///a.png"));
+    expect(cb).toHaveBeenCalledTimes(2);
+  });
+
   it("never navigates", async () => {
-    const router = { push: jest.fn(), replace: jest.fn(), navigate: jest.fn() };
-    jest.doMock("expo-router", () => ({ router, useRouter: () => router }));
     const { source, emit } = fakeSource(img("file:///a.png"));
     subscribeIncomingImage(jest.fn(), { source });
     emit(img("file:///b.png"));
     await flush();
-    expect(router.push).not.toHaveBeenCalled();
-    expect(router.replace).not.toHaveBeenCalled();
-    expect(router.navigate).not.toHaveBeenCalled();
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+    expect(mockRouter.navigate).not.toHaveBeenCalled();
+  });
+
+  it("neither delivery module imports expo-router", () => {
+    for (const f of ["../incomingShare.ts", "../nativeShareSource.ts", "../currentPath.ts"]) {
+      expect(readFileSync(resolve(__dirname, f), "utf8")).not.toMatch(/(from|require\()\s*["']expo-router/);
+    }
   });
 
   it("the E2E fake emits the fixture uri", () => {
