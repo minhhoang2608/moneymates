@@ -45,7 +45,7 @@ describe("buildTn", () => {
 describe("buildOpenUrl", () => {
   it.each([
     ["tcb", "tcb://"],
-    ["tpbank", "hydro://"],
+    ["tpb", "hydro://"],
     ["vcb", "vietcombankmobile://"],
     ["mb", "mbbank://"],
     ["icb", "vietinbankipay://"],
@@ -53,8 +53,8 @@ describe("buildOpenUrl", () => {
   ])("%s opens %s", (id, url) => {
     expect(buildOpenUrl(app(id))).toBe(url);
   });
-  it("non-autofill apps never go through a browser", () => {
-    for (const a of PAY_APPS.filter((x) => !x.supportsAutofill)) {
+  it("non-autofill apps with a known scheme never go through a browser", () => {
+    for (const a of PAY_APPS.filter((x) => !x.supportsAutofill && x.scheme)) {
       expect(buildOpenUrl(a)).not.toContain("http");
     }
   });

@@ -1,6 +1,14 @@
 import { readFileSync } from "fs";
 import { join } from "path";
-import { PAY_APPS, defaultAppId, orderAppsBySaved } from "../apps";
+import {
+  FEATURED_APP_IDS,
+  PAY_APPS,
+  defaultAppId,
+  filterApps,
+  normalizeAppId,
+  orderAppsBySaved,
+  orderPickerApps,
+} from "../apps";
 
 describe("orderAppsBySaved", () => {
   it("keeps catalogue order without a saved order", () => {
@@ -16,10 +24,10 @@ describe("orderAppsBySaved", () => {
 
 describe("defaultAppId", () => {
   it("prefers the most recent, then the scanned bank, then an autofill app", () => {
-    expect(defaultAppId(orderAppsBySaved(PAY_APPS, ["momo"]), ["mb"], "970423")).toBe("mb");
-    expect(defaultAppId(orderAppsBySaved(PAY_APPS, []), [], "970436")).toBe("vcb");
-    expect(defaultAppId(orderAppsBySaved(PAY_APPS, []), [])).toBe("mb");
-    expect(defaultAppId(orderAppsBySaved(PAY_APPS, ["momo"]), [])).toBe("mb");
+    expect(defaultAppId(orderAppsBySaved(PAY_APPS, ["momo", ...FEATURED_APP_IDS]), ["mb"], "970423")).toBe("mb");
+    expect(defaultAppId(orderAppsBySaved(PAY_APPS, FEATURED_APP_IDS), [], "970436")).toBe("vcb");
+    expect(defaultAppId(orderAppsBySaved(PAY_APPS, FEATURED_APP_IDS), [])).toBe("mb");
+    expect(defaultAppId(orderAppsBySaved(PAY_APPS, ["momo", ...FEATURED_APP_IDS]), [])).toBe("mb");
   });
 });
 
@@ -27,22 +35,46 @@ describe("catalogue", () => {
   it("autofill flags follow the VietQR registry", () => {
     const auto = PAY_APPS.filter((a) => a.supportsAutofill).map((a) => a.id);
     expect(auto.sort()).toEqual(["acb", "bidv", "icb", "mb", "ocb"]);
-    for (const id of ["tcb", "tpbank", "vcb"]) expect(PAY_APPS.find((a) => a.id === id)!.supportsAutofill).toBe(false);
+    for (const id of ["tcb", "tpb", "vcb"]) expect(PAY_APPS.find((a) => a.id === id)!.supportsAutofill).toBe(false);
   });
   it("maps BINs and defaults to an autofill app for an unknown bank", () => {
-    const ordered = orderAppsBySaved(PAY_APPS, []);
+    const ordered = orderAppsBySaved(PAY_APPS, FEATURED_APP_IDS);
     expect(defaultAppId(ordered, [], "970415")).toBe("icb");
     expect(defaultAppId(ordered, [], "970418")).toBe("bidv");
     expect(defaultAppId(ordered, [], "999999")).toBe("mb");
-    expect(defaultAppId(orderAppsBySaved(PAY_APPS, ["momo"]), [])).toBe("mb");
+    expect(defaultAppId(orderAppsBySaved(PAY_APPS, ["momo", ...FEATURED_APP_IDS]), [])).toBe("mb");
   });
   it("iOS LSApplicationQueriesSchemes match the known app schemes", () => {
     const cfg = JSON.parse(readFileSync(join(__dirname, "../../../../app.json"), "utf8"));
     const schemes: string[] = cfg.expo.ios.infoPlist.LSApplicationQueriesSchemes;
     expect([...schemes].sort()).toEqual(
-      PAY_APPS.map((a) => a.scheme)
-        .filter((s): s is string => !!s)
-        .sort(),
+      [...new Set(PAY_APPS.map((a) => a.scheme).filter((s): s is string => !!s))].sort(),
     );
   });
+});
+
+describe("orderPickerApps", () => {
+  const ids = (o: Parameters<typeof orderPickerApps>[1]) => orderPickerApps(PAY_APPS, o).map((a) => a.id);
+  it("orders preferred, recent, scanned bank, then the rest without duplicates", () => {
+    const out = ids({ preferred: ["tcb"], recent: ["mb"], scannedBin: "970436" });
+    expect(out.slice(0, 3)).toEqual(["tcb", "mb", "vcb"]);
+    expect(out).toHaveLength(PAY_APPS.length);
+    expect(new Set(out).size).toBe(PAY_APPS.length);
+  });
+  it("handles unknown and legacy ids, an already preferred scanned app and no BIN", () => {
+    const out = ids({ preferred: ["ghost", "vcb"], recent: ["tpbank", "vcb"], scannedBin: "970436" });
+    expect(out.slice(0, 2)).toEqual(["vcb", "tpb"]);
+    expect(out).toHaveLength(PAY_APPS.length);
+    expect(ids({ preferred: [], recent: [] })).toHaveLength(PAY_APPS.length);
+  });
+  it("normalises legacy ids", () => expect(normalizeAppId("tpbank")).toBe("tpb"));
+});
+
+describe("filterApps", () => {
+  it("matches name, code and id ignoring case and diacritics", () => {
+    expect(filterApps(PAY_APPS, "tech").map((a) => a.id)).toEqual(["tcb"]);
+    expect(filterApps(PAY_APPS, "VIETINBANK").map((a) => a.id)).toContain("icb");
+    expect(filterApps(PAY_APPS, "zzzz")).toEqual([]);
+  });
+  it("returns everything for a blank query", () => expect(filterApps(PAY_APPS, "  ")).toEqual(PAY_APPS));
 });

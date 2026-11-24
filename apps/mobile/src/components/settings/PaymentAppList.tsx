@@ -94,7 +94,8 @@ function Row({
   );
 }
 
-export function PaymentAppList({ order, onChange }: Props) {
+export function PaymentAppList({ order: rawOrder, onChange }: Props) {
+  const order = rawOrder.filter((id) => PAY_APPS.some((a) => a.id === id));
   function move(from: number, to: number) {
     const next = moveItem(order, from, to);
     if (next.some((k, i) => k !== order[i])) onChange(next);

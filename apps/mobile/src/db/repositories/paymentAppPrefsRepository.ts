@@ -1,6 +1,6 @@
 import { asc, isNull } from "drizzle-orm";
 
-import { PAY_APPS } from "../../lib/payConfirm/apps";
+import { FEATURED_APP_IDS, normalizeAppId } from "../../lib/payConfirm/apps";
 import { nowUtc } from "../columns";
 import { newId } from "../ids";
 import { paymentAppPrefs } from "../schema";
@@ -8,7 +8,7 @@ import type { AnyDb } from "../seed";
 
 type SyncTxDb = { transaction: (fn: (tx: any) => void) => void };
 
-const catalogueIds = () => PAY_APPS.map((a) => a.id);
+const catalogueIds = () => [...FEATURED_APP_IDS];
 
 export function createPaymentAppPrefsRepository(db: AnyDb) {
   return {
@@ -19,7 +19,9 @@ export function createPaymentAppPrefsRepository(db: AnyDb) {
         .from(paymentAppPrefs)
         .where(isNull(paymentAppPrefs.deleted_at))
         .orderBy(asc(paymentAppPrefs.sort_order));
-      const saved = rows.map((r) => r.app_key).filter((k) => catalogue.includes(k));
+      const saved = rows
+        .map((r) => normalizeAppId(r.app_key))
+        .filter((k, i, arr) => catalogue.includes(k) && arr.indexOf(k) === i);
       return [...saved, ...catalogue.filter((k) => !saved.includes(k))];
     },
 
