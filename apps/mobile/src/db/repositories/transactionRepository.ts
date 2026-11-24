@@ -4,7 +4,7 @@ import { TransactionError } from "../../lib/transaction/types";
 import { nowUtc } from "../columns";
 import { newId } from "../ids";
 import type { LastUsed } from "../../lib/target/types";
-import { category, groups, transactions } from "../schema";
+import { category, groups, TRANSACTION_SOURCES, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 
 export type TransactionRow = typeof transactions.$inferSelect;
@@ -22,6 +22,8 @@ export type NewTransaction = {
   occurred_at: string;
   money_source?: string;
   photo_uri?: string | null;
+  /** Receipt image (biên lai) attached to the transaction. */
+  attachment_uri?: string | null;
   source?: TransactionSource;
   qr_data?: string | null;
 };
@@ -42,9 +44,34 @@ export type TransactionFilter = {
 };
 
 const TYPES = ["expense", "income"];
-const SOURCES = ["manual", "qr", "voice", "bill"];
+const SOURCES: readonly string[] = TRANSACTION_SOURCES;
 
 const live = isNull(transactions.deleted_at);
+
+export type TransactionWithReceiptFlag = TransactionRow & { hasReceipt: boolean };
+
+/** A transaction "has a receipt" when it has its own attachment or a live hand-off with a receipt. */
+export function hasReceipt(
+  row: Pick<TransactionRow, "attachment_uri">,
+  handOffReceipt: string | null | undefined,
+): boolean {
+  return row.attachment_uri != null || handOffReceipt != null;
+}
+
+function listConditions(filter: TransactionFilter) {
+  const conds = [live];
+  if (filter.from !== undefined) conds.push(gte(transactions.occurred_at, filter.from));
+  if (filter.to !== undefined) conds.push(lt(transactions.occurred_at, filter.to));
+  if (filter.categoryId !== undefined) conds.push(eq(transactions.category_id, filter.categoryId));
+  if (filter.type !== undefined) conds.push(eq(transactions.type, filter.type));
+  if (filter.moneySource !== undefined) conds.push(eq(transactions.money_source, filter.moneySource));
+  if (filter.personalOnly) conds.push(isNull(transactions.group_id));
+  return conds;
+}
+
+function matchesSearch(note: string, q: string | undefined): boolean {
+  return !q || note.toLocaleLowerCase("vi").includes(q);
+}
 
 function checkAmount(amount: unknown): number {
   if (typeof amount !== "number" || !Number.isSafeInteger(amount) || amount <= 0) {
@@ -117,6 +144,7 @@ export function createTransactionRepository(db: AnyDb) {
         occurred_at,
         money_source: input.money_source?.trim() || "Tiền mặt",
         photo_uri: input.photo_uri ?? null,
+        attachment_uri: input.attachment_uri ?? null,
         source,
         qr_data: input.qr_data ?? null,
       });
@@ -134,6 +162,7 @@ export function createTransactionRepository(db: AnyDb) {
       if (patch.note !== undefined) set.note = patch.note.trim();
       if (patch.money_source !== undefined) set.money_source = patch.money_source.trim() || "Tiền mặt";
       if (patch.photo_uri !== undefined) set.photo_uri = patch.photo_uri;
+      if (patch.attachment_uri !== undefined) set.attachment_uri = patch.attachment_uri;
       if (patch.qr_data !== undefined) set.qr_data = patch.qr_data;
       await db.update(transactions).set(set).where(eq(transactions.id, id));
       return requireLive(id);
@@ -181,21 +210,28 @@ export function createTransactionRepository(db: AnyDb) {
     },
 
     async list(filter: TransactionFilter = {}): Promise<TransactionRow[]> {
-      const conds = [live];
-      if (filter.from !== undefined) conds.push(gte(transactions.occurred_at, filter.from));
-      if (filter.to !== undefined) conds.push(lt(transactions.occurred_at, filter.to));
-      if (filter.categoryId !== undefined) conds.push(eq(transactions.category_id, filter.categoryId));
-      if (filter.type !== undefined) conds.push(eq(transactions.type, filter.type));
-      if (filter.moneySource !== undefined) conds.push(eq(transactions.money_source, filter.moneySource));
-      if (filter.personalOnly) conds.push(isNull(transactions.group_id));
       const rows = await db
         .select()
         .from(transactions)
-        .where(and(...conds))
+        .where(and(...listConditions(filter)))
         .orderBy(desc(transactions.occurred_at), desc(transactions.created_at), desc(transactions.id));
       const q = filter.search?.trim().toLocaleLowerCase("vi");
       // SQLite LIKE/lower() don't case-fold Vietnamese diacritics, so match in JS.
-      return q ? rows.filter((r) => r.note.toLocaleLowerCase("vi").includes(q)) : rows;
+      return rows.filter((r) => matchesSearch(r.note, q));
+    },
+
+    /** Same rows and order as `list`, plus `hasReceipt` (own attachment or a live hand-off receipt). */
+    async listWithReceiptFlag(filter: TransactionFilter = {}): Promise<TransactionWithReceiptFlag[]> {
+      const handOffReceipt = sql<number>`exists (select 1 from hand_offs h where h.transaction_id = transactions.id and h.receipt_uri is not null and h.deleted_at is null)`;
+      const rows = await db
+        .select({ t: transactions, handOffReceipt })
+        .from(transactions)
+        .where(and(...listConditions(filter)))
+        .orderBy(desc(transactions.occurred_at), desc(transactions.created_at), desc(transactions.id));
+      const q = filter.search?.trim().toLocaleLowerCase("vi");
+      return rows
+        .filter((r) => matchesSearch(r.t.note, q))
+        .map((r) => ({ ...r.t, hasReceipt: hasReceipt(r.t, r.handOffReceipt ? "x" : null) }));
     },
   };
 }

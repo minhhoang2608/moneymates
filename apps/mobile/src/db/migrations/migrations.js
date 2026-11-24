@@ -11,6 +11,7 @@ import m0006 from "./0006_settlement_payments.sql";
 import m0007 from "./0007_preferences.sql";
 import m0008 from "./0008_payment_app_enabled.sql";
 import m0009 from "./0009_hand_offs.sql";
+import m0010 from "./0010_receipt_source.sql";
 
 export default {
   journal,
@@ -25,5 +26,6 @@ export default {
     m0007,
     m0008,
     m0009,
+    m0010,
   },
 };

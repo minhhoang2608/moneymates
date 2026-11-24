@@ -44,6 +44,20 @@ export function createHandOffRepository(db: AnyDb) {
       return get(id);
     },
 
+    /** Attaches a receipt image to the hand-off. Does not touch `paid_signal`. */
+    async attachReceipt(id: string, uri: string): Promise<HandOffRow | null> {
+      if (!(await get(id))) return null;
+      await db.update(handOffs).set({ receipt_uri: uri, updated_at: nowUtc() }).where(eq(handOffs.id, id));
+      return get(id);
+    },
+
+    /** Removes the receipt image from the hand-off. */
+    async detachReceipt(id: string): Promise<HandOffRow | null> {
+      if (!(await get(id))) return null;
+      await db.update(handOffs).set({ receipt_uri: null, updated_at: nowUtc() }).where(eq(handOffs.id, id));
+      return get(id);
+    },
+
     /** Stamps the time the QR image was deleted. The first deletion time wins. */
     async markQrDeleted(id: string, at: Date = new Date()): Promise<HandOffRow | null> {
       if (!(await get(id))) return null;

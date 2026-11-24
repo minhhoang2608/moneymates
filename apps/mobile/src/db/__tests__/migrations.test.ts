@@ -207,3 +207,81 @@ describe("hand_offs migration", () => {
     expect(row.qr_deleted_at).toBeNull();
   });
 });
+
+describe("receipt migration", () => {
+  function truncatedFolder(): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-mig-"));
+    fs.cpSync(folder, dir, { recursive: true });
+    const jp = path.join(dir, "meta", "_journal.json");
+    const j = JSON.parse(fs.readFileSync(jp, "utf8"));
+    j.entries = j.entries.filter((e: { idx: number }) => e.idx <= 9);
+    fs.writeFileSync(jp, JSON.stringify(j));
+    return dir;
+  }
+
+  it("keeps existing rows and children intact, adds nullable columns, allows source=receipt", () => {
+    const sqlite = new Database(":memory:");
+    migrate(drizzle(sqlite), { migrationsFolder: truncatedFolder() });
+    // The app never enables foreign keys (SQLite default off), but better-sqlite3 does; mirror the app.
+    sqlite.pragma("foreign_keys = OFF");
+    const now = "2026-01-01T00:00:00.000Z";
+    sqlite
+      .prepare(
+        "insert into category (id, created_at, updated_at, name, type, icon, color) values ('c1', ?, ?, 'x', 'expense', 'i', '#fff')",
+      )
+      .run(now, now);
+    sqlite.prepare("insert into groups (id, created_at, updated_at, name) values ('g1', ?, ?, 'g')").run(now, now);
+    sqlite
+      .prepare("insert into group_members (id, created_at, updated_at, group_id, name) values ('m1', ?, ?, 'g1', 'me')")
+      .run(now, now);
+    const ins = sqlite.prepare(
+      "insert into transactions (id, created_at, updated_at, type, amount, category_id, occurred_at, source, photo_uri, qr_data, group_id, paid_by_member_id, split_mode) values (?, ?, ?, 'expense', 1000, 'c1', ?, ?, ?, ?, ?, ?, ?)",
+    );
+    ins.run("t1", now, now, now, "manual", null, null, null, null, null);
+    ins.run("t2", now, now, now, "qr", null, "qrdata", null, null, null);
+    ins.run("t3", now, now, now, "voice", null, null, null, null, null);
+    ins.run("t4", now, now, now, "bill", "file:///b.jpg", null, "g1", "m1", "percent");
+    sqlite
+      .prepare(
+        "insert into expense_shares (id, created_at, updated_at, transaction_id, member_id, amount, value) values ('s1', ?, ?, 't4', 'm1', 1000, 10000)",
+      )
+      .run(now, now);
+    sqlite
+      .prepare(
+        "insert into hand_offs (id, created_at, updated_at, transaction_id, app_id, method, started_at) values ('h1', ?, ?, 't2', 'mb', 'share', ?)",
+      )
+      .run(now, now, now);
+    const before = sqlite.prepare("select * from transactions order by id").all();
+
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+
+    const after = sqlite.prepare("select * from transactions order by id").all() as Record<string, unknown>[];
+    expect(after).toHaveLength(4);
+    after.forEach((row, i) => {
+      const { attachment_uri, ...rest } = row;
+      expect(attachment_uri).toBeNull();
+      expect(rest).toEqual(before[i]);
+    });
+    expect(sqlite.pragma("foreign_key_check")).toEqual([]);
+    expect(sqlite.prepare("select count(*) n from expense_shares").get()).toEqual({ n: 1 });
+    expect(
+      (sqlite.prepare("select * from hand_offs where id = 'h1'").get() as Record<string, unknown>).receipt_uri,
+    ).toBeNull();
+    const idx = sqlite
+      .prepare(
+        "select name from sqlite_master where type = 'index' and tbl_name = 'transactions' and name not like 'sqlite_autoindex%'",
+      )
+      .all();
+    expect(idx).toHaveLength(3);
+
+    const cols = (t: string) => sqlite.pragma(`table_info(${t})`) as { name: string; notnull: number }[];
+    expect(cols("transactions").find((c) => c.name === "attachment_uri")?.notnull).toBe(0);
+    expect(cols("hand_offs").find((c) => c.name === "receipt_uri")?.notnull).toBe(0);
+
+    expect(() => ins.run("t5", now, now, now, "receipt", null, null, null, null, null)).not.toThrow();
+    expect(() => ins.run("t6", now, now, now, "sms", null, null, null, null, null)).toThrow();
+
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+    expect(sqlite.prepare("select count(*) n from transactions").get()).toEqual({ n: 5 });
+  });
+});
