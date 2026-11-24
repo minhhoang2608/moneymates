@@ -9,6 +9,7 @@ import { createBankAccountRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { vi } from "@/i18n/vi";
+import { setHapticsEnabled } from "@/lib/haptics";
 import { generateVietQr, parseVietQr } from "@/lib/vietqr";
 
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
@@ -149,5 +150,59 @@ describe("Tài khoản nhận tiền screen", () => {
     await screen.findByText(vi.bankAccounts.defaultBadge);
     await fireEvent.press(screen.getByTestId("bank-accounts-back"));
     await waitFor(() => expect(screen).not.toHavePathname("/bank-accounts"));
+  });
+});
+
+describe("Tài khoản nhận tiền screen: haptics", () => {
+  const Haptics = jest.requireMock("expo-haptics");
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setHapticsEnabled(true);
+  });
+  afterEach(() => setHapticsEnabled(true));
+
+  it("AC3: a missing bank fires an error haptic and shows the message", async () => {
+    freshFile();
+    await renderScreen();
+    await fireEvent.press(await screen.findByTestId("account-add"));
+    await fillAndSave({ no: "0123456789" });
+    expect(await screen.findByText(vi.bankAccounts.bankRequired)).toBeTruthy();
+    expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.notificationAsync).toHaveBeenCalledWith("error");
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC3: a missing account number fires an error haptic and shows the message", async () => {
+    freshFile();
+    await renderScreen();
+    await fireEvent.press(await screen.findByTestId("account-add"));
+    await fillAndSave({ bank: "TPB", no: "   " });
+    expect(await screen.findByText(vi.bankAccounts.accountNoRequired)).toBeTruthy();
+    expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC1: a valid save fires one light haptic and no error haptic", async () => {
+    freshFile();
+    await renderScreen();
+    await fireEvent.press(await screen.findByTestId("account-add"));
+    await fillAndSave({ bank: "TPB", no: "0123456789", holder: "LE MINH HOANG" });
+    await screen.findByText(vi.bankAccounts.defaultBadge);
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).toHaveBeenCalledWith("light");
+    expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC4: disabled haptics stay silent and behaviour is unchanged", async () => {
+    setHapticsEnabled(false);
+    freshFile();
+    await renderScreen();
+    await fireEvent.press(await screen.findByTestId("account-add"));
+    await fillAndSave({ no: "0123456789" });
+    expect(await screen.findByText(vi.bankAccounts.bankRequired)).toBeTruthy();
+    await fillAndSave({ bank: "TPB", no: "0123456789", holder: "LE MINH HOANG" });
+    await screen.findByText(vi.bankAccounts.defaultBadge);
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+    expect(Haptics.notificationAsync).not.toHaveBeenCalled();
   });
 });

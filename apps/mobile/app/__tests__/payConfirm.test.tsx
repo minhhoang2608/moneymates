@@ -14,6 +14,7 @@ import {
 } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
+import { setHapticsEnabled } from "@/lib/haptics";
 import { hasValidCrc, parseVietQr } from "@/lib/vietqr";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
 
@@ -60,12 +61,34 @@ const urlFor = (text: string) => {
 
 describe("pay-confirm screen", () => {
   beforeEach(async () => {
+    jest.clearAllMocks();
+    setHapticsEnabled(true);
     mockHandOff.mockReset();
     mockHandOff.mockImplementation(async () => ({ opened: true }));
     const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-pay-")), "test.db");
     global.__PAY_TEST_DB__ = openTestDb(file).db;
     // The coach sheet has its own tests: here the default bank (TPBank) has it dismissed.
     await createAppSettingRepository(testDb()).set("pay.coach_dismissed", ["tpb"]);
+  });
+
+  afterEach(() => setHapticsEnabled(true));
+
+  it("AC1: pay submit fires one light haptic", async () => {
+    const Haptics = jest.requireMock("expo-haptics");
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).toHaveBeenCalledWith("light");
+  });
+
+  it("AC4: pay submit with disabled haptics stays silent", async () => {
+    setHapticsEnabled(false);
+    const Haptics = jest.requireMock("expo-haptics");
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
   });
 
   it("AC1: dynamic code is prefilled", async () => {

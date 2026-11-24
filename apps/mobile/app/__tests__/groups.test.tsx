@@ -18,6 +18,7 @@ import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { vi } from "@/i18n/vi";
 import { DEFAULT_CATEGORIES } from "@/lib/category/defaults";
+import { setHapticsEnabled } from "@/lib/haptics";
 
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
 jest.mock("@/db/DatabaseProvider", () => ({
@@ -376,5 +377,77 @@ describe("Tạo/sửa nhóm: dates and validation", () => {
     const stored = await groupsRepo().getGroup(g.id);
     expect(stored.name).toBe("Cũ");
     expect(stored.members.map((m) => m.displayName)).toEqual(["", "An"]);
+  });
+});
+
+describe("Tạo/sửa nhóm: haptics", () => {
+  const Haptics = jest.requireMock("expo-haptics");
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setHapticsEnabled(true);
+  });
+  afterEach(() => setHapticsEnabled(true));
+
+  async function pickDate(testId: string, date: Date) {
+    await fireEvent.press(screen.getByTestId(testId));
+    await fireEvent(await screen.findByTestId("datetime-picker"), "onChange", { type: "set" }, date);
+  }
+
+  it("AC3: an empty name fires one error haptic and shows the message", async () => {
+    freshFile();
+    await renderEdit();
+    await fireEvent.press(screen.getByTestId("group-save"));
+    expect((await screen.findByTestId("group-error")).props.children).toBe(vi.groups.errors.name_required);
+    expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.notificationAsync).toHaveBeenCalledWith("error");
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC3: an empty member name fires one error haptic and shows the message", async () => {
+    freshFile();
+    const g = await groupsRepo().createGroup({ name: "Cũ", members: ["An"] });
+    await renderEdit(g.id);
+    await fireEvent.press(await screen.findByTestId("member-rename-1"));
+    await fireEvent.changeText(screen.getByTestId("member-rename-input-1"), "  ");
+    await fireEvent.press(screen.getByTestId("group-save"));
+    expect((await screen.findByTestId("group-error")).props.children).toBe(vi.groups.errors.member_name_required);
+    expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC3: invalid dates fire one error haptic and show the message", async () => {
+    freshFile();
+    await renderEdit();
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Đà Lạt");
+    await pickDate("group-start-date", new Date(2026, 11, 10, 9));
+    await pickDate("group-end-date", new Date(2026, 11, 4, 9));
+    await fireEvent.press(screen.getByTestId("group-save"));
+    expect((await screen.findByTestId("group-error")).props.children).toBe(vi.groups.errors.invalid_dates);
+    expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC1: a valid save fires one light haptic and no error haptic", async () => {
+    freshFile();
+    await renderEdit();
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Đà Lạt");
+    await fireEvent.press(screen.getByTestId("group-save"));
+    await waitFor(async () => expect(await groupsRepo().listGroups()).toHaveLength(1));
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).toHaveBeenCalledWith("light");
+    expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC4: disabled haptics stay silent and behaviour is unchanged", async () => {
+    setHapticsEnabled(false);
+    freshFile();
+    await renderEdit();
+    await fireEvent.press(screen.getByTestId("group-save"));
+    expect((await screen.findByTestId("group-error")).props.children).toBe(vi.groups.errors.name_required);
+    await fireEvent.changeText(screen.getByTestId("group-name"), "Đà Lạt");
+    await fireEvent.press(screen.getByTestId("group-save"));
+    await waitFor(async () => expect(await groupsRepo().listGroups()).toHaveLength(1));
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+    expect(Haptics.notificationAsync).not.toHaveBeenCalled();
   });
 });

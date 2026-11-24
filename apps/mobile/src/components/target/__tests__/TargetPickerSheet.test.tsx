@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { setHapticsEnabled } from "@/lib/haptics";
 import { grp, hoursAgo, NOW } from "@/lib/target/testFixtures";
 
 import { TargetPickerSheet } from "../TargetPickerSheet";
@@ -54,5 +55,31 @@ describe("TargetPickerSheet", () => {
     expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ kind: "group", groupId: "antrua" }));
     await fireEvent.press(screen.getByTestId("target-close"));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("TargetPickerSheet haptics", () => {
+  const Haptics = jest.requireMock("expo-haptics");
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setHapticsEnabled(true);
+  });
+  afterEach(() => setHapticsEnabled(true));
+
+  it.each(["target-row-personal", "target-row-dalat"])("AC2: selecting %s fires a selection haptic", async (id) => {
+    const onSelect = jest.fn();
+    await setup({ onSelect });
+    await fireEvent.press(screen.getByTestId(id));
+    expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC4: disabled haptics stay silent", async () => {
+    setHapticsEnabled(false);
+    const onSelect = jest.fn();
+    await setup({ onSelect });
+    await fireEvent.press(screen.getByTestId("target-row-dalat"));
+    expect(Haptics.selectionAsync).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledTimes(1);
   });
 });
