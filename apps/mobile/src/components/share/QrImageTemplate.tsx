@@ -15,10 +15,10 @@ type Props = QrImageInput & {
 
 /** The 600×900 transfer image handed to bank apps (design: mockup 27). Rendered off-screen, exported as PNG. */
 export function QrImageTemplate({ getRef, ...input }: Props) {
-  const { name, bankBin, bankName, account, amount, message } = input;
+  const { name, bankBin, bankName, account, amount, message, fallbackPayload } = input;
   const content = useMemo(
-    () => buildQrImageContent({ name, bankBin, bankName, account, amount, message }),
-    [name, bankBin, bankName, account, amount, message],
+    () => buildQrImageContent({ name, bankBin, bankName, account, amount, message, fallbackPayload }),
+    [name, bankBin, bankName, account, amount, message, fallbackPayload],
   );
   const matrix = useMemo(() => qrMatrix(content.payload), [content.payload]);
   const L = computeQrImageLayout(matrix.size, {

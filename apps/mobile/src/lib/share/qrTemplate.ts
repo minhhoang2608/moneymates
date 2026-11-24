@@ -6,7 +6,6 @@ import { vi } from "@/i18n/vi";
 
 export const CANVAS_W = 600;
 export const CANVAS_H = 900;
-const PAD_X = 48;
 const PAD_Y = 36;
 const LOGO = 36;
 const GAP = 22;
@@ -22,6 +21,8 @@ export type QrImageInput = {
   account: string;
   amount?: number;
   message?: string;
+  /** Encoded instead when a fresh VietQR cannot be built (bad amount, over-long note, bad bank/account). */
+  fallbackPayload?: string;
 };
 
 export type QrImageContent = {
@@ -45,19 +46,27 @@ function truncate(s: string, max: number): string {
 export function buildQrImageContent(input: QrImageInput): QrImageContent {
   const message = input.message?.trim() || undefined;
   // No merchant name (tag 59): keep the canonical bank-transfer VietQR every bank app reads.
-  const payload = generateVietQr({
-    bankBin: input.bankBin,
-    account: input.account,
-    amount: input.amount,
-    message,
-  });
+  let payload: string;
+  let amountValid = input.amount !== undefined && Number.isSafeInteger(input.amount) && input.amount > 0;
+  try {
+    payload = generateVietQr({
+      bankBin: input.bankBin,
+      account: input.account,
+      amount: input.amount,
+      message,
+    });
+  } catch (e) {
+    // Never throw into render: fall back to the scanned payload, as buildConfirmedQrPayload does.
+    if (input.fallbackPayload === undefined) throw e;
+    payload = input.fallbackPayload;
+  }
   const bankName = input.bankName?.trim() || findBankByBin(input.bankBin)?.shortName || input.bankBin;
   const name = input.name?.trim();
   return {
     payload,
     title: name ? truncate(name, NAME_MAX_CHARS) : null,
     bankLine: `${bankName} · ${groupAccount(input.account)}`,
-    amountLine: input.amount !== undefined ? formatVnd(input.amount) : null,
+    amountLine: amountValid && input.amount !== undefined ? formatVnd(input.amount) : null,
     messageLine: message ?? null,
     footer: vi.payConfirm.qrImageFooter,
   };
@@ -142,5 +151,3 @@ export function computeQrImageLayout(
     footer,
   };
 }
-
-export const PAD = { x: PAD_X, y: PAD_Y };

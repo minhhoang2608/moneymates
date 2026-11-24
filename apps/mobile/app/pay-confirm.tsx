@@ -421,6 +421,7 @@ export default function PayConfirmScreen() {
             account={model.account}
             amount={confirmedAmount}
             message={note}
+            fallbackPayload={model.payload}
             getRef={(r) => (qrRef.current = r)}
           />
         ) : (
