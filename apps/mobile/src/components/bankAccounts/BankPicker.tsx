@@ -1,3 +1,4 @@
+import { haptics } from "@/lib/haptics";
 import { useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -40,6 +41,7 @@ export function BankPicker({
               testID={`bank-option-${item.code}`}
               style={styles.row}
               onPress={() => {
+                haptics.selection();
                 setQuery("");
                 onSelect(item);
               }}

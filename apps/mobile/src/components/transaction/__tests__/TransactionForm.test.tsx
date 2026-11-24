@@ -261,3 +261,42 @@ describe("TransactionForm", () => {
     });
   });
 });
+
+describe("TransactionForm haptics", () => {
+  const Haptics = jest.requireMock("expo-haptics");
+  const { setHapticsEnabled } = jest.requireActual("@/lib/haptics");
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setHapticsEnabled(true);
+  });
+  afterEach(() => setHapticsEnabled(true));
+
+  it("AC1: a valid save fires one light impact and no error haptic", async () => {
+    const { mount, onClose } = form();
+    await mount();
+    await fireEvent.changeText(screen.getByTestId("amount-input"), "50k");
+    await chooseCategory(catId("Ăn uống"));
+    await fireEvent.press(screen.getByTestId("save-button"));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).toHaveBeenCalledWith("light");
+    expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC3: an invalid save fires the error haptic", async () => {
+    const { mount } = form();
+    await mount();
+    await fireEvent.press(screen.getByTestId("save-button"));
+    expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+  });
+
+  it("AC4: nothing fires when haptics are disabled", async () => {
+    setHapticsEnabled(false);
+    const { mount } = form();
+    await mount();
+    await fireEvent.press(screen.getByTestId("save-button"));
+    expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+  });
+});

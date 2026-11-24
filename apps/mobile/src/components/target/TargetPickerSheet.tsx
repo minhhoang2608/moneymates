@@ -1,3 +1,4 @@
+import { haptics } from "@/lib/haptics";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -46,6 +47,7 @@ export function TargetPickerSheet({
 }: TargetPickerSheetProps) {
   const [query, setQuery] = useState("");
   const select = (t: Target) => {
+    haptics.selection();
     setQuery("");
     onSelect(t);
   };

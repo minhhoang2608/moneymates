@@ -1,3 +1,4 @@
+import { haptics } from "@/lib/haptics";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -68,7 +69,11 @@ export default function BankAccountsScreen() {
   async function save() {
     const found = validateAccountForm({ bank_bin: bank?.bin ?? null, account_no: accountNo });
     setErrors(found);
-    if (Object.keys(found).length > 0 || !bank) return;
+    if (Object.keys(found).length > 0 || !bank) {
+      haptics.error();
+      return;
+    }
+    haptics.light();
     const input = { bank_bin: bank.bin, account_no: accountNo, account_name: holder };
     if (mode === "new") {
       const row = await bankAccounts.addAccount(input);
