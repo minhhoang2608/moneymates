@@ -25,12 +25,20 @@ describe("Toast", () => {
     expect(screen.queryByTestId("handoff-coach-toast")).toBeNull();
   });
 
-  it("uses a longer duration in E2E mode", () => {
-    expect(toastDuration()).toBe(TOAST_MS);
+  it("keeps the toast visible for the longer duration in E2E mode", async () => {
     (isE2E as jest.Mock).mockReturnValue(true);
     try {
       expect(toastDuration()).toBe(E2E_TOAST_MS);
-      expect(E2E_TOAST_MS).toBeGreaterThan(TOAST_MS);
+      await render(<Toast />);
+      await act(async () => useToast.getState().show("Xin chào"));
+      await act(async () => {
+        jest.advanceTimersByTime(TOAST_MS + 10);
+      });
+      expect(screen.getByTestId("handoff-coach-toast")).toBeTruthy();
+      await act(async () => {
+        jest.advanceTimersByTime(E2E_TOAST_MS - TOAST_MS);
+      });
+      expect(screen.queryByTestId("handoff-coach-toast")).toBeNull();
     } finally {
       (isE2E as jest.Mock).mockReturnValue(false);
     }

@@ -19,7 +19,7 @@ export function Toast() {
 
   useEffect(() => {
     if (!text) return;
-    const t = setTimeout(() => useToast.getState().hide(), TOAST_MS);
+    const t = setTimeout(() => useToast.getState().hide(), toastDuration());
     return () => clearTimeout(t);
   }, [text]);
 
