@@ -110,3 +110,9 @@ jest.mock("expo-share-intent", () => ({
   getShareExtensionKey: () => "moneymatesShareKey",
   parseShareIntent: (v) => v,
 }));
+
+// expo-text-extractor has no native module under Jest.
+jest.mock("expo-text-extractor", () => ({
+  isSupported: true,
+  extractTextFromImage: jest.fn(async () => []),
+}));
