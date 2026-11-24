@@ -143,13 +143,6 @@
 "h": 844,
 "title": "18 Cài đặt"
 },
-"PayCoachSheet.dc.html": {
-"x": 0,
-"y": 3852,
-"w": 390,
-"h": 844,
-"title": "03b Hướng dẫn chuyển (coach sheet)"
-},
 "HandoffReturn.dc.html": {
 "x": 470,
 "y": 3852,
@@ -163,6 +156,76 @@
 "w": 390,
 "h": 844,
 "title": "05b Voice – trạng thái mic"
+},
+"OnbProfile.dc.html": {
+"x": 0,
+"y": 5036,
+"w": 390,
+"h": 844,
+"title": "20 Onboarding 1 – Hồ sơ"
+},
+"OnbApps.dc.html": {
+"x": 470,
+"y": 5036,
+"w": 390,
+"h": 844,
+"title": "21 Onboarding 2 – App thanh toán"
+},
+"OnbPermissions.dc.html": {
+"x": 940,
+"y": 5036,
+"w": 390,
+"h": 844,
+"title": "22 Onboarding 3 – Quyền"
+},
+"OnbReceiveAccount.dc.html": {
+"x": 1410,
+"y": 5036,
+"w": 390,
+"h": 844,
+"title": "23 Onboarding 4 – TK nhận tiền"
+},
+"PaymentApps.dc.html": {
+"x": 0,
+"y": 6220,
+"w": 390,
+"h": 844,
+"title": "24 App thanh toán (ẩn/hiện)"
+},
+"NotifAccess.dc.html": {
+"x": 470,
+"y": 6220,
+"w": 390,
+"h": 844,
+"title": "25 Tự nhận biết chuyển khoản (Android)"
+},
+"ReceiptSheet.dc.html": {
+"x": 940,
+"y": 6220,
+"w": 390,
+"h": 844,
+"title": "26 Nhận biên lai – không khớp (sheet)"
+},
+"QrImage.dc.html": {
+"x": 1410,
+"y": 6220,
+"w": 600,
+"h": 900,
+"title": "27 Ảnh QR chuyển khoản (PNG)"
+},
+"PayAppPicker.dc.html": {
+"x": 0,
+"y": 3852,
+"w": 390,
+"h": 844,
+"title": "03b Chọn app thanh toán (sheet)"
+},
+"ReceiptMatched.dc.html": {
+"x": 2610,
+"y": 6220,
+"w": 390,
+"h": 844,
+"title": "26b Nhận biên lai – khớp (toast)"
 }
 },
 "order": [
@@ -185,9 +248,18 @@
 "BankAccounts.dc.html",
 "Categories.dc.html",
 "Settings.dc.html",
-"PayCoachSheet.dc.html",
+"PayAppPicker.dc.html",
 "HandoffReturn.dc.html",
-"VoiceStates.dc.html"
+"VoiceStates.dc.html",
+"OnbProfile.dc.html",
+"OnbApps.dc.html",
+"OnbPermissions.dc.html",
+"OnbReceiveAccount.dc.html",
+"PaymentApps.dc.html",
+"NotifAccess.dc.html",
+"ReceiptSheet.dc.html",
+"QrImage.dc.html",
+"ReceiptMatched.dc.html"
 ],
 "notes": {
 "row1": {
@@ -225,6 +297,36 @@
 "fill": "teal",
 "size": "m",
 "text": "Chuyển động & phản hồi chạm (#265)\n\n• Mọi nút, hàng, chip, tab: khi nhấn thu nhỏ còn 0.97 hoặc mờ, 100–150 ms.\n• Bottom sheet (Ghi vào, coach sheet, danh mục, Popup QR): trượt lên + nền mờ dần, ≤ 250 ms.\n• Toast/banner: trượt + mờ vào/ra.\n• Màn stack: hiệu ứng trượt gốc của hệ điều hành.\n• Lịch sử: hàng mới/xóa có animation; Tổng quan và cảnh báo >20% hiện dần; khi tải dữ liệu dùng skeleton.\n• Quét QR (02): khung quét có vệt quét chạy; nháy sáng ngắn khi nhận được mã.\n• Rung: nhẹ khi lưu/thanh toán/chuyển app, selection khi chọn, rung lỗi khi nhập sai.\n• “Giảm chuyển động” bật: đổi trạng thái tức thì, vẫn giữ rung."
+},
+"row5": {
+"x": 0,
+"y": 4736,
+"text": "v1.0.1 · Hướng dẫn lần đầu",
+"kind": "title1",
+"maxW": 1800
+},
+"onb": {
+"x": 1880,
+"y": 5036,
+"w": 420,
+"fill": "blue",
+"size": "m",
+"text": "Onboarding (v1.0.1)\n\n• Hiện một lần khi mở app lần đầu; lưu onboarding_completed_at. Hồ sơ có lối vào để làm lại.\n• Bước nào cũng có “Để sau”; bấm “Để sau” ở bước 1 là bỏ cả onboarding.\n• Bước 3: nút “Tiếp tục” trên từng quyền mới mở hộp thoại hệ thống (quy định Apple: không dùng nút “Cho phép” ở màn giải thích). Quyền bị bỏ qua được hỏi lại lúc cần.\n• Quyền Ảnh trên iOS phải là đọc/ghi (chế độ “Ảnh đã chọn” là đủ) để xoá được ảnh QR.\n• Dòng “Thông báo ngân hàng” chỉ có trên Android.\n• Chế độ E2E bỏ qua onboarding để flow Maestro không đổi."
+},
+"row6": {
+"x": 0,
+"y": 5920,
+"text": "v1.0.1 · App thanh toán, ảnh QR & biên lai",
+"kind": "title1",
+"maxW": 2010
+},
+"qrclean": {
+"x": 2090,
+"y": 6220,
+"w": 440,
+"fill": "teal",
+"size": "m",
+"text": "Thanh toán ít bước nhất & ảnh QR tạm (v1.0.1)\n\n• Màn 03: app chọn sẵn (app dùng lần trước với ngân hàng đó, rồi ngân hàng trong mã QR); “Đổi ›” mở sheet 03b. Gợi ý thao tác trong app ngân hàng nằm ngay dưới nút Thanh toán, không còn coach sheet.\n• Quay lại app: không hỏi “Đã thanh toán xong chưa?”. Coi là đã trả khi đã quá 60 giây, thông báo ngân hàng khớp (Android, tuỳ chọn) hoặc biên lai khớp. Banner chỉ có “Hoàn tác” và tự ẩn.\n• Biên lai khớp: tự ghi, chỉ hiện toast có “Hoàn tác” (26b). Sheet 26 chỉ hiện khi không khớp.\n• Ảnh chỉ cần cho app KHÔNG tự điền. Android: ngân hàng đã biết nhận ảnh gửi thẳng → file tạm, không vào thư viện; còn lại lưu album MoneyMates và xoá ngay khi quay lại, không hỏi. iOS: xoá khi quay lại, một hộp thoại hệ thống; có thể chọn “Không lưu ảnh” (copy STK để dán).\n• “Mở lại TPBank” trên banner tạo lại ảnh mới. Ảnh còn sót: dọn sau 24 giờ.\n• Ảnh PNG (27): QR ≥ 70% chiều ngang, viền trắng 4 ô, đen trên trắng, không có tag 59; chữ nằm ngoài viền. Kiểm tra lại TPBank, Techcombank, MoMo trên máy thật."
 }
 },
 "designSystems": []
