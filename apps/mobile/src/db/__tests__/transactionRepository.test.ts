@@ -6,9 +6,9 @@ import path from "node:path";
 
 import { DEFAULT_CATEGORIES } from "../../lib/category/defaults";
 import { TransactionError } from "../../lib/transaction/types";
-import { createTransactionRepository } from "../repositories";
+import { createHandOffRepository, createTransactionRepository } from "../repositories";
 import type { NewTransaction } from "../repositories";
-import { groups, transactions } from "../schema";
+import { groups, handOffs, transactions } from "../schema";
 import type { AnyDb } from "../seed";
 import { openTestDb } from "../testing/testDb";
 
@@ -244,5 +244,50 @@ describe("last used target", () => {
     ]);
     (db as any).update(groups).set({ deleted_at: "2026-11-06T00:00:00Z" }).where(eq(groups.id, "g2")).run();
     expect(await repo.lastUsedTarget()).toEqual({ target: "personal", at: "2026-11-01T00:00:00Z" });
+  });
+});
+
+describe("receipt source and attachment", () => {
+  it("persists source=receipt and attachment_uri; update sets and clears it", async () => {
+    const { repo } = setup();
+    const row = await repo.create({ ...base, source: "receipt", attachment_uri: "file:///doc/receipts/r.jpg" });
+    const got = await repo.getById(row.id);
+    expect(got?.source).toBe("receipt");
+    expect(got?.attachment_uri).toBe("file:///doc/receipts/r.jpg");
+    expect((await repo.update(row.id, { attachment_uri: null })).attachment_uri).toBeNull();
+    expect((await repo.update(row.id, { attachment_uri: "file:///x.jpg" })).attachment_uri).toBe("file:///x.jpg");
+    expect(await code(repo.create({ ...base, source: "sms" as never }))).toBe("invalid_source");
+  });
+
+  it("listWithReceiptFlag flags own attachments and live hand-off receipts", async () => {
+    const { db, repo } = setup();
+    const ho = createHandOffRepository(db as unknown as AnyDb);
+    const mk = (n: string, at: string, extra: Partial<NewTransaction> = {}) =>
+      repo.create({ ...base, note: n, occurred_at: at, ...extra });
+    const plain = await mk("plain", "2026-11-01T00:00:00Z");
+    const own = await mk("own", "2026-11-02T00:00:00Z", { attachment_uri: "file:///a.jpg" });
+    const viaHo = await mk("viaHo", "2026-11-03T00:00:00Z");
+    const detached = await mk("detached", "2026-11-04T00:00:00Z");
+    const deletedHo = await mk("deletedHo", "2026-11-05T00:00:00Z");
+    const make = (id: string) =>
+      ho.create({ transaction_id: id, app_id: "mb", method: "share", started_at: new Date() });
+    const h1 = await make(viaHo.id);
+    await ho.attachReceipt(h1.id, "file:///h1.jpg");
+    const h2 = await make(detached.id);
+    await ho.attachReceipt(h2.id, "file:///h2.jpg");
+    await ho.detachReceipt(h2.id);
+    const h3 = await make(deletedHo.id);
+    await ho.attachReceipt(h3.id, "file:///h3.jpg");
+    await (db as unknown as AnyDb)
+      .update(handOffs)
+      .set({ deleted_at: "2026-11-06T00:00:00Z" })
+      .where(eq(handOffs.id, h3.id));
+
+    const rows = await repo.listWithReceiptFlag();
+    const flags = Object.fromEntries(rows.map((r) => [r.note, r.hasReceipt]));
+    expect(flags).toEqual({ plain: false, own: true, viaHo: true, detached: false, deletedHo: false });
+    expect(rows.map((r) => r.id)).toEqual((await repo.list()).map((r) => r.id));
+    expect((await repo.listWithReceiptFlag({ search: "OWN" })).map((r) => r.id)).toEqual([own.id]);
+    expect(plain.id).toBeTruthy();
   });
 });

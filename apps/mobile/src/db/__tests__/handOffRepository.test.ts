@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -128,5 +129,35 @@ describe("handOffRepository", () => {
       expect(await repo.markQrDeleted(c.id)).toBeNull();
       expect(await repo.setQrAsset("missing", "y")).toBeNull();
     });
+  });
+
+  it("attachReceipt / detachReceipt set and clear receipt_uri, bump updated_at, leave paid_signal alone", async () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date("2026-02-01T00:00:00.000Z"));
+      const { repo, make } = await setup();
+      const h = await make();
+      jest.setSystemTime(new Date("2026-02-01T00:00:05.000Z"));
+      const a = await repo.attachReceipt(h.id, "file:///r.jpg");
+      expect(a?.receipt_uri).toBe("file:///r.jpg");
+      expect(a?.paid_signal).toBeNull();
+      expect(a!.updated_at > h.updated_at).toBe(true);
+      jest.setSystemTime(new Date("2026-02-01T00:00:10.000Z"));
+      const d = await repo.detachReceipt(h.id);
+      expect(d?.receipt_uri).toBeNull();
+      expect(d!.updated_at > a!.updated_at).toBe(true);
+      expect(await repo.attachReceipt("nope", "x")).toBeNull();
+      expect(await repo.detachReceipt("nope")).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("receipt methods return null for a soft-deleted hand-off", async () => {
+    const { db, repo, make } = await setup();
+    const h = await make();
+    await db.update(handOffs).set({ deleted_at: "2026-02-01T00:00:00.000Z" }).where(eq(handOffs.id, h.id));
+    expect(await repo.attachReceipt(h.id, "x")).toBeNull();
+    expect(await repo.detachReceipt(h.id)).toBeNull();
   });
 });

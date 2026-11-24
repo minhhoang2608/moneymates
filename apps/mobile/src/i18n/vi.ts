@@ -252,7 +252,7 @@ export const vi = {
     today: "Hôm nay",
     yesterday: "Hôm qua",
     weekdays: ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"],
-    sources: { manual: "Nhập tay", qr: "QR", voice: "Voice", bill: "Ảnh bill" },
+    sources: { manual: "Nhập tay", qr: "QR", voice: "Voice", bill: "Ảnh bill", receipt: "Biên lai" },
   },
   detail: {
     title: "Chi tiết giao dịch",

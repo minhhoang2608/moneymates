@@ -93,6 +93,8 @@ export const groupMembers = sqliteTable(
   ],
 );
 
+export const TRANSACTION_SOURCES = ["manual", "qr", "voice", "bill", "receipt"] as const;
+
 /** Personal income/expense entries. Money is integer VND. `occurred_at` is ISO UTC. */
 export const transactions = sqliteTable(
   "transactions",
@@ -108,9 +110,8 @@ export const transactions = sqliteTable(
     occurred_at: text("occurred_at").notNull(),
     money_source: text("money_source").notNull().default("Tiền mặt"),
     photo_uri: text("photo_uri"),
-    source: text("source", { enum: ["manual", "qr", "voice", "bill"] })
-      .notNull()
-      .default("manual"),
+    attachment_uri: text("attachment_uri"),
+    source: text("source", { enum: TRANSACTION_SOURCES }).notNull().default("manual"),
     qr_data: text("qr_data"),
     group_id: text("group_id").references(() => groups.id),
     paid_by_member_id: text("paid_by_member_id").references(() => groupMembers.id),
@@ -122,7 +123,7 @@ export const transactions = sqliteTable(
     index("transactions_group_id_deleted_at_idx").on(t.group_id, t.deleted_at),
     check("transactions_amount_check", sql`${t.amount} > 0`),
     check("transactions_type_check", sql`${t.type} in ('expense', 'income')`),
-    check("transactions_source_check", sql`${t.source} in ('manual', 'qr', 'voice', 'bill')`),
+    check("transactions_source_check", sql`${t.source} in ('manual', 'qr', 'voice', 'bill', 'receipt')`),
     check(
       "transactions_split_mode_check",
       sql`${t.split_mode} is null or ${t.split_mode} in ('equal', 'amount', 'percent')`,
@@ -229,6 +230,7 @@ export const handOffs = sqliteTable(
     returned_at: text("returned_at"),
     paid_signal: text("paid_signal", { enum: PAID_SIGNALS }),
     qr_deleted_at: text("qr_deleted_at"),
+    receipt_uri: text("receipt_uri"),
   },
   (t) => [
     index("hand_offs_transaction_id_idx").on(t.transaction_id),
