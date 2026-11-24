@@ -153,3 +153,38 @@ describe("local migrations", () => {
     ]);
   });
 });
+
+describe("hand_offs migration", () => {
+  it("has the base columns and every HandOff field, and the CHECKs reject bad values", () => {
+    const sqlite = new Database(":memory:");
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+    const names = (sqlite.pragma("table_info(hand_offs)") as { name: string }[]).map((c) => c.name);
+    for (const c of [
+      "id",
+      "created_at",
+      "updated_at",
+      "deleted_at",
+      "owner_id",
+      "transaction_id",
+      "app_id",
+      "method",
+      "qr_asset_id",
+      "started_at",
+      "returned_at",
+      "paid_signal",
+      "qr_deleted_at",
+    ]) {
+      expect(names).toContain(c);
+    }
+    sqlite.pragma("foreign_keys = OFF");
+    const insert = (method: string, signal: string | null) =>
+      sqlite
+        .prepare(
+          "insert into hand_offs (id, created_at, updated_at, transaction_id, app_id, method, started_at, paid_signal) values (?, 'a', 'a', 't', 'mb', ?, 'a', ?)",
+        )
+        .run(`id-${Math.random()}`, method, signal);
+    expect(() => insert("share", "time")).not.toThrow();
+    expect(() => insert("bogus", null)).toThrow();
+    expect(() => insert("share", "bogus")).toThrow();
+  });
+});

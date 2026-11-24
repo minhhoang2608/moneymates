@@ -8,6 +8,7 @@ import { RepositoriesProvider } from "@/db/RepositoriesProvider";
 import {
   createCategoryRepository,
   createHandOffMemoryRepository,
+  createHandOffRepository,
   createTransactionRepository,
 } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
@@ -119,5 +120,23 @@ describe("ReturnBanner", () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it("records the return on the pending hand-off when the app comes back", async () => {
+    const { tx, db } = await setup();
+    const repo = createHandOffRepository(db);
+    const ho = await repo.create({
+      transaction_id: tx.id,
+      app_id: "mb",
+      method: "autofill",
+      started_at: new Date(Date.now() - 90_000),
+    });
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24", handOffId: ho.id });
+    });
+    await act(async () => handler("background"));
+    await act(async () => handler("active"));
+    await waitFor(async () => expect((await repo.get(ho.id))?.paid_signal).toBe("time"));
+    expect((await repo.get(ho.id))?.returned_at).not.toBeNull();
   });
 });
