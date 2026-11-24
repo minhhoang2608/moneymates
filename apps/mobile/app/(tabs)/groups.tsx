@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { Avatar } from "@/components/group/Avatar";
 import { GroupGlyph } from "@/components/group/GroupIconTile";
@@ -40,23 +41,23 @@ export default function GroupsScreen() {
     <View style={styles.root} testID="screen-groups">
       <View style={styles.header}>
         <Text style={styles.title}>{vi.tabs.groups}</Text>
-        <Pressable testID="group-create" accessibilityRole="button" style={styles.createBtn} onPress={create}>
+        <PressableScale testID="group-create" accessibilityRole="button" style={styles.createBtn} onPress={create}>
           <Text style={styles.createText}>+ {t.create}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
       <ScrollView contentContainerStyle={styles.body}>
         {loaded && rows.length === 0 && (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>{t.empty}</Text>
-            <Pressable testID="group-empty-create" style={styles.createBtn} onPress={create}>
+            <PressableScale testID="group-empty-create" style={styles.createBtn} onPress={create}>
               <Text style={styles.createText}>{t.create}</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         )}
         {rows.map((g) => {
           const icon = groupIconFor(g.icon);
           return (
-            <Pressable
+            <PressableScale
               key={g.id}
               testID={`group-card-${g.id}`}
               accessibilityRole="button"
@@ -87,7 +88,7 @@ export default function GroupsScreen() {
                   />
                 ))}
               </View>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </ScrollView>

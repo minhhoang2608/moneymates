@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { pickAvatar } from "@/components/AvatarPicker";
 import { BankIcon, GridIcon, SettingsIcon } from "@/components/icons";
@@ -92,7 +93,7 @@ export default function ProfileScreen() {
       <Text style={styles.title}>{vi.profile.title}</Text>
 
       <View style={styles.card}>
-        <Pressable
+        <PressableScale
           testID="profile-avatar"
           accessibilityRole="button"
           accessibilityLabel={vi.profile.avatarA11y}
@@ -104,7 +105,7 @@ export default function ProfileScreen() {
           ) : (
             <Text style={styles.avatarText}>{initials(name)}</Text>
           )}
-        </Pressable>
+        </PressableScale>
         <View style={styles.nameBlock}>
           {editing ? (
             <TextInput
@@ -123,11 +124,11 @@ export default function ProfileScreen() {
           <Text style={styles.subtitle}>{vi.profile.subtitle}</Text>
         </View>
         {editing ? (
-          <Pressable testID="profile-name-save" onPress={save} style={styles.smallButton}>
+          <PressableScale testID="profile-name-save" onPress={save} style={styles.smallButton}>
             <Text style={styles.smallButtonText}>{vi.profile.save}</Text>
-          </Pressable>
+          </PressableScale>
         ) : (
-          <Pressable
+          <PressableScale
             testID="profile-edit-name"
             onPress={() => {
               setDraft(name);
@@ -137,7 +138,7 @@ export default function ProfileScreen() {
             style={styles.smallButton}
           >
             <Text style={styles.smallButtonText}>{vi.profile.edit}</Text>
-          </Pressable>
+          </PressableScale>
         )}
       </View>
       {error ? (
@@ -161,7 +162,7 @@ export default function ProfileScreen() {
 
       <View style={styles.list}>
         {rows.map((row, i) => (
-          <Pressable
+          <PressableScale
             key={row.id}
             testID={row.id}
             accessibilityRole="button"
@@ -172,7 +173,7 @@ export default function ProfileScreen() {
             <Text style={styles.rowLabel}>{row.label}</Text>
             {row.count !== undefined ? <Text style={styles.rowCount}>{row.count}</Text> : null}
             <Text style={styles.chevron}>›</Text>
-          </Pressable>
+          </PressableScale>
         ))}
       </View>
     </ScrollView>

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
@@ -24,9 +25,9 @@ export function UndoSnackbar({
   return (
     <View style={styles.bar} testID="undo-snackbar">
       <Text style={styles.text}>{vi.history.deleted}</Text>
-      <Pressable testID="undo" accessibilityRole="button" onPress={onUndo} hitSlop={8}>
+      <PressableScale testID="undo" accessibilityRole="button" onPress={onUndo} hitSlop={8}>
         <Text style={styles.action}>{vi.history.undo}</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

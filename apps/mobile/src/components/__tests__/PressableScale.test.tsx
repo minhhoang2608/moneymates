@@ -50,6 +50,19 @@ describe("PressableScale", () => {
     expect(flat(screen.getByTestId("btn").props.style).transform).toEqual([{ scale: 1 }]);
   });
 
+  it("keeps the caller's resting opacity and multiplies the pressed opacity into it", async () => {
+    await render(
+      <PressableScale testID="btn" style={{ opacity: 0.4 }}>
+        <Text>x</Text>
+      </PressableScale>,
+    );
+    expect(flat(screen.getByTestId("btn").props.style).opacity).toBe(0.4);
+    await fireEvent(screen.getByTestId("btn"), "pressIn");
+    expect(flat(screen.getByTestId("btn").props.style).opacity).toBeCloseTo(0.4 * pressOpacity);
+    await fireEvent(screen.getByTestId("btn"), "pressOut");
+    expect(flat(screen.getByTestId("btn").props.style).opacity).toBe(0.4);
+  });
+
   it("still handles presses with reduce motion on", async () => {
     jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(true);
     const onPress = jest.fn();

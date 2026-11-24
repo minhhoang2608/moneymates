@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/layouts/Tabs";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, layout } from "@/theme";
@@ -34,7 +35,7 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
     const active = activeRoute === t.route;
     const color = active ? colors.primary : colors.textMuted;
     return (
-      <Pressable
+      <PressableScale
         key={t.route}
         testID={t.testID}
         accessibilityRole="button"
@@ -50,14 +51,14 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         <Text style={[styles.label, { color, fontFamily: active ? fontFamily.semibold : fontFamily.medium }]}>
           {t.label}
         </Text>
-      </Pressable>
+      </PressableScale>
     );
   };
 
   return (
     <View style={styles.bar}>
       {LEFT.map(renderTab)}
-      <Pressable
+      <PressableScale
         testID="tab-qr"
         accessibilityRole="button"
         accessibilityLabel={vi.scan.title}
@@ -66,7 +67,7 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         style={styles.qr}
       >
         <QrIcon color={colors.onPrimary} size={26} />
-      </Pressable>
+      </PressableScale>
       {RIGHT.map(renderTab)}
       <EntryMenu
         visible={menuOpen}

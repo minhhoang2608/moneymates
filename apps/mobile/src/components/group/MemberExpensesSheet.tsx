@@ -1,4 +1,5 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import type { MemberExpense } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
@@ -22,6 +23,7 @@ export function MemberExpensesSheet({
 }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      {/* bare-pressable-ok: modal backdrop, not a visual button */}
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={t.close} />
       <View style={styles.sheet} testID="member-expenses-sheet">
         <Text style={styles.title}>{t.memberExpenses(name)}</Text>
@@ -45,9 +47,14 @@ export function MemberExpensesSheet({
             );
           })}
         </ScrollView>
-        <Pressable testID="member-expenses-close" accessibilityRole="button" style={styles.close} onPress={onClose}>
+        <PressableScale
+          testID="member-expenses-close"
+          accessibilityRole="button"
+          style={styles.close}
+          onPress={onClose}
+        >
           <Text style={styles.closeText}>{t.close}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </Modal>
   );

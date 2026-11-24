@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
@@ -9,7 +10,7 @@ export function FilterChips({ chips, showClear, onClear }: { chips: Chip[]; show
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {chips.map((c) => (
-        <Pressable
+        <PressableScale
           key={c.key}
           testID={`history-chip-${c.key}`}
           accessibilityRole="button"
@@ -17,12 +18,17 @@ export function FilterChips({ chips, showClear, onClear }: { chips: Chip[]; show
           style={[styles.chip, c.active && styles.chipActive]}
         >
           <Text style={[styles.chipText, c.active && styles.chipTextActive]}>{c.label}</Text>
-        </Pressable>
+        </PressableScale>
       ))}
       {showClear ? (
-        <Pressable testID="history-clear-filters" accessibilityRole="button" onPress={onClear} style={styles.clear}>
+        <PressableScale
+          testID="history-clear-filters"
+          accessibilityRole="button"
+          onPress={onClear}
+          style={styles.clear}
+        >
           <Text style={styles.clearText}>{vi.history.clearFilters}</Text>
-        </Pressable>
+        </PressableScale>
       ) : null}
     </ScrollView>
   );

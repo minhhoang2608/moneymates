@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
@@ -11,12 +12,22 @@ export function DefaultBankSuggestion({ appName, onAccept, onDismiss }: Props) {
     <View style={styles.card} testID="settings-default-suggest">
       <Text style={styles.text}>{vi.settings.suggestDefault(appName)}</Text>
       <View style={styles.actions}>
-        <Pressable testID="settings-default-suggest-dismiss" accessibilityRole="button" onPress={onDismiss} hitSlop={8}>
+        <PressableScale
+          testID="settings-default-suggest-dismiss"
+          accessibilityRole="button"
+          onPress={onDismiss}
+          hitSlop={8}
+        >
           <Text style={styles.dismiss}>{vi.settings.suggestDismiss}</Text>
-        </Pressable>
-        <Pressable testID="settings-default-suggest-accept" accessibilityRole="button" onPress={onAccept} hitSlop={8}>
+        </PressableScale>
+        <PressableScale
+          testID="settings-default-suggest-accept"
+          accessibilityRole="button"
+          onPress={onAccept}
+          hitSlop={8}
+        >
           <Text style={styles.accept}>{vi.settings.suggestAccept}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
@@ -17,12 +18,13 @@ export function CoachSheet({
   const [dontShow, setDontShow] = useState(false);
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      {/* bare-pressable-ok: modal backdrop, not a visual button */}
       <Pressable style={styles.backdrop} onPress={onClose} testID="coach-close" accessibilityLabel={vi.txn.close} />
       <View style={styles.sheet} testID="coach-sheet">
         <Text style={styles.text} testID="coach-text">
           {vi.coach.text(bankName)}
         </Text>
-        <Pressable
+        <PressableScale
           testID="coach-dont-show"
           accessibilityRole="checkbox"
           accessibilityState={{ checked: dontShow }}
@@ -33,15 +35,15 @@ export function CoachSheet({
             {dontShow ? <Text style={styles.tick}>✓</Text> : null}
           </View>
           <Text style={styles.checkText}>{vi.coach.dontShow}</Text>
-        </Pressable>
-        <Pressable
+        </PressableScale>
+        <PressableScale
           testID="coach-confirm"
           accessibilityRole="button"
           onPress={() => onConfirm({ dontShow })}
           style={styles.confirm}
         >
           <Text style={styles.confirmText}>{vi.coach.confirm(bankName)}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </Modal>
   );

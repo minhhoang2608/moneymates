@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { CategoryRow, GroupMember } from "@/db/repositories";
@@ -238,7 +239,7 @@ export function TransactionForm({
   return (
     <View style={styles.root} testID="transaction-form">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="close-button"
           accessibilityRole="button"
           accessibilityLabel={vi.txn.close}
@@ -246,7 +247,7 @@ export function TransactionForm({
           style={styles.close}
         >
           <Text style={styles.closeText}>✕</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.headerTitle}>{transactionId ? vi.txn.editTitle : vi.txn.addTitle}</Text>
       </View>
 
@@ -261,7 +262,7 @@ export function TransactionForm({
             {(["expense", "income"] as const).map((t) => {
               const active = type === t;
               return (
-                <Pressable
+                <PressableScale
                   key={t}
                   testID={`type-${t}`}
                   accessibilityRole="radio"
@@ -280,7 +281,7 @@ export function TransactionForm({
                   >
                     {t === "expense" ? vi.txn.expense : vi.txn.income}
                   </Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -359,7 +360,7 @@ export function TransactionForm({
               now={targetState.now}
             />
           )}
-          <Pressable
+          <PressableScale
             testID="category-row"
             accessibilityRole="button"
             onPress={() => setSheet("category")}
@@ -369,12 +370,12 @@ export function TransactionForm({
             <Text style={[styles.rowValue, errors.category && { color: colors.expense }]}>
               {`${categoryName ?? (errors.category ? vi.txn.categoryError : vi.txn.categoryChoose)} ›`}
             </Text>
-          </Pressable>
+          </PressableScale>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{vi.txn.note}</Text>
             <TextInput testID="note-input" value={note} onChangeText={setNote} style={styles.noteInput} />
           </View>
-          <Pressable
+          <PressableScale
             testID="datetime-row"
             accessibilityRole="button"
             onPress={() => setSheet("time")}
@@ -382,9 +383,9 @@ export function TransactionForm({
           >
             <Text style={styles.rowLabel}>{vi.txn.time}</Text>
             <Text style={styles.rowValue}>{`${formatTxnDateLabel(occurredAt, new Date())} ›`}</Text>
-          </Pressable>
+          </PressableScale>
           {isGroup ? null : (
-            <Pressable
+            <PressableScale
               testID="money-source-row"
               accessibilityRole="button"
               onPress={() => setSheet("source")}
@@ -392,22 +393,22 @@ export function TransactionForm({
             >
               <Text style={styles.rowLabel}>{vi.txn.moneySource}</Text>
               <Text style={styles.rowValue}>{`${moneySource} ›`}</Text>
-            </Pressable>
+            </PressableScale>
           )}
           <View style={[styles.row, styles.lastRow]}>
-            <Pressable testID="photo-row" accessibilityRole="button" onPress={pickPhoto} style={styles.photoMain}>
+            <PressableScale testID="photo-row" accessibilityRole="button" onPress={pickPhoto} style={styles.photoMain}>
               <Text style={styles.rowLabel}>{vi.txn.photo}</Text>
               {photoUri ? null : <Text style={styles.rowValue}>{`${vi.txn.photoAdd} ›`}</Text>}
-            </Pressable>
+            </PressableScale>
             {photoUri ? (
-              <Pressable
+              <PressableScale
                 testID="photo-thumbnail"
                 accessibilityRole="imagebutton"
                 accessibilityLabel={vi.txn.photo}
                 onPress={pickPhoto}
               >
                 <Image testID="photo-thumbnail-image" source={{ uri: photoUri }} style={styles.thumb} />
-              </Pressable>
+              </PressableScale>
             ) : null}
           </View>
         </View>
@@ -424,7 +425,7 @@ export function TransactionForm({
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
+        <PressableScale
           testID="save-button"
           accessibilityRole="button"
           accessibilityState={{ disabled: saveDisabled }}
@@ -432,7 +433,7 @@ export function TransactionForm({
           style={[styles.save, saveDisabled && styles.saveDisabled]}
         >
           <Text style={styles.saveText}>{vi.txn.save}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
 
       <CategoryPicker

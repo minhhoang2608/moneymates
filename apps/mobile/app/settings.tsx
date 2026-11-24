@@ -1,7 +1,8 @@
 import Constants from "expo-constants";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { DefaultBankSuggestion } from "@/components/settings/DefaultBankSuggestion";
 import { MoneySourceSection } from "@/components/settings/MoneySourceSection";
@@ -105,7 +106,7 @@ export default function SettingsScreen() {
   return (
     <View style={styles.root} testID="screen-settings">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="settings-back"
           accessibilityRole="button"
           accessibilityLabel={vi.settings.back}
@@ -113,7 +114,7 @@ export default function SettingsScreen() {
           style={styles.iconBtn}
         >
           <Text style={styles.back}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{vi.settings.title}</Text>
       </View>
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">

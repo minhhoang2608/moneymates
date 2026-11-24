@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { AccountQrPreview } from "@/components/bankAccounts/AccountQrPreview";
 import { BankPicker } from "@/components/bankAccounts/BankPicker";
@@ -103,14 +104,14 @@ export default function BankAccountsScreen() {
   return (
     <View style={styles.root} testID="screen-bank-accounts">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="bank-accounts-back"
           accessibilityLabel="Quay lại"
           style={styles.back}
           onPress={() => (editing ? setMode(null) : router.back())}
         >
           <Text style={styles.backGlyph}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{mode === "new" ? t.add : editing ? t.edit : vi.profile.rows.bankAccounts}</Text>
       </View>
 
@@ -123,7 +124,7 @@ export default function BankAccountsScreen() {
               const code = findBankByBin(a.bank_bin)?.code ?? "";
               const tint = bankTint(code);
               return (
-                <Pressable
+                <PressableScale
                   key={a.id}
                   testID={`account-row-${a.id}`}
                   onPress={() => openEdit(a)}
@@ -143,29 +144,29 @@ export default function BankAccountsScreen() {
                       {t.defaultBadge}
                     </Text>
                   ) : (
-                    <Pressable
+                    <PressableScale
                       testID={`account-set-default-${a.id}`}
                       style={styles.smallBtn}
                       onPress={() => promote(a.id)}
                     >
                       <Text style={styles.smallBtnText}>{t.setDefault}</Text>
-                    </Pressable>
+                    </PressableScale>
                   )}
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
         )}
 
         {!editing && loaded && accounts.length === 0 && (
-          <Pressable testID="account-add" style={styles.primaryBtn} onPress={openNew}>
+          <PressableScale testID="account-add" style={styles.primaryBtn} onPress={openNew}>
             <Text style={styles.primaryText}>{t.add}</Text>
-          </Pressable>
+          </PressableScale>
         )}
         {!editing && accounts.length > 0 && (
-          <Pressable testID="account-add" style={styles.outlineBtn} onPress={openNew}>
+          <PressableScale testID="account-add" style={styles.outlineBtn} onPress={openNew}>
             <Text style={styles.smallBtnText}>{t.add}</Text>
-          </Pressable>
+          </PressableScale>
         )}
 
         {editing && (
@@ -174,12 +175,12 @@ export default function BankAccountsScreen() {
               <Text style={styles.sectionTitle}>{mode === "new" ? t.add : t.edit}</Text>
               <View style={styles.field}>
                 <Text style={styles.label}>{t.bank}</Text>
-                <Pressable testID="account-bank" style={styles.input} onPress={() => setPicking(true)}>
+                <PressableScale testID="account-bank" style={styles.input} onPress={() => setPicking(true)}>
                   <Text style={bank ? styles.inputText : styles.placeholder}>
                     {bank?.shortName ?? t.bankPlaceholder}
                   </Text>
                   <Text style={styles.inputText}>▾</Text>
-                </Pressable>
+                </PressableScale>
                 {errors.bank_required && <Text style={styles.error}>{t.bankRequired}</Text>}
               </View>
               <View style={styles.field}>
@@ -208,7 +209,7 @@ export default function BankAccountsScreen() {
                 />
                 <Text style={styles.hint}>{t.holderHint}</Text>
               </View>
-              <Pressable
+              <PressableScale
                 testID="account-default-checkbox"
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: makeDefault }}
@@ -219,7 +220,7 @@ export default function BankAccountsScreen() {
                   {makeDefault && <Text style={styles.tick}>✓</Text>}
                 </View>
                 <Text style={styles.inputText}>{t.makeDefault}</Text>
-              </Pressable>
+              </PressableScale>
             </View>
           </View>
         )}
@@ -227,17 +228,17 @@ export default function BankAccountsScreen() {
         {qrPayload && <AccountQrPreview payload={qrPayload} />}
 
         {editingRow && (
-          <Pressable testID="account-delete" style={styles.outlineBtn} onPress={remove}>
+          <PressableScale testID="account-delete" style={styles.outlineBtn} onPress={remove}>
             <Text style={styles.deleteText}>{t.delete}</Text>
-          </Pressable>
+          </PressableScale>
         )}
       </ScrollView>
 
       {editing && (
         <View style={styles.footer}>
-          <Pressable testID="account-save" style={styles.primaryBtn} onPress={save}>
+          <PressableScale testID="account-save" style={styles.primaryBtn} onPress={save}>
             <Text style={styles.primaryText}>{t.save}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       )}
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { TargetPickerSheet } from "@/components/target/TargetPickerSheet";
 import type { TargetPickerSheetProps } from "@/components/target/TargetPickerSheet";
@@ -19,7 +20,7 @@ export function TargetLine({ value, onChange, ...sheet }: TargetLineProps) {
   const label = `${targetName(value)} ›`;
   return (
     <View>
-      <Pressable
+      <PressableScale
         testID="target-line"
         accessibilityRole="button"
         accessibilityLabel={`${vi.target.line}: ${label}`}
@@ -28,7 +29,7 @@ export function TargetLine({ value, onChange, ...sheet }: TargetLineProps) {
       >
         <Text style={styles.label}>{vi.target.line}</Text>
         <Text style={styles.value}>{label}</Text>
-      </Pressable>
+      </PressableScale>
       <TargetPickerSheet
         {...sheet}
         visible={open}

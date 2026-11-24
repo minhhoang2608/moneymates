@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import type { CategoryRow } from "@/db/repositories";
 import { tintFor } from "@/lib/category/palette";
@@ -15,10 +16,15 @@ export function CategoryBadge({ icon, color }: { icon: string; color: string }) 
 /** Default category: 3-column grid tile; only icon and colour can change. */
 export function CategoryTile({ item, onPress }: { item: CategoryRow; onPress: () => void }) {
   return (
-    <Pressable testID={`category-tile-${item.id}`} accessibilityRole="button" onPress={onPress} style={styles.tile}>
+    <PressableScale
+      testID={`category-tile-${item.id}`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={styles.tile}
+    >
       <CategoryBadge icon={item.icon} color={item.color} />
       <Text style={styles.name}>{item.name}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

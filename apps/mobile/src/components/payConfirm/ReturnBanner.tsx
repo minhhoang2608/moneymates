@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import { vi } from "@/i18n/vi";
@@ -69,28 +70,28 @@ export function ReturnBanner() {
         {pending.askPaid ? (
           <View style={styles.ask} testID="handoff-ask-paid">
             <Text style={styles.text}>{vi.handOff.askPaid}</Text>
-            <Pressable
+            <PressableScale
               testID="handoff-paid-yes"
               accessibilityRole="button"
               onPress={() => void answer(true)}
               hitSlop={8}
             >
               <Text style={styles.action}>{vi.handOff.paidYes}</Text>
-            </Pressable>
-            <Pressable
+            </PressableScale>
+            <PressableScale
               testID="handoff-paid-no"
               accessibilityRole="button"
               onPress={() => void answer(false)}
               hitSlop={8}
             >
               <Text style={styles.action}>{vi.handOff.paidNo}</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         ) : null}
       </View>
-      <Pressable testID="handoff-delete" accessibilityRole="button" onPress={remove} hitSlop={8}>
+      <PressableScale testID="handoff-delete" accessibilityRole="button" onPress={remove} hitSlop={8}>
         <Text style={styles.action}>{vi.handOff.delete}</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

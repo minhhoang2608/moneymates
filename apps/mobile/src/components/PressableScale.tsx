@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, type PressableProps, type StyleProp, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { durations, pressOpacity, pressScale, useReduceMotion } from "@/lib/motion";
 
@@ -12,9 +12,11 @@ export function PressableScale({ style, onPressIn, onPressOut, children, ...rest
   const [pressed, setPressed] = useState(false);
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  // Keep the caller's resting opacity (disabled/muted looks) and multiply the pressed dimming into it.
+  const baseOpacity = StyleSheet.flatten(style)?.opacity ?? 1;
 
   const animated = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+    opacity: baseOpacity * opacity.value,
     transform: [{ scale: scale.value }],
   }));
 
@@ -33,7 +35,7 @@ export function PressableScale({ style, onPressIn, onPressOut, children, ...rest
         scale.set(withTiming(1, { duration: durations.press }));
         onPressOut?.(e);
       }}
-      style={[style, animated, { opacity: pressed ? pressOpacity : 1 }]}
+      style={[style, animated, { opacity: baseOpacity * (pressed ? pressOpacity : 1) }]}
     >
       {children}
     </AnimatedPressable>

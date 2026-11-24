@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import type { MoneySourceRow } from "@/db/repositories/moneySourceRepository";
 import { vi } from "@/i18n/vi";
@@ -37,7 +38,7 @@ export function MoneySourceSection({ sources, onAdd, onDelete }: Props) {
 
   return (
     <View>
-      <Pressable
+      <PressableScale
         testID="settings-sources-row"
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
@@ -48,14 +49,14 @@ export function MoneySourceSection({ sources, onAdd, onDelete }: Props) {
         <Text style={styles.value} numberOfLines={1}>
           {sources.map((s) => s.name).join(", ")} {open ? "⌄" : "›"}
         </Text>
-      </Pressable>
+      </PressableScale>
       {open ? (
         <View style={styles.panel} testID="settings-sources-panel">
           {sources.map((s) => (
             <View key={s.id} style={styles.item} testID={`settings-source-${s.id}`}>
               <Text style={styles.itemName}>{s.name}</Text>
               <Text style={styles.itemKind}>{vi.settings.kinds[s.kind as MoneySourceKind]}</Text>
-              <Pressable
+              <PressableScale
                 testID={`settings-source-delete-${s.id}`}
                 accessibilityRole="button"
                 accessibilityLabel={`${vi.settings.sourceDelete} ${s.name}`}
@@ -63,7 +64,7 @@ export function MoneySourceSection({ sources, onAdd, onDelete }: Props) {
                 style={styles.del}
               >
                 <Text style={styles.delText}>✕</Text>
-              </Pressable>
+              </PressableScale>
             </View>
           ))}
           <TextInput
@@ -79,7 +80,7 @@ export function MoneySourceSection({ sources, onAdd, onDelete }: Props) {
           />
           <View style={styles.kinds}>
             {MONEY_SOURCE_KINDS.map((k) => (
-              <Pressable
+              <PressableScale
                 key={k}
                 testID={`settings-source-kind-${k}`}
                 accessibilityRole="radio"
@@ -88,7 +89,7 @@ export function MoneySourceSection({ sources, onAdd, onDelete }: Props) {
                 style={[styles.chip, kind === k && styles.chipOn]}
               >
                 <Text style={[styles.chipText, kind === k && styles.chipTextOn]}>{vi.settings.kinds[k]}</Text>
-              </Pressable>
+              </PressableScale>
             ))}
           </View>
           {error ? (
@@ -96,9 +97,9 @@ export function MoneySourceSection({ sources, onAdd, onDelete }: Props) {
               {error}
             </Text>
           ) : null}
-          <Pressable testID="settings-source-add" accessibilityRole="button" onPress={add} style={styles.add}>
+          <PressableScale testID="settings-source-add" accessibilityRole="button" onPress={add} style={styles.add}>
             <Text style={styles.addText}>{vi.settings.sourceAdd}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       ) : null}
     </View>

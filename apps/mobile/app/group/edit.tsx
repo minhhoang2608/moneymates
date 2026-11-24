@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState, type ComponentRef } from "react";
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { Avatar } from "@/components/group/Avatar";
 import { GroupGlyph } from "@/components/group/GroupIconTile";
@@ -164,10 +165,15 @@ export default function GroupEditScreen() {
   return (
     <View style={styles.root} testID="screen-group-edit">
       <View style={styles.header}>
-        <Pressable testID="group-close" accessibilityLabel={t.close} style={styles.close} onPress={() => router.back()}>
+        <PressableScale
+          testID="group-close"
+          accessibilityLabel={t.close}
+          style={styles.close}
+          onPress={() => router.back()}
+        >
           <Text style={styles.closeGlyph}>✕</Text>
-        </Pressable>
-        <Pressable
+        </PressableScale>
+        <PressableScale
           testID="group-edit-title"
           accessible
           accessibilityRole="header"
@@ -175,7 +181,7 @@ export default function GroupEditScreen() {
           onPress={Keyboard.dismiss}
         >
           <Text style={styles.title}>{id ? t.edit : t.create}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
 
       <ScrollView ref={scrollRef} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -200,7 +206,7 @@ export default function GroupEditScreen() {
             <Text style={styles.label}>{t.icon}</Text>
             <View style={styles.icons}>
               {groupIcons.map((i) => (
-                <Pressable
+                <PressableScale
                   key={i.key}
                   testID={`group-icon-${i.key}`}
                   accessibilityLabel={i.label}
@@ -214,7 +220,7 @@ export default function GroupEditScreen() {
                   onPress={() => setIcon(i.key)}
                 >
                   <GroupGlyph path={i.path} color={i.fg} size={22} />
-                </Pressable>
+                </PressableScale>
               ))}
             </View>
           </View>
@@ -226,7 +232,7 @@ export default function GroupEditScreen() {
                 <View key={which} style={[styles.field, styles.half]}>
                   <Text style={styles.label}>{which === "start" ? t.start : t.end}</Text>
                   <View style={styles.dateRow}>
-                    <Pressable
+                    <PressableScale
                       testID={`group-${which}-date`}
                       style={[styles.input, styles.dateInput]}
                       onPress={() => setPicking(which)}
@@ -234,16 +240,16 @@ export default function GroupEditScreen() {
                       <Text style={value ? styles.inputText : styles.placeholder}>
                         {value ? displayDate(value) : "dd/mm/yyyy"}
                       </Text>
-                    </Pressable>
+                    </PressableScale>
                     {value && (
-                      <Pressable
+                      <PressableScale
                         testID={`group-${which}-date-clear`}
                         accessibilityLabel={t.clearDate}
                         style={styles.clear}
                         onPress={() => set(null)}
                       >
                         <Text style={styles.inputText}>✕</Text>
-                      </Pressable>
+                      </PressableScale>
                     )}
                   </View>
                 </View>
@@ -257,9 +263,9 @@ export default function GroupEditScreen() {
                 {accountLabel(account)}
               </Text>
             </View>
-            <Pressable testID="group-account-change" style={styles.link} onPress={() => setAccountSheet(true)}>
+            <PressableScale testID="group-account-change" style={styles.link} onPress={() => setAccountSheet(true)}>
               <Text style={styles.linkText}>{t.change}</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </View>
 
@@ -286,26 +292,34 @@ export default function GroupEditScreen() {
                     onChangeText={(v) => renameMember(m, v)}
                     autoFocus
                   />
-                  <Pressable
+                  <PressableScale
                     testID={`member-rename-save-${i}`}
                     style={styles.smallBtn}
                     onPress={() => setRenaming(null)}
                   >
                     <Text style={styles.smallBtnText}>{t.renameSave}</Text>
-                  </Pressable>
+                  </PressableScale>
                 </>
               ) : (
                 <>
                   <Text testID={`member-name-${i}`} style={styles.memberName}>
                     {m.name}
                   </Text>
-                  <Pressable testID={`member-rename-${i}`} style={styles.smallBtn} onPress={() => setRenaming(m.key)}>
+                  <PressableScale
+                    testID={`member-rename-${i}`}
+                    style={styles.smallBtn}
+                    onPress={() => setRenaming(m.key)}
+                  >
                     <Text style={styles.smallBtnText}>{t.rename}</Text>
-                  </Pressable>
+                  </PressableScale>
                   {!m.hasTransactions && (
-                    <Pressable testID={`member-remove-${i}`} style={styles.smallBtn} onPress={() => removeMember(m)}>
+                    <PressableScale
+                      testID={`member-remove-${i}`}
+                      style={styles.smallBtn}
+                      onPress={() => removeMember(m)}
+                    >
                       <Text style={styles.smallBtnText}>{t.remove}</Text>
-                    </Pressable>
+                    </PressableScale>
                   )}
                 </>
               )}
@@ -324,9 +338,9 @@ export default function GroupEditScreen() {
               returnKeyType="done"
               submitBehavior="blurAndSubmit"
             />
-            <Pressable testID="member-add" style={styles.addBtn} onPress={() => addMember()}>
+            <PressableScale testID="member-add" style={styles.addBtn} onPress={() => addMember()}>
               <Text style={styles.addBtnText}>{t.add}</Text>
-            </Pressable>
+            </PressableScale>
           </View>
           <Text style={styles.hint}>{t.hint}</Text>
         </View>
@@ -339,9 +353,9 @@ export default function GroupEditScreen() {
 
       {!keyboardOpen && (
         <View style={styles.footer}>
-          <Pressable testID="group-save" style={styles.primaryBtn} onPress={save}>
+          <PressableScale testID="group-save" style={styles.primaryBtn} onPress={save}>
             <Text style={styles.primaryText}>{t.save}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       )}
 

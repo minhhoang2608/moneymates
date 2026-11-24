@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { EntryMenu } from "@/components/EntryMenu";
 import { TransactionListItem } from "@/components/transaction/TransactionListItem";
@@ -55,7 +56,7 @@ export default function OverviewScreen() {
             <Text style={styles.title}>{vi.overview.greeting(name)}</Text>
             {data ? <Text style={styles.subtitle}>{vi.overview.monthTitle(data.month)}</Text> : null}
           </View>
-          <Pressable
+          <PressableScale
             testID="overview-add-button"
             accessibilityRole="button"
             accessibilityLabel={vi.overview.add}
@@ -63,7 +64,7 @@ export default function OverviewScreen() {
             style={styles.add}
           >
             <Text style={styles.addText}>+</Text>
-          </Pressable>
+          </PressableScale>
         </View>
 
         <View style={styles.hero}>
@@ -104,9 +105,9 @@ export default function OverviewScreen() {
           <View style={styles.card} testID="overview-top">
             <View style={styles.cardHead}>
               <Text style={styles.cardTitle}>{vi.overview.topCategories}</Text>
-              <Pressable testID="overview-stats-link" onPress={() => router.push("/stats")}>
+              <PressableScale testID="overview-stats-link" onPress={() => router.push("/stats")}>
                 <Text style={styles.link}>{vi.overview.statsLink}</Text>
-              </Pressable>
+              </PressableScale>
             </View>
             <View style={styles.stack}>
               {bar.map((amount, i) => (
@@ -129,20 +130,20 @@ export default function OverviewScreen() {
         <View style={styles.card}>
           <View style={styles.cardHead}>
             <Text style={styles.cardTitle}>{vi.overview.recent}</Text>
-            <Pressable testID="overview-see-all" onPress={() => router.push("/history")}>
+            <PressableScale testID="overview-see-all" onPress={() => router.push("/history")}>
               <Text style={styles.link}>{vi.overview.seeAll}</Text>
-            </Pressable>
+            </PressableScale>
           </View>
           <View testID="overview-recent-list">
             {data && !data.hasAny ? <Text style={styles.empty}>{vi.overview.empty}</Text> : null}
             {data?.recent.map((t) => (
-              <Pressable
+              <PressableScale
                 key={t.id}
                 testID={`overview-open-${t.id}`}
                 onPress={() => router.push(`/transaction/${t.id}`)}
               >
                 <TransactionListItem txn={t} categoryName={data.categoryNames[t.category_id] ?? ""} />
-              </Pressable>
+              </PressableScale>
             ))}
           </View>
         </View>
