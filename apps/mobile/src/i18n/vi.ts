@@ -43,6 +43,27 @@ export const vi = {
     grant: "Cấp quyền",
     openSettings: "Mở Cài đặt",
   },
+  onboarding: {
+    permissions: {
+      step: "Bước 3/4",
+      skip: "Để sau",
+      title: "Cho phép những gì cần",
+      subtitle: "Bật trước để lúc dùng không bị gián đoạn. Quyền nào cũng có thể để sau.",
+      footnote: "Mỗi nút mở hộp thoại xin quyền của hệ thống. Bỏ qua quyền nào thì app sẽ hỏi lại đúng lúc cần dùng.",
+      next: "Tiếp tục",
+      granted: "Đã bật",
+      openSettings: "Mở Cài đặt",
+      camera: { label: "Camera", description: "Quét mã QR thanh toán, chụp bill." },
+      photos: {
+        label: "Ảnh",
+        description: "Lưu ảnh QR tạm cho app ngân hàng quét, rồi tự xoá. Cần quyền này để xoá được.",
+      },
+      microphone: {
+        label: "Micro & giọng nói",
+        description: "Nói “ăn phở 50 nghìn” để nhập nhanh. Nhận dạng trên máy.",
+      },
+    },
+  },
   payConfirm: {
     howTo: {
       prefix: (bank: string) => `Trong ${bank}: `,

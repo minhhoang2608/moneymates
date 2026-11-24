@@ -99,3 +99,25 @@ export const WarningIcon = (p: IconProps) => (
     <Path d="M12 10v5M12 18h.01" />
   </Base>
 );
+
+export const CameraIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+    <Circle cx="12" cy="13" r="3.5" />
+  </Base>
+);
+
+export const ImageIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="3" y="3" width="18" height="18" rx="3" />
+    <Circle cx="9" cy="9" r="2" />
+    <Path d="m21 15-5-5L5 21" />
+  </Base>
+);
+
+export const MicIcon = (p: IconProps) => (
+  <Base {...p}>
+    <Rect x="9" y="3" width="6" height="11" rx="3" />
+    <Path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+  </Base>
+);
