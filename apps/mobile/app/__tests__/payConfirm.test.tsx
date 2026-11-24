@@ -26,6 +26,17 @@ jest.mock("@/db/client", () => {
   const db = new Proxy({}, { get: (_t, key) => (global.__PAY_TEST_DB__ as never)[key] });
   return { db };
 });
+// The hidden transfer image: expose the VietQR payload it encodes (the real SVG is covered in QrImageTemplate.test).
+jest.mock("@/components/share/QrImageTemplate", () => {
+  const { View } = require("react-native");
+  const { buildQrImageContent } = require("@/lib/share/qrTemplate");
+  return {
+    QrImageTemplate: ({ getRef, ...props }: { getRef?: (r: unknown) => void }) => {
+      getRef?.({ toDataURL: (cb: (d: string) => void) => cb("BASE64PNG") });
+      return <View testID="qr-svg" value={buildQrImageContent(props as never).payload} />;
+    },
+  };
+});
 const mockHandOff = jest.fn();
 jest.mock("@/lib/payConfirm/handOffDeps", () => ({
   makeHandOff: jest.fn(
