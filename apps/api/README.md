@@ -35,10 +35,17 @@ Live at `https://moneymates-api.brandkey.net` (cPanel account on a CloudLinux + 
 2. Setup Python App: Python 3.12, app root `moneymates/apps/api`, URL = the API domain, startup file
    `config/wsgi.py`, entry point `application`. Run Pip Install with `requirements.txt`.
 3. Environment variables (same page): `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, `ALLOWED_HOSTS`,
-   `APP_SHARED_SECRET`, `CACHE_BACKEND=db`, `OPENROUTER_*`. Do **not** set `DATABASE_URL`: the host's
-   PostgreSQL is 10.x and Django 5.2 needs 14+, so the API uses SQLite (`db.sqlite3`, git-ignored). It only
-   stores request counters.
-4. Execute python script: `manage.py migrate`, then `manage.py createcachetable`.
+   `APP_SHARED_SECRET`, `CACHE_BACKEND=db`, `OPENROUTER_*`, and `DATABASE_URL` pointing at Supabase
+   PostgreSQL through the **session pooler**:
+   `postgresql://postgres.<project-ref>:<password>@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require`.
+   URL-encode special characters in the password (`@` → `%40`, `!` → `%21`, `:` → `%3A`, `/` → `%2F`,
+   `#` → `%23`, `%` → `%25`). The host's own PostgreSQL is 10.x (Django 5.2 needs 14+) and Supabase's direct
+   connection is IPv6-only, hence the pooler. Hawk Host opened outbound TCP 5432/6543 for this on request.
+   Keep the Supabase Data API disabled: the API connects to Postgres directly and the Django tables have no RLS.
+   Without `DATABASE_URL` the API falls back to SQLite (`db.sqlite3`, git-ignored).
+4. In the cPanel Terminal:
+   `~/virtualenv/moneymates/apps/api/3.12/bin/python ~/moneymates/apps/api/deploy/hawkhost/manage_with_env.py migrate`,
+   then the same with `createcachetable`.
 5. LiteSpeed on this host ignores the Passenger block that step 2 writes, so requests go through CGI.
    In the cPanel Terminal: `bash ~/moneymates/apps/api/deploy/hawkhost/install.sh`. It installs
    `cgi-bin/django.cgi` (reads the env vars from step 3) and the rewrite rules in the domain's `.htaccess`.
