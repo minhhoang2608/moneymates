@@ -1,5 +1,8 @@
 # BA: reads the requirements in docs/, compares them with existing issues and creates missing tickets
 # (with acceptance criteria, grouped under epics) as status:triage. Never creates duplicates.
+# claude-code-action rejects the push event, so a docs push to dev only runs the small `dispatch` job,
+# which starts this workflow again via workflow_dispatch (passing the pushed range); the agent job
+# runs only on workflow_dispatch (from that job, from ba.sh when more tickets remain, or by hand).
 name: BA
 run-name: BA – sync tickets from docs
 
@@ -18,16 +21,35 @@ on:
         description: Optional focus (for example "group settlement" or "v1 – AI")
         required: false
         type: string
+      before:
+        description: Commit before the docs push (set by the push dispatcher; diffed against dev for the BA)
+        required: false
+        type: string
 
 permissions: {}
 
+# Separate groups so a short-lived push run never replaces a pending agent run.
 concurrency:
-  group: ba
+  group: ba-${{ github.event_name }}
   cancel-in-progress: false
 
 jobs:
+  dispatch:
+    name: Dispatch BA
+    if: vars.FACTORY_ENABLED == 'true' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Start the BA via workflow_dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+        run: gh workflow run ba.yml --ref dev --repo "$GITHUB_REPOSITORY" -f before="$BEFORE"
+
   ba:
-    if: vars.FACTORY_ENABLED == 'true'
+    if: vars.FACTORY_ENABLED == 'true' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -46,7 +68,7 @@ jobs:
       - uses: ./.github/actions/factory-setup
       - name: Collect existing issues and docs changes
         env:
-          BEFORE: ${{ github.event.before }}
+          BEFORE: ${{ inputs.before }}
         run: |
           "$FACTORY_BIN/ba.sh" collect
           if [[ -n "${BEFORE:-}" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
