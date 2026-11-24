@@ -71,6 +71,9 @@ appId: com.moneymates.app
 - tapOn:
     id: "amount-preview"
 - waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "category-row"
 - tapOn:
     id: "category-row"
 - tapOn: "Ăn uống"
