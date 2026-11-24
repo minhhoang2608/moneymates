@@ -26,6 +26,7 @@ appId: com.moneymates.app
     id: "settings-source-name"
 - inputText: "Visa"
 - scrollUntilVisible:
+    direction: UP
     element:
       id: "settings-general-heading"
 - tapOn:
