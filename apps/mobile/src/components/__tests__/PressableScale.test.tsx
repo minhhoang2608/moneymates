@@ -1,7 +1,7 @@
 import { AccessibilityInfo, Text } from "react-native";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { PressableScale } from "../PressableScale";
-import { pressOpacity } from "@/lib/motion";
+import { pressOpacity, pressScale } from "@/lib/motion";
 
 function flat(style: unknown): Record<string, unknown> {
   return Object.assign({}, ...(Array.isArray(style) ? style.flat(Infinity) : [style]).filter(Boolean));
@@ -44,8 +44,10 @@ describe("PressableScale", () => {
     const btn = screen.getByTestId("btn");
     await fireEvent(btn, "pressIn");
     expect(flat(screen.getByTestId("btn").props.style).opacity).toBe(pressOpacity);
+    expect(flat(screen.getByTestId("btn").props.style).transform).toEqual([{ scale: pressScale }]);
     await fireEvent(btn, "pressOut");
     expect(flat(screen.getByTestId("btn").props.style).opacity).toBe(1);
+    expect(flat(screen.getByTestId("btn").props.style).transform).toEqual([{ scale: 1 }]);
   });
 
   it("still handles presses with reduce motion on", async () => {
@@ -57,9 +59,9 @@ describe("PressableScale", () => {
       </PressableScale>,
     );
     await waitFor(() => expect(AccessibilityInfo.isReduceMotionEnabled).toHaveBeenCalled());
+    await act(async () => {});
     await fireEvent(screen.getByTestId("btn"), "pressIn");
-    const t = flat(screen.getByTestId("btn").props.style).transform as { scale: number }[] | undefined;
-    expect(t?.every((x) => x.scale === 1) ?? true).toBe(true);
+    expect(flat(screen.getByTestId("btn").props.style).transform).toEqual([{ scale: 1 }]);
     await fireEvent.press(screen.getByTestId("btn"));
     expect(onPress).toHaveBeenCalled();
   });
