@@ -24,8 +24,13 @@ class BankHandOffModule : Module() {
         throw CodedException("ERR_BAD_INTENT", "Invalid intent uri", e)
       }
       val pkg = intent.`package`
-      val launch = if (intent.action == null && pkg != null) {
-        context.packageManager.getLaunchIntentForPackage(pkg)
+      // parseUri defaults to ACTION_VIEW with data "//" for package-only URIs, which never
+      // resolves. A package with no real data means "open the app": use its launcher intent.
+      val data = intent.dataString
+      val packageOnly = pkg != null && (data.isNullOrEmpty() || data == "//") &&
+        (intent.action == null || intent.action == Intent.ACTION_VIEW)
+      val launch = if (packageOnly) {
+        context.packageManager.getLaunchIntentForPackage(pkg!!)
       } else {
         intent
       }
