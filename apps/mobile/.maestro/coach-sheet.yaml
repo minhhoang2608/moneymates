@@ -36,6 +36,7 @@ appId: com.moneymates.app
     id: "screen-pay-confirm"
 - tapOn:
     id: "pay-submit"
+    waitToSettleTimeoutMs: 500
 - extendedWaitUntil:
     visible:
       id: "handoff-coach-toast"
