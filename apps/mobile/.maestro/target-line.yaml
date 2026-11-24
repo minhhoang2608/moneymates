@@ -71,6 +71,9 @@ appId: com.moneymates.app
     id: "overview-add-button"
 - tapOn:
     id: "entry-menu-manual"
+- scrollUntilVisible:
+    element:
+      id: "target-line"
 - assertVisible: "Đà Lạt ›"
 - tapOn:
     id: "close-button"
