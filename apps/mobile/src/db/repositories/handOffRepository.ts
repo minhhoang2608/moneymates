@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
 
 import { evaluateReturn } from "../../lib/payConfirm/paidRule";
 import { nowUtc } from "../columns";
@@ -36,6 +36,32 @@ export function createHandOffRepository(db: AnyDb) {
   return {
     get,
     markPaid,
+
+    /** Remembers which saved QR image (media-library asset) belongs to this hand-off. */
+    async setQrAsset(id: string, assetId: string): Promise<HandOffRow | null> {
+      if (!(await get(id))) return null;
+      await db.update(handOffs).set({ qr_asset_id: assetId, updated_at: nowUtc() }).where(eq(handOffs.id, id));
+      return get(id);
+    },
+
+    /** Stamps the time the QR image was deleted. The first deletion time wins. */
+    async markQrDeleted(id: string, at: Date = new Date()): Promise<HandOffRow | null> {
+      if (!(await get(id))) return null;
+      await db
+        .update(handOffs)
+        .set({ qr_deleted_at: at.toISOString(), updated_at: nowUtc() })
+        .where(and(eq(handOffs.id, id), isNull(handOffs.qr_deleted_at)));
+      return get(id);
+    },
+
+    /** Hand-offs whose QR image was saved and not yet deleted, oldest first. */
+    async listPendingQrImages(): Promise<HandOffRow[]> {
+      return db
+        .select()
+        .from(handOffs)
+        .where(and(isNotNull(handOffs.qr_asset_id), isNull(handOffs.qr_deleted_at), isNull(handOffs.deleted_at)))
+        .orderBy(asc(handOffs.started_at));
+    },
 
     async create(input: NewHandOff): Promise<HandOffRow> {
       const now = nowUtc();
