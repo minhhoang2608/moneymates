@@ -37,3 +37,26 @@ def test_invalid_input_does_not_consume_quota(post, settings):
     settings.AI_LIMIT_PER_MINUTE = 1
     assert post({"text": ""}).status_code == 400
     assert post(BODY).status_code == 200
+
+
+def test_limit_store_error_fails_open(post, monkeypatch, caplog):
+    from django.db import DatabaseError
+
+    def boom(*a, **k):
+        raise DatabaseError("down dev-1")
+
+    monkeypatch.setattr("ai.limits._hit", boom)
+    with caplog.at_level("WARNING"):
+        assert post().status_code == 200
+    assert "failing open" in caplog.text
+    assert "dev-1" not in caplog.text
+
+
+def test_limit_store_error_fails_open_bill(post_bill, monkeypatch):
+    from django.db import DatabaseError
+
+    def boom(*a, **k):
+        raise DatabaseError("down")
+
+    monkeypatch.setattr("ai.limits._hit", boom)
+    assert post_bill().status_code == 200

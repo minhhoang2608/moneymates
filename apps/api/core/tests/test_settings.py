@@ -44,3 +44,42 @@ def test_example_env_file_has_only_placeholders():
     assert values["APP_SHARED_SECRET"] == ""
     assert values["DJANGO_SECRET_KEY"] == "change-me"
     assert values["DATABASE_URL"].startswith("postgres://")
+
+
+def _reload_with(monkeypatch, **env):
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    return importlib.reload(settings)
+
+
+def test_postgres_gets_connect_timeout(monkeypatch):
+    try:
+        s = _reload_with(monkeypatch, DATABASE_URL="postgres://u:p@h:5432/d")
+        assert s.DATABASES["default"]["OPTIONS"]["connect_timeout"] == 5
+        s = _reload_with(monkeypatch, DB_CONNECT_TIMEOUT_S="2")
+        assert s.DATABASES["default"]["OPTIONS"]["connect_timeout"] == 2
+        s = _reload_with(monkeypatch, DATABASE_URL="postgres://u:p@h:5432/d?connect_timeout=9")
+        assert s.DATABASES["default"]["OPTIONS"]["connect_timeout"] == 9
+    finally:
+        monkeypatch.undo()
+        importlib.reload(settings)
+
+
+def test_sqlite_has_no_connect_timeout(monkeypatch):
+    try:
+        s = _reload_with(monkeypatch, DATABASE_URL="sqlite:///x.sqlite3")
+        assert "connect_timeout" not in s.DATABASES["default"].get("OPTIONS", {})
+    finally:
+        monkeypatch.undo()
+        importlib.reload(settings)
+
+
+def test_db_cache_is_culled(monkeypatch):
+    try:
+        s = _reload_with(monkeypatch, CACHE_BACKEND="db")
+        opts = s.CACHES["default"]["OPTIONS"]
+        assert opts["MAX_ENTRIES"] == 1000
+        assert opts["CULL_FREQUENCY"] == 3
+    finally:
+        monkeypatch.undo()
+        importlib.reload(settings)

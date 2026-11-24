@@ -87,3 +87,26 @@ def test_missing_or_wrong_secret_401(get, fake):
 
 def test_missing_device_id_401(get, fake):
     assert get(device=None).status_code == 401
+
+
+def _break_cache(monkeypatch):
+    def boom(*a, **k):
+        raise RuntimeError("cache down")
+
+    monkeypatch.setattr(cache, "get", boom)
+    monkeypatch.setattr(cache, "set", boom)
+
+
+def test_cache_down_fetches_live(get, fake, monkeypatch):
+    _break_cache(monkeypatch)
+    resp = get()
+    assert resp.status_code == 200
+    assert len(fake.calls) == 3
+
+
+def test_cache_down_and_vietqr_down_503(get, fake, monkeypatch):
+    _break_cache(monkeypatch)
+    fake.fail = httpx.ConnectError("down")
+    resp = get()
+    assert resp.status_code == 503
+    assert resp.json()["error"] == "banks_unavailable"

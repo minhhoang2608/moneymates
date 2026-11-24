@@ -55,6 +55,8 @@ Auto-deploy: a cPanel cron job runs `deploy/hawkhost/update.sh` every 5 minutes.
 fast-forwards `~/moneymates`, reinstalls requirements if they changed, re-runs `install.sh`, migrates (via
 `manage_with_env.py`, which loads the Python App env vars) and logs to `~/logs/moneymates-api-deploy.log`. CGI starts Python per request (about a second); fine for this low-traffic API.
 
-Note: request counters use the Django cache. With PostgreSQL the cache is a DB cache table (`django_cache`, created by `createcachetable`); otherwise LocMem, which is per process. `DatabaseCache.incr` is not atomic, so concurrent workers may slightly undercount a soft quota.
+Note: with PostgreSQL the per-device request counters live in the `ai_counter` table and are incremented by a single atomic `INSERT ... ON CONFLICT DO UPDATE` (expired rows are reset on hit and culled on about 1 in 50 calls). Otherwise (SQLite, tests) the Django cache is used. If the counter store errors, the limit check fails open (logged warning, request allowed). `banks` cache errors are also tolerated: the service fetches live from VietQR, and answers 503 `banks_unavailable` if that fails too (the app then uses its bundled list). The PostgreSQL connection uses `connect_timeout` (`DB_CONNECT_TIMEOUT_S`, default 5; a `?connect_timeout=` in `DATABASE_URL` wins). The DB cache table is culled at `DB_CACHE_MAX_ENTRIES` (default 1000). `update.sh` runs `migrate`, which creates `ai_counter`.
+
+`GET /health` never touches the database. `GET /health?db=1` runs `SELECT 1`: 200 `{"status":"ok","db":"ok"}` or 503 `{"status":"error","db":"error"}`. Point a daily uptime probe at `/health?db=1` to keep the Supabase project from pausing.
 
 `GET /banks/apps` (headers `X-App-Secret`, `X-Device-Id`): VietQR bank-app registry merged by appId, cached for `BANKS_CACHE_TTL_S` (24 h) with a last-good copy served as `stale: true` when VietQR is down; 503 `banks_unavailable` if nothing was ever cached.

@@ -43,7 +43,7 @@ class FakeOpenRouter:
 
 
 @pytest.fixture(autouse=True)
-def _isolate(settings, monkeypatch):
+def _isolate(settings, monkeypatch, db):
     cache.clear()
     settings.APP_SHARED_SECRET = SECRET
     settings.OPENROUTER_API_KEY = "test-key"
