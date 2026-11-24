@@ -49,3 +49,5 @@ fast-forwards `~/moneymates`, reinstalls requirements if they changed, re-runs `
 `manage_with_env.py`, which loads the Python App env vars) and logs to `~/logs/moneymates-api-deploy.log`. CGI starts Python per request (about a second); fine for this low-traffic API.
 
 Note: request counters use the Django cache. With PostgreSQL the cache is a DB cache table (`django_cache`, created by `createcachetable`); otherwise LocMem, which is per process. `DatabaseCache.incr` is not atomic, so concurrent workers may slightly undercount a soft quota.
+
+`GET /banks/apps` (headers `X-App-Secret`, `X-Device-Id`): VietQR bank-app registry merged by appId, cached for `BANKS_CACHE_TTL_S` (24 h) with a last-good copy served as `stale: true` when VietQR is down; 503 `banks_unavailable` if nothing was ever cached.
