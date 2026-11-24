@@ -20,6 +20,7 @@ describe("ScanFrame", () => {
   it("renders the scanning animation while nothing is detected", async () => {
     const repeat = spy("withRepeat");
     await render(<ScanFrame />);
+    expect(screen.getByTestId("scan-frame")).toBeTruthy();
     expect(screen.getByTestId("scan-frame-animated")).toBeTruthy();
     expect(screen.getByTestId("scan-line")).toBeTruthy();
     expect(repeat).toHaveBeenCalledWith(expect.anything(), -1, true);
@@ -34,6 +35,7 @@ describe("ScanFrame", () => {
     timing.mockClear();
     await rerender(<ScanFrame detected />);
     expect(screen.getByTestId("scan-flash")).toBeTruthy();
+    expect(screen.getByTestId("scan-frame")).toBeTruthy();
     expect(screen.getByTestId("scan-frame-static")).toBeTruthy();
     expect(sequence).toHaveBeenCalledTimes(1);
     const total = timing.mock.calls.reduce((sum, c) => sum + (c[1] as { duration: number }).duration, 0);
@@ -47,6 +49,7 @@ describe("ScanFrame", () => {
     const sequence = spy("withSequence");
     const { rerender } = await render(<ScanFrame />);
     await waitFor(() => expect(screen.getByTestId("scan-frame-static")).toBeTruthy());
+    expect(screen.getByTestId("scan-frame")).toBeTruthy();
     repeat.mockClear();
     const timing = spy("withTiming");
     await rerender(<ScanFrame detected />);
