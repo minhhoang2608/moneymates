@@ -3,6 +3,9 @@ appId: com.moneymates.app
 ---
 - launchApp:
     clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
 - tapOn:
     id: "tab-profile"
 - tapOn:
@@ -11,6 +14,11 @@ appId: com.moneymates.app
     id: "screen-categories"
 - tapOn:
     id: "category-add"
+- extendedWaitUntil:
+    visible:
+      id: "category-sheet"
+    timeout: 10000
+- waitForAnimationToEnd
 - tapOn:
     id: "category-name-input"
 - inputText: "Cà phê"
@@ -19,6 +27,13 @@ appId: com.moneymates.app
 - waitForAnimationToEnd
 - tapOn:
     id: "category-save"
+- extendedWaitUntil:
+    notVisible:
+      id: "category-sheet"
+    timeout: 10000
+- scrollUntilVisible:
+    element: "Cà phê"
+    centerElement: true
 - assertVisible: "Cà phê"
 - tapOn: "Xóa"
 - tapOn: "Xóa"
