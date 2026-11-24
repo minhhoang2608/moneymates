@@ -34,5 +34,9 @@ appId: com.moneymates.app
     id: "save-button"
 - tapOn:
     id: "tab-history"
+- extendedWaitUntil:
+    visible:
+      id: "screen-history"
+    timeout: 10000
 - assertVisible: "Bánh căn Nhà Chung"
-- assertVisible: "345.000đ"
+- assertVisible: "−345.000đ"
