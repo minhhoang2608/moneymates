@@ -70,6 +70,8 @@ jobs:
               result=none
             fi
           fi
+          # E2E (Maestro) is switched off for now (owner decision 2026-11-24): the Tester ignores it.
+          result=skipped
           echo "E2E_RESULT=$result" >>"$GITHUB_ENV"
           echo "E2E_SHA=$sha" >>"$GITHUB_ENV"
       - name: Live dev API smoke
@@ -112,6 +114,10 @@ jobs:
             The live dev API (deployed from dev about 5 minutes after each merge) was probed: `.factory/live-api.json`
             (health status, `/me/features` body, `/ai/parse-text` status without the app secret, which must be 401).
             Use it for `area:api` criteria about the deployed service; if the merge is newer than the deploy, use `pending`.
+
+            E2E (Maestro) is DISABLED (owner decision): `e2e_job` is `skipped`. Never use `pending`, `needs_e2e` or `fail`
+            because a Maestro flow is missing, old or red, and never file an E2E regression bug. Judge criteria that a
+            flow would cover by reading the code and the unit/API/golden tests instead.
 
             Each entry has a `kind`:
             - `ticket`: a Dev sub-ticket merged into dev (find the PR via `gh pr list --state merged --search "<issue number>"`).
