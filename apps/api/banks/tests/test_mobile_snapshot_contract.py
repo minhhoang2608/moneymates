@@ -3,6 +3,7 @@ from pathlib import Path
 
 SNAPSHOT = (
     Path(__file__).resolve().parents[4]
+    / "apps"
     / "mobile"
     / "src"
     / "lib"
