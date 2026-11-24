@@ -6,12 +6,11 @@ import { vi } from "@/i18n/vi";
 
 export const CANVAS_W = 600;
 export const CANVAS_H = 900;
-const PAD_Y = 36;
-const LOGO = 36;
+const PAD_Y = 48;
 const GAP = 22;
 const QUIET = 4;
-const TARGET_BOX = 440;
-const MIN_BOX = 420;
+const TARGET_BOX = 520;
+const MIN_BOX = 500;
 const NAME_MAX_CHARS = 28;
 
 export type QrImageInput = {
@@ -41,6 +40,12 @@ export function groupAccount(account: string): string {
   return account.replace(/(.{4})(?=.)/g, "$1 ");
 }
 
+/** Merchant QRs often carry "Cua hang X" / "Cửa hàng X" as the name; the prefix is noise on the transfer image. */
+export function stripShopPrefix(name: string): string {
+  const stripped = name.replace(/^c(?:ua|ửa)\s+h(?:ang|àng)\s+/i, "").trim();
+  return stripped || name;
+}
+
 function truncate(s: string, max: number): string {
   return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
 }
@@ -63,7 +68,7 @@ export function buildQrImageContent(input: QrImageInput): QrImageContent {
     payload = input.fallbackPayload;
   }
   const bankName = input.bankName?.trim() || findBankByBin(input.bankBin)?.shortName || input.bankBin;
-  const name = input.name?.trim();
+  const name = input.name?.trim() ? stripShopPrefix(input.name.trim()) : undefined;
   return {
     payload,
     title: name ? truncate(name, NAME_MAX_CHARS) : null,
@@ -87,7 +92,6 @@ export type QrImageLayout = {
   width: number;
   height: number;
   centerX: number;
-  logoY: number;
   moduleSize: number;
   box: { x: number; y: number; size: number };
   /** Top-left of the first dark-module cell (box + quiet zone). */
@@ -116,7 +120,7 @@ export function computeQrImageLayout(
   if (moduleSize * cells < MIN_BOX) moduleSize = TARGET_BOX / cells;
   const boxSize = moduleSize * cells;
   const boxX = (CANVAS_W - boxSize) / 2;
-  const boxY = PAD_Y + LOGO + GAP;
+  const boxY = PAD_Y;
   let y = boxY + boxSize + GAP;
 
   const hasTitle = opts.hasTitle ?? true;
@@ -141,7 +145,6 @@ export function computeQrImageLayout(
     width: CANVAS_W,
     height: CANVAS_H,
     centerX: CANVAS_W / 2,
-    logoY: PAD_Y,
     moduleSize,
     box: { x: boxX, y: boxY, size: boxSize },
     qrOrigin: { x: boxX + QUIET * moduleSize, y: boxY + QUIET * moduleSize },
