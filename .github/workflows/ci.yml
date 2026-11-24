@@ -118,6 +118,17 @@ jobs:
     needs: detect
     if: needs.detect.outputs.api == 'true'
     runs-on: ubuntu-latest
+    # Same engine as the dev API (Supabase PostgreSQL 17).
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci" --health-interval 5s --health-timeout 5s --health-retries 10
     defaults:
       run:
         working-directory: apps/api
@@ -140,6 +151,7 @@ jobs:
         env:
           DJANGO_SECRET_KEY: ci-only-not-a-secret
           OPENROUTER_API_KEY: ci-mock
+          DATABASE_URL: postgres://ci:ci-only-not-a-secret@localhost:5432/ci
 
   ci-gate:
     name: ci-gate
