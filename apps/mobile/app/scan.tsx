@@ -19,6 +19,7 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
   const [error, setError] = useState(false);
+  const [detected, setDetected] = useState(false);
   const handling = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -37,8 +38,10 @@ export default function ScanScreen() {
     if (handling.current) return;
     handling.current = true;
     const route = scanResultToRoute(text);
-    if (route.ok) router.replace(route.href);
-    else showError();
+    if (route.ok) {
+      setDetected(true);
+      router.replace(route.href);
+    } else showError();
   }
 
   async function onGallery() {
@@ -94,7 +97,7 @@ export default function ScanScreen() {
       </View>
 
       <View style={styles.frameWrap}>
-        <ScanFrame />
+        <ScanFrame detected={detected} />
         {e2e ? <Pressable testID="scan-e2e-feed" style={styles.feed} onPress={() => handle(e2eQr.dynamic)} /> : null}
       </View>
 

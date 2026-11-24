@@ -2,6 +2,8 @@ import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
 
 import { vi } from "@/i18n/vi";
 
+// expo-router/testing-library registers an empty reanimated mock on import: override it afterwards.
+Object.assign(require("react-native-reanimated"), require("../../jest.reanimated-mock"));
 jest.mock("@/db/client", () => {
   const { openTestDb } = jest.requireActual("@/db/testing/testDb");
   return { db: openTestDb().db };

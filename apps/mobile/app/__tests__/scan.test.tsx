@@ -5,6 +5,8 @@ import { Linking } from "react-native";
 
 import qr from "../../e2e/fixtures/qr.json";
 
+// expo-router/testing-library registers an empty reanimated mock on import: override it afterwards.
+Object.assign(require("react-native-reanimated"), require("../../jest.reanimated-mock"));
 jest.mock("@/db/client", () => {
   const { openTestDb } = jest.requireActual("@/db/testing/testDb");
   return { db: openTestDb().db };
@@ -46,6 +48,17 @@ describe("scan screen", () => {
     expect(screen.getByTestId("pay-amount").props.value).toBe("55000");
   });
 
+  it("navigates immediately on detection, without waiting for the flash", async () => {
+    await open();
+    jest.useFakeTimers();
+    try {
+      await scan(qr.dynamic);
+      expect(screen).toHavePathname("/pay-confirm");
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("static code navigates without amount", async () => {
     await open();
     await scan(qr.static);
@@ -57,6 +70,7 @@ describe("scan screen", () => {
     await open();
     await scan(qr.invalid);
     expect(screen.getByTestId("scan-error")).toBeTruthy();
+    expect(screen.queryByTestId("scan-flash")).toBeNull();
     expect(screen).toHavePathname("/scan");
   });
 
