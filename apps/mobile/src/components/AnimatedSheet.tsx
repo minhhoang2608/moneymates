@@ -2,7 +2,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
-import { isE2E } from "@/e2e/isE2E";
 import { durations, useReduceMotion } from "@/lib/motion";
 
 export type AnimatedSheetVariant = "sheet" | "popup" | "fullscreen";
@@ -33,7 +32,7 @@ export function AnimatedSheet({
   children: ReactNode;
 }) {
   const reduceMotion = useReduceMotion();
-  const instantExit = reduceMotion || isE2E();
+  const instantExit = reduceMotion;
   const [mounted, setMounted] = useState(visible);
   const progress = useSharedValue(visible && reduceMotion ? 1 : 0);
 
