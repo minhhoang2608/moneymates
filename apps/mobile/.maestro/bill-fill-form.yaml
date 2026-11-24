@@ -13,8 +13,13 @@ appId: com.moneymates.app
 - tapOn:
     id: "bill-accept"
 - extendedWaitUntil:
-    visible: "AI đã đọc xong bill"
+    visible:
+      id: "bill-done"
     timeout: 10000
+- assertVisible: "345.000đ"
+- assertVisible: "Bánh căn Nhà Chung"
+- assertVisible: "22/11/2026"
+- assertVisible: "Ăn uống"
 - tapOn:
     id: "bill-fill-form"
 - assertVisible:
