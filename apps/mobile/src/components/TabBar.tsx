@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
+import { ensurePermission } from "@/lib/permissions";
 import { colors, fontFamily, fontSize, layout } from "@/theme";
 
 import { EntryMenu } from "./EntryMenu";
@@ -62,7 +63,10 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         testID="tab-qr"
         accessibilityRole="button"
         accessibilityLabel={vi.scan.title}
-        onPress={() => router.push("/scan")}
+        onPress={async () => {
+          await ensurePermission("camera");
+          router.push("/scan");
+        }}
         onLongPress={() => setMenuOpen(true)}
         style={styles.qr}
       >

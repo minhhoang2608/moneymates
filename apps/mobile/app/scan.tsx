@@ -1,7 +1,7 @@
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { pickAndDecodeQr } from "@/components/scanner/decodeImage";
@@ -9,6 +9,7 @@ import { ScanFrame } from "@/components/scanner/ScanFrame";
 import { e2eQr } from "@/e2e/fixtures";
 import { isE2E } from "@/e2e/isE2E";
 import { vi } from "@/i18n/vi";
+import { getPermissionState, openAppSettings, requestPermission, type PermissionState } from "@/lib/permissions";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
 import { colors, fontFamily, fontSize, layout } from "@/theme";
 
@@ -17,7 +18,7 @@ const ERROR_MS = 3000;
 export default function ScanScreen() {
   const router = useRouter();
   const e2e = isE2E();
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, setPermission] = useState<PermissionState | null>(null);
   const [torch, setTorch] = useState(false);
   const [error, setError] = useState(false);
   const [detected, setDetected] = useState(false);
@@ -25,6 +26,18 @@ export default function ScanScreen() {
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(timer.current), []);
+
+  useEffect(() => {
+    let alive = true;
+    void getPermissionState("camera").then((s) => alive && setPermission(s));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function onGrant() {
+    setPermission(await requestPermission("camera"));
+  }
 
   function showError() {
     setError(true);
@@ -59,8 +72,8 @@ export default function ScanScreen() {
     handle(res.text);
   }
 
-  const showCamera = !e2e && permission?.granted;
-  const denied = !e2e && permission !== null && !permission.granted;
+  const showCamera = !e2e && permission === "granted";
+  const denied = !e2e && permission !== null && permission !== "granted";
 
   return (
     <View style={styles.root} testID="screen-scan">
@@ -106,12 +119,12 @@ export default function ScanScreen() {
       {denied ? (
         <View style={styles.denied}>
           <Text style={styles.hint}>{vi.scan.permissionDenied}</Text>
-          {permission?.canAskAgain ? (
-            <PressableScale testID="scan-grant" accessibilityRole="button" onPress={requestPermission}>
+          {permission === "not_asked" ? (
+            <PressableScale testID="scan-grant" accessibilityRole="button" onPress={onGrant}>
               <Text style={styles.link}>{vi.scan.grant}</Text>
             </PressableScale>
           ) : null}
-          <PressableScale testID="scan-open-settings" accessibilityRole="button" onPress={() => Linking.openSettings()}>
+          <PressableScale testID="scan-open-settings" accessibilityRole="button" onPress={() => void openAppSettings()}>
             <Text style={styles.link}>{vi.scan.openSettings}</Text>
           </PressableScale>
         </View>

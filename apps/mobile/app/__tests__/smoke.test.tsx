@@ -1,4 +1,4 @@
-import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
+import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { vi } from "@/i18n/vi";
 
@@ -45,7 +45,7 @@ describe("app smoke (mirrors .maestro/smoke.yaml)", () => {
       expect(screen.getByTestId(`screen-${name}`)).toBeTruthy();
     }
     await fireEvent.press(screen.getByTestId("tab-qr"));
-    expect(screen.getByTestId("screen-scan")).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId("screen-scan")).toBeTruthy());
     expect(screen.getAllByText("Quét mã thanh toán").length).toBeGreaterThan(0);
   });
 
