@@ -16,6 +16,9 @@ export const PREF_KEYS = {
   alertOverLastMonth: "alert_over_last_month",
   defaultCurrency: "default_currency",
   appLockEnabled: "app_lock_enabled",
+  directShareMemory: "direct_share_memory",
+  defaultBankSuggestionDismissed: "default_bank_suggestion_dismissed",
+  recentPayApps: "pay.recent_apps",
 } as const;
 
 export class PreferencesError extends Error {

@@ -3,18 +3,22 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 
+import { DefaultBankSuggestion } from "@/components/settings/DefaultBankSuggestion";
 import { MoneySourceSection } from "@/components/settings/MoneySourceSection";
 import { PaymentAppList } from "@/components/settings/PaymentAppList";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { MoneySourceRow } from "@/db/repositories/moneySourceRepository";
 import { vi } from "@/i18n/vi";
 import { getAppLockAuth } from "@/lib/appLock/auth";
+import { PAY_APPS, orderAppsBySaved } from "@/lib/payConfirm/apps";
+import { suggestDefaultApp } from "@/lib/payConfirm/defaultSuggestion";
+import { PREF_KEYS } from "@/lib/preferences/defaults";
 import { useAppLock } from "@/stores/appLock";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { paymentAppPrefs, moneySources, preferences } = useRepositories();
+  const { paymentAppPrefs, moneySources, preferences, appSettings, bankAccounts, handOffMemory } = useRepositories();
   const [order, setOrder] = useState<string[]>([]);
   const [sources, setSources] = useState<MoneySourceRow[]>([]);
   const [currency, setCurrency] = useState("VND");
@@ -22,6 +26,9 @@ export default function SettingsScreen() {
   const [lockOn, setLockOn] = useState(false);
   const [lockAvailable, setLockAvailable] = useState(true);
   const [lockBusy, setLockBusy] = useState(false);
+  const [recent, setRecent] = useState<string[]>([]);
+  const [accountBins, setAccountBins] = useState<string[]>([]);
+  const [dismissed, setDismissed] = useState(true);
 
   const onLockChange = async (v: boolean) => {
     if (!v) {
@@ -59,7 +66,7 @@ export default function SettingsScreen() {
     useCallback(() => {
       let alive = true;
       (async () => {
-        const [o, s, c, a, l, avail] = await Promise.all([
+        const [o, s, c, a, l, avail, rec, accounts, dis] = await Promise.all([
           paymentAppPrefs.getAppOrder(),
           moneySources.listSources(),
           preferences.getDefaultCurrency(),
@@ -68,6 +75,9 @@ export default function SettingsScreen() {
           getAppLockAuth()
             .isLockAvailable()
             .catch(() => false),
+          appSettings.get<string[]>(PREF_KEYS.recentPayApps),
+          bankAccounts.listAccounts(),
+          handOffMemory.getDefaultSuggestionDismissed(),
         ]);
         if (!alive) return;
         setOrder(o);
@@ -76,12 +86,19 @@ export default function SettingsScreen() {
         setAlertOn(a);
         setLockOn(l);
         setLockAvailable(avail);
+        setRecent(Array.isArray(rec) ? rec : []);
+        setAccountBins(accounts.map((x) => x.bank_bin));
+        setDismissed(dis);
       })();
       return () => {
         alive = false;
       };
-    }, [paymentAppPrefs, moneySources, preferences]),
+    }, [paymentAppPrefs, moneySources, preferences, appSettings, bankAccounts, handOffMemory]),
   );
+
+  const fullOrder = orderAppsBySaved(PAY_APPS, order).map((a) => a.id);
+  const suggestedId = suggestDefaultApp({ order: fullOrder, recent, accountBins, dismissed });
+  const suggested = PAY_APPS.find((a) => a.id === suggestedId);
 
   const version = Constants.expoConfig?.version ?? "";
 
@@ -101,6 +118,20 @@ export default function SettingsScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <Text style={styles.section}>{vi.settings.appsHeading}</Text>
+        {suggested ? (
+          <DefaultBankSuggestion
+            appName={suggested.name}
+            onAccept={() => {
+              const keys = [suggested.id, ...fullOrder.filter((id) => id !== suggested.id)];
+              setOrder(keys);
+              void paymentAppPrefs.setAppOrder(keys);
+            }}
+            onDismiss={() => {
+              setDismissed(true);
+              void handOffMemory.dismissDefaultSuggestion();
+            }}
+          />
+        ) : null}
         <PaymentAppList
           order={order}
           onChange={(keys) => {

@@ -62,6 +62,9 @@ export const vi = {
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
     delete: "Xóa",
+    askPaid: "Đã thanh toán xong chưa?",
+    paidYes: "Đã trả",
+    paidNo: "Chưa",
     qrHint: "Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.",
   },
   db: {
@@ -82,6 +85,10 @@ export const vi = {
   settings: {
     title: "Cài đặt",
     back: "Quay lại",
+    suggestDefault: (name: string) =>
+      `Đặt ${name} làm app thanh toán mặc định? App này tự điền sẵn thông tin chuyển khoản.`,
+    suggestAccept: "Đặt mặc định",
+    suggestDismiss: "Bỏ qua",
     appsHeading: "App thanh toán · kéo để sắp xếp",
     autofill: "Tự điền",
     scanQr: "Quét ảnh QR",

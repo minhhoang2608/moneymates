@@ -48,5 +48,7 @@ export { createPaymentAppPrefsRepository } from "./paymentAppPrefsRepository";
 export type { PaymentAppPrefsRepository } from "./paymentAppPrefsRepository";
 export { createMoneySourceRepository } from "./moneySourceRepository";
 export type { MoneySourceRepository, MoneySourceRow } from "./moneySourceRepository";
+export { createHandOffMemoryRepository } from "./handOffMemoryRepository";
+export type { HandOffMemoryRepository } from "./handOffMemoryRepository";
 export { createPreferencesRepository } from "./preferencesRepository";
 export type { PreferencesRepository } from "./preferencesRepository";

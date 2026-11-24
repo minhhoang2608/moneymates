@@ -11,7 +11,7 @@ const HIDE_AFTER_MS = 8000;
 
 /** Shown when the user comes back from the bank app: confirms the saved payment, with quick delete. */
 export function ReturnBanner() {
-  const { transactions } = useRepositories();
+  const { transactions, handOffMemory } = useRepositories();
   const pending = usePendingHandOff((s) => s.pending);
   const visible = usePendingHandOff((s) => s.visible);
 
@@ -28,10 +28,21 @@ export function ReturnBanner() {
   }, []);
 
   useEffect(() => {
-    if (!visible || !pending) return;
+    if (!visible || !pending || pending.askPaid) return;
     const t = setTimeout(() => usePendingHandOff.getState().clear(), HIDE_AFTER_MS);
     return () => clearTimeout(t);
   }, [visible, pending]);
+
+  const answer = async (worked: boolean) => {
+    const appId = pending?.appId;
+    usePendingHandOff.getState().answerPaid();
+    if (!appId) return;
+    try {
+      await handOffMemory.setShareResult(appId, worked);
+    } catch (e) {
+      console.warn("could not remember share result", e);
+    }
+  };
 
   if (!visible || !pending) return null;
 
@@ -54,6 +65,27 @@ export function ReturnBanner() {
           <Text style={styles.hint} testID="handoff-qr-hint">
             {vi.handOff.qrHint}
           </Text>
+        ) : null}
+        {pending.askPaid ? (
+          <View style={styles.ask} testID="handoff-ask-paid">
+            <Text style={styles.text}>{vi.handOff.askPaid}</Text>
+            <Pressable
+              testID="handoff-paid-yes"
+              accessibilityRole="button"
+              onPress={() => void answer(true)}
+              hitSlop={8}
+            >
+              <Text style={styles.action}>{vi.handOff.paidYes}</Text>
+            </Pressable>
+            <Pressable
+              testID="handoff-paid-no"
+              accessibilityRole="button"
+              onPress={() => void answer(false)}
+              hitSlop={8}
+            >
+              <Text style={styles.action}>{vi.handOff.paidNo}</Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
       <Pressable testID="handoff-delete" accessibilityRole="button" onPress={remove} hitSlop={8}>
@@ -80,6 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.text,
   },
   body: { flex: 1 },
+  ask: { flexDirection: "row", alignItems: "center", gap: 12 },
   text: { fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.onPrimary },
   hint: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.onPrimary },
   action: { fontFamily: fontFamily.bold, fontSize: fontSize.body, color: colors.accent },

@@ -7,6 +7,7 @@ import {
   createCategoryRepository,
   createGroupExpenseRepository,
   createGroupRepository,
+  createHandOffMemoryRepository,
   createMoneySourceRepository,
   createPaymentAppPrefsRepository,
   createPreferencesRepository,
@@ -18,6 +19,7 @@ import {
   type CategoryRepository,
   type GroupExpenseRepository,
   type GroupRepository,
+  type HandOffMemoryRepository,
   type MoneySourceRepository,
   type PaymentAppPrefsRepository,
   type PreferencesRepository,
@@ -39,6 +41,7 @@ export type Repositories = {
   paymentAppPrefs: PaymentAppPrefsRepository;
   moneySources: MoneySourceRepository;
   preferences: PreferencesRepository;
+  handOffMemory: HandOffMemoryRepository;
 };
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -59,6 +62,7 @@ export function RepositoriesProvider({ children, db }: { children: ReactNode; db
       paymentAppPrefs: createPaymentAppPrefsRepository(target),
       moneySources: createMoneySourceRepository(target),
       preferences: createPreferencesRepository(target),
+      handOffMemory: createHandOffMemoryRepository(target),
     };
   }, [db]);
   return <RepositoriesContext.Provider value={value}>{children}</RepositoriesContext.Provider>;

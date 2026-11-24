@@ -22,10 +22,12 @@ import { shareConfirmedQr } from "@/lib/payConfirm/shareQr";
 import { shareQr } from "@/lib/share/qrImage";
 import * as Clipboard from "expo-clipboard";
 import { formatVnd, parseAmount } from "@/lib/money";
+import { PREF_KEYS } from "@/lib/preferences/defaults";
+import { knownResultFor } from "@/lib/payConfirm/shareMemory";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
-const RECENT_KEY = "pay.recent_apps";
+const RECENT_KEY = PREF_KEYS.recentPayApps;
 
 export default function PayConfirmScreen() {
   const router = useRouter();
@@ -38,6 +40,7 @@ export default function PayConfirmScreen() {
     groups: groupRepo,
     groupExpenses,
     paymentAppPrefs,
+    handOffMemory,
   } = useRepositories();
   const targetState = useTargetDefault();
   const { target } = targetState;
@@ -169,7 +172,15 @@ export default function PayConfirmScreen() {
       await appSettings.set(RECENT_KEY, [selected.id, ...recent.filter((id) => id !== selected.id)].slice(0, 10));
       usePendingHandOff.getState().set({ txId, amount: parsed.vnd, label: note });
       const handOff = makeHandOff(getQrBase64);
-      const { opened, mode } = await handOff(selected, { model, amount: parsed.vnd, note });
+      const memory = await handOffMemory.getShareMemory().catch(() => ({}));
+      const { opened, mode, decision, share } = await handOff(selected, {
+        model,
+        amount: parsed.vnd,
+        note,
+        knownResult: knownResultFor(memory, selected.id),
+      });
+      if (decision === "direct-share" && share === "shared") usePendingHandOff.getState().askPaid(selected.id);
+      if (share === "share_failed") await handOffMemory.setShareResult(selected.id, false).catch(() => {});
       if (mode === "direct") usePendingHandOff.getState().showQrHint();
       if (!opened) usePendingHandOff.getState().reveal();
     } catch {

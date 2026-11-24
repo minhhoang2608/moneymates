@@ -5,7 +5,11 @@ import path from "node:path";
 import { AppState } from "react-native";
 
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
-import { createCategoryRepository, createTransactionRepository } from "@/db/repositories";
+import {
+  createCategoryRepository,
+  createHandOffMemoryRepository,
+  createTransactionRepository,
+} from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
@@ -41,7 +45,7 @@ async function setup() {
       <ReturnBanner />
     </RepositoriesProvider>,
   );
-  return { repo, tx };
+  return { repo, tx, db };
 }
 
 describe("ReturnBanner", () => {
@@ -79,5 +83,41 @@ describe("ReturnBanner", () => {
       usePendingHandOff.getState().reveal();
     });
     expect(screen.getByTestId("handoff-return-banner")).toBeTruthy();
+  });
+
+  it.each([
+    ["handoff-paid-yes", "share_ok"],
+    ["handoff-paid-no", "share_failed"],
+  ])("asks 'Đã thanh toán xong chưa?' once; %s stores %s", async (button, expected) => {
+    const { tx, db } = await setup();
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
+      usePendingHandOff.getState().askPaid("tcb");
+      usePendingHandOff.getState().reveal();
+    });
+    expect(screen.getByText("Đã thanh toán xong chưa?")).toBeTruthy();
+    await act(async () => fireEvent.press(screen.getByTestId(button)));
+    expect(screen.queryByTestId("handoff-ask-paid")).toBeNull();
+    expect(await createHandOffMemoryRepository(db).getShareMemory()).toEqual({ tcb: expected });
+    // Coming back again does not ask again.
+    await act(async () => handler("background"));
+    await act(async () => handler("active"));
+    expect(screen.queryByTestId("handoff-ask-paid")).toBeNull();
+  });
+
+  it("keeps the question open past the auto-hide delay", async () => {
+    jest.useFakeTimers();
+    try {
+      const { tx } = await setup();
+      await act(async () => {
+        usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
+        usePendingHandOff.getState().askPaid("tcb");
+        usePendingHandOff.getState().reveal();
+      });
+      await act(async () => jest.advanceTimersByTime(20000));
+      expect(screen.getByTestId("handoff-ask-paid")).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

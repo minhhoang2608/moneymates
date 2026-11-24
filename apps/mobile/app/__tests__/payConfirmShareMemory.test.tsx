@@ -1,0 +1,100 @@
+import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
+
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+import qr from "../../e2e/fixtures/qr.json";
+import { createHandOffMemoryRepository } from "@/db/repositories";
+import { usePendingHandOff } from "@/stores/pendingHandOff";
+import type { AnyDb } from "@/db/seed";
+import { openTestDb } from "@/db/testing/testDb";
+import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
+
+jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
+jest.mock("@/db/DatabaseProvider", () => ({
+  DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+jest.mock("@/db/client", () => {
+  const db = new Proxy({}, { get: (_t, key) => (global.__PAY_TEST_DB__ as never)[key] });
+  return { db };
+});
+const mockHandOff = jest.fn();
+jest.mock("@/lib/payConfirm/handOffDeps", () => ({
+  makeHandOff: jest.fn(
+    () =>
+      (...args: unknown[]) =>
+        mockHandOff(...args),
+  ),
+}));
+
+declare global {
+  var __PAY_TEST_DB__: object;
+}
+
+const testDb = () => global.__PAY_TEST_DB__ as unknown as AnyDb;
+
+const fetchMock = jest.fn(() => {
+  throw new Error("network disabled");
+});
+const original = global.fetch;
+beforeAll(() => {
+  global.fetch = fetchMock as unknown as typeof fetch;
+});
+afterAll(() => {
+  global.fetch = original;
+  expect(fetchMock).not.toHaveBeenCalled(); // AC6
+});
+
+const urlFor = (text: string) => {
+  const r = scanResultToRoute(text);
+  if (!r.ok) throw new Error("expected ok");
+  return `/pay-confirm?${new URLSearchParams(r.href.params).toString()}`;
+};
+
+describe("pay-confirm share memory", () => {
+  beforeEach(() => {
+    mockHandOff.mockReset();
+    usePendingHandOff.setState({ pending: null, visible: false });
+    const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-pay-")), "test.db");
+    global.__PAY_TEST_DB__ = openTestDb(file).db;
+  });
+
+  it("asks 'Đã thanh toán xong chưa?' after a direct share, never for autofill", async () => {
+    mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "shared" });
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("app-tcb"));
+    await fireEvent.press(screen.getByTestId("pay-submit"));
+    await waitFor(() => expect(usePendingHandOff.getState().pending?.askPaid).toBe(true));
+    expect(usePendingHandOff.getState().pending?.appId).toBe("tcb");
+  });
+
+  it("autofill hand-off does not ask", async () => {
+    mockHandOff.mockResolvedValue({ opened: true, mode: "autofill", decision: "autofill-link" });
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("app-mb"));
+    await fireEvent.press(screen.getByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalled());
+    expect(usePendingHandOff.getState().pending?.askPaid).toBeUndefined();
+  });
+
+  it("passes the remembered result to the hand-off", async () => {
+    await createHandOffMemoryRepository(testDb()).setShareResult("vcb", false);
+    mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "share_failed" });
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("app-vcb"));
+    await fireEvent.press(screen.getByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalled());
+    expect(mockHandOff.mock.calls[0][1].knownResult).toBe("share_failed");
+  });
+
+  it("stores a rejected share as failed", async () => {
+    mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "share_failed" });
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("app-tcb"));
+    await fireEvent.press(screen.getByTestId("pay-submit"));
+    await waitFor(async () =>
+      expect(await createHandOffMemoryRepository(testDb()).getShareMemory()).toEqual({ tcb: "share_failed" }),
+    );
+  });
+});
