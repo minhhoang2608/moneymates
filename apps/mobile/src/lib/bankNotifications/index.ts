@@ -8,6 +8,8 @@ import type { BankNotification, BankRule } from "./types";
 
 export type { BankNotification, BankRule } from "./types";
 export { parseSignedVnd } from "./amount";
+export { matchNotification, MATCH_WINDOW_MS } from "./match";
+export type { ReceivedNotification, MatchableHandOff } from "./match";
 
 const RULES: BankRule[] = [tpbankRule, techcombankRule, mbbankRule, vietcombankRule, momoRule, zalopayRule];
 
