@@ -21,4 +21,5 @@ appId: com.moneymates.app
     id: "screen-overview"
 - tapOn:
     id: "tab-qr"
-- assertVisible: "Quét QR"
+- assertVisible:
+    id: "screen-scan"
