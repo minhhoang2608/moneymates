@@ -58,6 +58,12 @@ Expo + TypeScript, dùng development build (không dùng Expo Go) vì cần modu
 | Voice | Thư viện speech-to-text trên máy hỗ trợ vi-VN (ví dụ expo-speech-recognition, cần thử trước) → rule tách số tiền → gọi AI khi cần |
 | Chụp bill | expo-camera / expo-image-picker, nén ảnh trước khi gửi AI |
 | Khóa app | expo-local-authentication |
+| Ảnh QR có chữ (v1.0.1) | Vẽ mã QR + tên, STK, số tiền trong một View rồi chụp thành PNG (ví dụ react-native-view-shot); lưu ảnh bằng expo-media-library, xoá bằng id ảnh |
+| Xoá ảnh QR tạm (v1.0.1) | Android: xoá ảnh do app tạo không cần hỏi (cần kiểm tra expo-media-library có dùng cách này, nếu không thì viết module native nhỏ). iOS: một hộp thoại xoá cho cả lô, cần quyền Ảnh đọc/ghi |
+| Nhận ảnh biên lai từ nút Chia sẻ (v1.0.1) | Thư viện nhận share intent hỗ trợ Expo dev build (ví dụ expo-share-intent): Android nhận ảnh, iOS cần Share Extension + App Group |
+| Đọc chữ biên lai offline (v1.0.1) | OCR trên máy (ví dụ ML Kit Text Recognition, nhận chữ Latin có tiếng Việt), rồi quy tắc tách số tiền, STK, thời gian theo từng ngân hàng; không gọi AI |
+| Đọc thông báo ngân hàng (v1.0.1, chỉ Android) | NotificationListenerService qua module native (thư viện có sẵn hoặc tự viết), chỉ xử lý thông báo của package ngân hàng đang bật |
+| Phát hiện app ngân hàng đã cài (v1.0.1) | Android: kiểm tra package đã khai báo trong `<queries>`; iOS: `canOpenURL` với scheme trong `LSApplicationQueriesSchemes` (tối đa 50 scheme) |
 | Build & phát hành | EAS Build (build iOS trên cloud, không cần Mac) |
 
 ## Backend
@@ -130,6 +136,9 @@ Làm đúng từ v1 thì lúc bật sync không phải migrate dữ liệu cũ.
 | Deeplink autofill của từng bank/ví | Test thực tế 5 app đang dùng |
 | Quota OpenRouter khi nhiều người dùng chung 1 key | Giới hạn theo thiết bị; khi có gói Pro thì chỉ user Pro gọi được AI, dùng model trả phí cho Pro |
 | Phí và quy định In-App Purchase của Apple/Google | Kiểm tra khi chuẩn bị ra gói Pro, tính vào giá gói |
+| Thư viện share intent, OCR, đọc thông báo có chạy với bản Expo SDK đang dùng (v1.0.1) | Thử từng thư viện bằng một spike nhỏ trước khi làm tính năng; chỉ dùng phiên bản tương thích qua `npx expo install` |
+| OCR tiếng Việt trên biên lai của từng ngân hàng (v1.0.1) | Gom ảnh biên lai mẫu làm fixture test; không khớp thì luôn cho nhập tay |
+| Chính sách Google Play với quyền đọc thông báo (v1.0.1) | Khai báo trong Data safety, màn giải thích trong app, tính năng tuỳ chọn |
 
 ## Nguồn
 
