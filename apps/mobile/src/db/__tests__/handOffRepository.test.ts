@@ -82,4 +82,51 @@ describe("handOffRepository", () => {
     await repo.markPaid(p.id, "time");
     expect(await memory.getShareMemory()).toEqual({ tpb: "share_ok" });
   });
+
+  describe("QR image tracking", () => {
+    it("setQrAsset makes the hand-off pending, markQrDeleted removes it", async () => {
+      const { repo, make } = await setup();
+      const a = await make();
+      const set = await repo.setQrAsset(a.id, "asset-1");
+      expect(set?.qr_asset_id).toBe("asset-1");
+      expect((await repo.listPendingQrImages()).map((r) => r.id)).toEqual([a.id]);
+      const when = at(5_000);
+      const done = await repo.markQrDeleted(a.id, when);
+      expect(done?.qr_deleted_at).toBe(when.toISOString());
+      expect(await repo.listPendingQrImages()).toEqual([]);
+    });
+
+    it("bumps updated_at on both writes", async () => {
+      const { repo, make, db } = await setup();
+      const a = await make();
+      const old = "2020-01-01T00:00:00.000Z";
+      await db.update(handOffs).set({ updated_at: old });
+      expect((await repo.setQrAsset(a.id, "x"))?.updated_at).not.toBe(old);
+      await db.update(handOffs).set({ updated_at: old });
+      expect((await repo.markQrDeleted(a.id))?.updated_at).not.toBe(old);
+    });
+
+    it("markQrDeleted twice keeps the first time", async () => {
+      const { repo, make } = await setup();
+      const a = await make();
+      await repo.setQrAsset(a.id, "x");
+      await repo.markQrDeleted(a.id, at(1_000));
+      const r = await repo.markQrDeleted(a.id, at(9_000));
+      expect(r?.qr_deleted_at).toBe(at(1_000).toISOString());
+    });
+
+    it("hand-offs without an image, or soft-deleted, are never pending", async () => {
+      const { repo, make, db } = await setup();
+      await make("autofill");
+      await make("share", "tpb");
+      expect(await repo.listPendingQrImages()).toEqual([]);
+      const c = await make();
+      await repo.setQrAsset(c.id, "x");
+      await db.update(handOffs).set({ deleted_at: new Date().toISOString() });
+      expect(await repo.listPendingQrImages()).toEqual([]);
+      expect(await repo.setQrAsset(c.id, "y")).toBeNull();
+      expect(await repo.markQrDeleted(c.id)).toBeNull();
+      expect(await repo.setQrAsset("missing", "y")).toBeNull();
+    });
+  });
 });

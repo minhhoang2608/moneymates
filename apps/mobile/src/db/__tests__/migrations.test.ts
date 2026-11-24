@@ -187,4 +187,23 @@ describe("hand_offs migration", () => {
     expect(() => insert("bogus", null)).toThrow();
     expect(() => insert("share", "bogus")).toThrow();
   });
+
+  it("keeps qr_asset_id and qr_deleted_at nullable and re-migrating a populated DB is a no-op", () => {
+    const sqlite = new Database(":memory:");
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+    const cols = sqlite.pragma("table_info(hand_offs)") as { name: string; notnull: number }[];
+    for (const n of ["qr_asset_id", "qr_deleted_at"]) {
+      expect(cols.find((c) => c.name === n)?.notnull).toBe(0);
+    }
+    sqlite.pragma("foreign_keys = OFF");
+    sqlite
+      .prepare(
+        "insert into hand_offs (id, created_at, updated_at, transaction_id, app_id, method, started_at) values ('h1', 'a', 'a', 't', 'mb', 'share', 'a')",
+      )
+      .run();
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+    const row = sqlite.prepare("select * from hand_offs where id = 'h1'").get() as Record<string, unknown>;
+    expect(row.qr_asset_id).toBeNull();
+    expect(row.qr_deleted_at).toBeNull();
+  });
 });
