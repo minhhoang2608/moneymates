@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { StyleSheet } from "react-native";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import {
@@ -13,6 +14,7 @@ import {
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { catId } from "@/testing/repoTestUtils";
+import { colors } from "@/theme";
 
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
 jest.mock("@/db/DatabaseProvider", () => ({
@@ -177,5 +179,53 @@ describe("Tổng quan screen", () => {
     await renderOverview();
     await waitFor(() => expect(text("overview-expense")).toBe("250.000đ"));
     expect(screen.getByTestId("overview-group-share")).toBeTruthy();
+  });
+
+  it("header: greeting is 13px muted above a 22px bold month title", async () => {
+    await renderOverview();
+    const month = await screen.findByText("Tháng 11/2026");
+    const greeting = screen.getByText(/^Xin chào/);
+    const g = StyleSheet.flatten(greeting.props.style);
+    const m = StyleSheet.flatten(month.props.style);
+    expect(g).toMatchObject({ fontSize: 13, color: colors.textMuted });
+    expect(m).toMatchObject({ fontSize: 22, color: colors.text });
+    expect(m.fontFamily).toMatch(/bold/i);
+  });
+
+  it("header: white bordered Đổi tháng button switches the month", async () => {
+    await add(50_000, "2026-11-05T03:00:00Z");
+    await add(70_000, "2026-10-05T03:00:00Z");
+    await renderOverview();
+    await waitFor(() => expect(text("overview-expense")).toBe("50.000đ"));
+    const btn = screen.getByLabelText("Đổi tháng");
+    expect(btn.props.testID).toBe("overview-month-button");
+    expect(StyleSheet.flatten(btn.props.style)).toMatchObject({
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+    });
+    await fireEvent.press(btn);
+    await fireEvent.press(await screen.findByTestId("overview-pick-month-2026-10"));
+    await waitFor(() => expect(text("overview-expense")).toBe("70.000đ"));
+    expect(screen.getByText("Tháng 10/2026")).toBeTruthy();
+  });
+
+  it("add action is a 52px white floating button outside the header", async () => {
+    await renderOverview();
+    const fab = screen.getByTestId("overview-add-button");
+    expect(StyleSheet.flatten(fab.props.style)).toMatchObject({
+      position: "absolute",
+      right: 20,
+      bottom: 20,
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+    });
+    await fireEvent.press(fab);
+    expect(await screen.findByTestId("entry-menu-manual")).toBeTruthy();
   });
 });

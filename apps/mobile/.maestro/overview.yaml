@@ -9,6 +9,8 @@ appId: com.moneymates.app
 - assertVisible:
     id: "overview-expense"
     text: "0đ"
+- assertVisible:
+    id: "overview-month-button"
 - assertVisible: "Chưa có giao dịch nào"
 - assertNotVisible:
     id: "overview-banner"
