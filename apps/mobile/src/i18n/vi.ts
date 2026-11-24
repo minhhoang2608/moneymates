@@ -75,6 +75,10 @@ export const vi = {
     paidNo: "Chưa",
     qrHint: "Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.",
   },
+  qrImage: {
+    addOnlyPermission:
+      "Chưa cho phép xoá ảnh. Vào Cài đặt > Ảnh, chọn quyền đọc và ghi để MoneyMates tự xoá ảnh QR tạm.",
+  },
   db: {
     migrationError: "Không thể khởi tạo dữ liệu trên máy. Vui lòng khởi động lại ứng dụng.",
   },
