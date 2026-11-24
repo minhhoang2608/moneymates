@@ -1,8 +1,10 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { PressableScale } from "@/components/PressableScale";
+import Animated from "react-native-reanimated";
 
+import { PressableScale } from "@/components/PressableScale";
+import { SkeletonList } from "@/components/Skeleton";
 import { FilterChips, type Chip } from "@/components/history/FilterChips";
 import { HistoryRow } from "@/components/history/HistoryRow";
 import { SwipeableRow } from "@/components/history/SwipeableRow";
@@ -21,6 +23,7 @@ import {
   type HistoryFilters,
 } from "@/lib/history";
 import { formatVnd } from "@/lib/money";
+import { motionProps, useReduceMotion } from "@/lib/motion";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
@@ -29,6 +32,7 @@ type Picker = "month" | "category" | "source" | null;
 
 export default function HistoryScreen() {
   const router = useRouter();
+  const reduceMotion = useReduceMotion();
   const { transactions, categories, groups: groupRepo } = useRepositories();
   const [filters, setFilters] = useState<HistoryFilters>(() => defaultFilters());
   const [rows, setRows] = useState<TransactionRow[]>([]);
@@ -167,6 +171,7 @@ export default function HistoryScreen() {
         onClear={() => setFilters({ month: null, categoryId: null, moneySource: null, type: null, search: "" })}
       />
       <ScrollView contentContainerStyle={styles.list} testID="history-list">
+        {!loaded ? <SkeletonList testID="history-skeleton" count={5} /> : null}
         {loaded && groups.length === 0 ? (
           <Text style={styles.empty} testID="history-empty">
             {customized ? vi.history.noMatch : vi.history.empty}
@@ -186,15 +191,17 @@ export default function HistoryScreen() {
               </Text>
             </View>
             {g.rows.map((t) => (
-              <SwipeableRow key={t.id} id={t.id} onDelete={() => void remove(t.id)}>
-                <PressableScale testID={`history-open-${t.id}`} onPress={() => router.push(`/transaction/${t.id}`)}>
-                  <HistoryRow
-                    txn={t}
-                    categoryName={names[t.category_id] ?? ""}
-                    groupName={t.group_id ? groupNames[t.group_id] : undefined}
-                  />
-                </PressableScale>
-              </SwipeableRow>
+              <Animated.View key={t.id} testID={`history-row-anim-${t.id}`} {...motionProps(reduceMotion)}>
+                <SwipeableRow id={t.id} onDelete={() => void remove(t.id)}>
+                  <PressableScale testID={`history-open-${t.id}`} onPress={() => router.push(`/transaction/${t.id}`)}>
+                    <HistoryRow
+                      txn={t}
+                      categoryName={names[t.category_id] ?? ""}
+                      groupName={t.group_id ? groupNames[t.group_id] : undefined}
+                    />
+                  </PressableScale>
+                </SwipeableRow>
+              </Animated.View>
             ))}
           </View>
         ))}
