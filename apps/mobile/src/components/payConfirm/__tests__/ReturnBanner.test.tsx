@@ -52,6 +52,9 @@ describe("ReturnBanner", () => {
     await act(async () => handler("background"));
     await act(async () => handler("active"));
     expect(await screen.findByText("Đã lưu 55.000đ · PHO 24")).toBeTruthy();
+    expect(screen.getByTestId("handoff-qr-hint").props.children).toBe(
+      "Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.",
+    );
     expect(await repo.list()).toHaveLength(1);
     await act(async () => fireEvent.press(screen.getByTestId("handoff-delete")));
     await waitFor(() => expect(screen.queryByTestId("handoff-return-banner")).toBeNull());

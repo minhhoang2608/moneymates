@@ -67,9 +67,7 @@ function Row({
         <Text style={styles.handle}>⋮⋮</Text>
       </View>
       <Text style={styles.name}>{app.name}</Text>
-      <Text style={[styles.mode, app.supportsAutofill && styles.modeAuto]}>
-        {app.supportsAutofill ? vi.settings.autofill : vi.settings.copyOpen}
-      </Text>
+      <Text style={styles.mode}>{vi.settings.copyOpen}</Text>
       <Pressable
         testID={`settings-app-up-${id}`}
         accessibilityRole="button"
@@ -116,7 +114,6 @@ const styles = StyleSheet.create({
   handle: { color: colors.neutral, fontSize: 16 },
   name: { flex: 1, fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.text },
   mode: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
-  modeAuto: { color: colors.primaryDark },
   arrow: { width: 28, height: 44, alignItems: "center", justifyContent: "center" },
   arrowOff: { opacity: 0.3 },
   arrowText: { fontSize: 11, color: colors.textMuted },

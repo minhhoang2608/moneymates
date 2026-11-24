@@ -1,5 +1,5 @@
 import type { PayApp } from "./apps";
-import { buildAutofillUrl, buildOpenUrl } from "./deeplink";
+import { buildClipboardText, buildOpenUrl } from "./deeplink";
 import type { PayConfirmModel } from "./params";
 
 export type HandOffDeps = {
@@ -23,15 +23,11 @@ async function attempt(step: () => Promise<void>): Promise<void> {
 export function createHandOff(deps: HandOffDeps) {
   return async function handOff(app: PayApp, input: HandOffInput): Promise<{ opened: boolean }> {
     const { model, amount, note } = input;
-    let url = buildOpenUrl(app);
-    if (model.kind === "vietqr" && app.supportsAutofill) {
-      url = buildAutofillUrl(app, { account: model.account, bin: model.bankBin, amount, message: note || undefined });
-    } else if (model.kind === "vietqr") {
-      await attempt(() => deps.setClipboard(`${model.account} ${amount}`));
-      await attempt(deps.saveQrImage);
-    } else {
-      await attempt(deps.saveQrImage);
+    const url = buildOpenUrl(app);
+    if (model.kind === "vietqr") {
+      await attempt(() => deps.setClipboard(buildClipboardText({ account: model.account, amount, message: note })));
     }
+    await attempt(deps.saveQrImage);
     try {
       await deps.openUrl(url);
       return { opened: true };

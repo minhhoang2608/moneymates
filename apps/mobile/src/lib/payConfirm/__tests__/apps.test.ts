@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+import { join } from "path";
 import { PAY_APPS, defaultAppId, orderAppsBySaved } from "../apps";
 
 describe("orderAppsBySaved", () => {
@@ -18,5 +20,23 @@ describe("defaultAppId", () => {
     expect(defaultAppId(orderAppsBySaved(PAY_APPS, []), [], "970436")).toBe("vcb");
     expect(defaultAppId(orderAppsBySaved(PAY_APPS, []), [])).toBe("tpbank");
     expect(defaultAppId(orderAppsBySaved(PAY_APPS, ["momo"]), [])).toBe("momo");
+  });
+});
+
+describe("catalogue", () => {
+  it("includes VietinBank and maps its BIN", () => {
+    expect(PAY_APPS.some((a) => a.id === "icb" && a.scheme === "vietinbankipay")).toBe(true);
+    expect(defaultAppId(orderAppsBySaved(PAY_APPS, []), [], "970415")).toBe("icb");
+  });
+  it("has no autofill flags", () => {
+    for (const a of PAY_APPS) {
+      expect(a).not.toHaveProperty("supportsAutofill");
+      expect(a).not.toHaveProperty("deeplinkCode");
+    }
+  });
+  it("iOS LSApplicationQueriesSchemes match the app schemes", () => {
+    const cfg = JSON.parse(readFileSync(join(__dirname, "../../../../app.json"), "utf8"));
+    const schemes: string[] = cfg.expo.ios.infoPlist.LSApplicationQueriesSchemes;
+    expect([...schemes].sort()).toEqual(PAY_APPS.map((a) => a.scheme).sort());
   });
 });

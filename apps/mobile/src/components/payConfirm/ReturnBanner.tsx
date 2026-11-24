@@ -7,7 +7,7 @@ import { formatVnd } from "@/lib/money";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
-const HIDE_AFTER_MS = 6000;
+const HIDE_AFTER_MS = 8000;
 
 /** Shown when the user comes back from the bank app: confirms the saved payment, with quick delete. */
 export function ReturnBanner() {
@@ -46,9 +46,14 @@ export function ReturnBanner() {
 
   return (
     <View style={styles.bar} testID="handoff-return-banner">
-      <Text style={styles.text} numberOfLines={1}>
-        {vi.handOff.saved(formatVnd(pending.amount), pending.label)}
-      </Text>
+      <View style={styles.body}>
+        <Text style={styles.text} numberOfLines={1}>
+          {vi.handOff.saved(formatVnd(pending.amount), pending.label)}
+        </Text>
+        <Text style={styles.hint} testID="handoff-qr-hint">
+          {vi.handOff.qrHint}
+        </Text>
+      </View>
       <Pressable testID="handoff-delete" accessibilityRole="button" onPress={remove} hitSlop={8}>
         <Text style={styles.action}>{vi.handOff.delete}</Text>
       </Pressable>
@@ -67,10 +72,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: radii.input,
     backgroundColor: colors.text,
   },
-  text: { flex: 1, fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.onPrimary },
+  body: { flex: 1 },
+  text: { fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.onPrimary },
+  hint: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.onPrimary },
   action: { fontFamily: fontFamily.bold, fontSize: fontSize.body, color: colors.accent },
 });

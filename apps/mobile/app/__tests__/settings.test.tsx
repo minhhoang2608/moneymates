@@ -55,7 +55,7 @@ describe("Cài đặt screen", () => {
   it("AC1: reorders payment apps with the up buttons and persists across remount", async () => {
     await createPaymentAppPrefsRepository(fresh()).setAppOrder(["tpbank", "tcb", "momo", "vcb", "mb"]);
     const view = await open();
-    expect(rowIds()).toEqual(["tpbank", "tcb", "momo", "vcb", "mb"]);
+    expect(rowIds()).toEqual(["tpbank", "tcb", "momo", "vcb", "mb", "icb"]);
     await fireEvent.press(screen.getByTestId("settings-app-up-momo"));
     await fireEvent.press(screen.getByTestId("settings-app-up-momo"));
     await waitFor(() => expect(rowIds()[0]).toBe("momo"));

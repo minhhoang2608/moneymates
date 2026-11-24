@@ -157,6 +157,8 @@ describe("pay-confirm screen", () => {
     await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy());
     const ids = screen.getAllByTestId(/^app-/).map((n) => n.props.testID);
     expect(ids[0]).toBe("app-momo");
-    expect(ids).toEqual(["app-momo", "app-tpbank", "app-tcb", "app-vcb", "app-mb"]);
+    expect(ids).toEqual(["app-momo", "app-tpbank", "app-tcb", "app-vcb", "app-mb", "app-icb"]);
+    expect(screen.queryByText("Tự điền")).toBeNull();
+    expect(screen.getAllByText("Copy + mở app")).toHaveLength(ids.length);
   });
 });

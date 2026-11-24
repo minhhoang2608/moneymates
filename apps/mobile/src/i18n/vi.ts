@@ -54,12 +54,12 @@ export const vi = {
     groupHint: (n: number) => `Trong nhóm: người chi là Tôi, chia đều ${n} người.`,
     saveNote: "Giao dịch được lưu ngay khi bấm. Không chuyển thì vào Lịch sử để xóa.",
     saveFailed: "Không lưu được giao dịch. Vui lòng thử lại.",
-    autofill: "Tự điền",
     copyOpen: "Copy + mở app",
   },
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
     delete: "Xóa",
+    qrHint: "Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.",
   },
   db: {
     migrationError: "Không thể khởi tạo dữ liệu trên máy. Vui lòng khởi động lại ứng dụng.",
@@ -80,8 +80,6 @@ export const vi = {
     title: "Cài đặt",
     back: "Quay lại",
     appsHeading: "App thanh toán · kéo để sắp xếp",
-    appsNote: "“Tự điền” hay “Copy + mở app” sẽ chốt sau khi test deeplink thật.",
-    autofill: "Tự điền",
     copyOpen: "Copy + mở app",
     moveUp: "Chuyển lên",
     moveDown: "Chuyển xuống",

@@ -34,13 +34,14 @@ function setup(over: Partial<HandOffDeps> = {}) {
 }
 
 describe("handOff", () => {
-  it("autofill app opens deeplink with account, amount, message", async () => {
+  it("VietQR: clipboard (account, amount, note) → image → open the scheme, in order", async () => {
+    const tcb = PAY_APPS.find((x) => x.id === "tcb")!;
     const { calls, handOff } = setup();
-    expect(await handOff(tpb, { model: vietqr, amount: 60000, note: "PHO" })).toEqual({ opened: true });
-    expect(calls).toEqual(["open:https://dl.vietqr.io/pay?app=tpb&ba=0123456789%40970423&am=60000&tn=PHO"]);
+    expect(await handOff(tcb, { model: vietqr, amount: 60000, note: "PHO" })).toEqual({ opened: true });
+    expect(calls).toEqual(["clip:0123456789 60000 PHO", "image", "open:tcb://"]);
   });
 
-  it("non-autofill: clipboard → save image → open, in order", async () => {
+  it("VietQR without note: clipboard has account and amount only", async () => {
     const { calls, handOff } = setup();
     await handOff(mb, { model: vietqr, amount: 55000, note: "" });
     expect(calls).toEqual(["clip:0123456789 55000", "image", "open:mbbank://"]);
@@ -60,17 +61,19 @@ describe("handOff", () => {
   it("non-VietQR: saves image, opens app, no clipboard", async () => {
     const { calls, deps, handOff } = setup();
     await handOff(tpb, { model: other, amount: 1, note: "" });
-    expect(calls).toEqual(["image", "open:tpbank://"]);
+    expect(calls).toEqual(["image", "open:hydro://"]);
     expect(deps.setClipboard).not.toHaveBeenCalled();
   });
 
   it("openUrl throws → resolves {opened:false}", async () => {
     jest.spyOn(console, "warn").mockImplementation(() => {});
-    const { handOff } = setup({
+    const { deps, handOff } = setup({
       openUrl: async () => {
         throw new Error("no app");
       },
     });
     expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toEqual({ opened: false });
+    expect(deps.setClipboard).toHaveBeenCalled();
+    expect(deps.saveQrImage).toHaveBeenCalled();
   });
 });

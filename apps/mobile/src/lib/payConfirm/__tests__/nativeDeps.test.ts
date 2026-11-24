@@ -25,9 +25,9 @@ jest.mock("expo-file-system", () => ({
 describe("nativeDeps", () => {
   it("opens urls and copies text", async () => {
     const d = createNativeDeps(async () => null);
-    await d.openUrl("tpbank://");
+    await d.openUrl("hydro://");
     await d.setClipboard("1 2");
-    expect(Linking.openURL).toHaveBeenCalledWith("tpbank://");
+    expect(Linking.openURL).toHaveBeenCalledWith("hydro://");
     expect(Clipboard.setStringAsync).toHaveBeenCalledWith("1 2");
   });
 

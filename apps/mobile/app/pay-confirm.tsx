@@ -256,9 +256,7 @@ export default function PayConfirmScreen() {
                   <Text style={styles.appBadgeText}>{a.short}</Text>
                 </View>
                 <Text style={[styles.appName, on && styles.appNameOn]}>{a.name}</Text>
-                <Text style={styles.appMode}>
-                  {a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.copyOpen}
-                </Text>
+                <Text style={styles.appMode}>{vi.payConfirm.copyOpen}</Text>
                 {on ? <Text style={styles.check}>✓</Text> : null}
               </Pressable>
             );

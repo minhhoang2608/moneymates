@@ -1,20 +1,36 @@
 import { PAY_APPS } from "../apps";
-import { buildAutofillUrl, buildOpenUrl } from "../deeplink";
+import { buildClipboardText, buildOpenUrl } from "../deeplink";
 
-const tpb = PAY_APPS[0];
+describe("buildOpenUrl", () => {
+  it.each([
+    ["tcb", "tcb://"],
+    ["tpbank", "hydro://"],
+    ["vcb", "vietcombankmobile://"],
+    ["mb", "mbbank://"],
+    ["icb", "vietinbankipay://"],
+    ["momo", "momo://"],
+  ])("%s opens %s", (id, url) => {
+    expect(buildOpenUrl(PAY_APPS.find((a) => a.id === id)!)).toBe(url);
+  });
+  it("never goes through a browser", () => {
+    for (const a of PAY_APPS) {
+      const url = buildOpenUrl(a);
+      expect(url).not.toContain("http");
+      expect(url).not.toContain("dl.vietqr.io");
+    }
+  });
+});
 
-describe("deeplink", () => {
-  it("encodes account, integer amount and message", () => {
-    expect(
-      buildAutofillUrl(tpb, { account: "0123456789", bin: "970423", amount: 55000, message: "PHO 24 & ca phe" }),
-    ).toBe("https://dl.vietqr.io/pay?app=tpb&ba=0123456789%40970423&am=55000&tn=PHO%2024%20%26%20ca%20phe");
+describe("buildClipboardText", () => {
+  it("joins account, amount and message", () => {
+    expect(buildClipboardText({ account: "0123", amount: 60000, message: " PHO " })).toBe("0123 60000 PHO");
   });
-  it("leaves am and tn out when missing", () => {
-    expect(buildAutofillUrl(tpb, { account: "1", bin: "970423" })).toBe(
-      "https://dl.vietqr.io/pay?app=tpb&ba=1%40970423",
-    );
+  it("leaves out an empty or whitespace message", () => {
+    expect(buildClipboardText({ account: "0123", amount: 60000 })).toBe("0123 60000");
+    expect(buildClipboardText({ account: "0123", amount: 60000, message: "  " })).toBe("0123 60000");
   });
-  it("builds the plain open url", () => {
-    expect(buildOpenUrl(tpb)).toBe("tpbank://");
+  it("leaves out an invalid amount", () => {
+    expect(buildClipboardText({ account: "0123", amount: 0, message: "A" })).toBe("0123 A");
+    expect(buildClipboardText({ account: "0123", amount: 1.5 })).toBe("0123");
   });
 });
