@@ -10,8 +10,10 @@ appId: com.moneymates.app
     id: "tab-qr"
 - tapOn:
     id: "scan-e2e-feed"
-- assertVisible:
-    id: "screen-pay-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "screen-pay-confirm"
+    timeout: 10000
 - tapOn:
     id: "pay-submit"
 - extendedWaitUntil:
@@ -32,8 +34,10 @@ appId: com.moneymates.app
     id: "tab-qr"
 - tapOn:
     id: "scan-e2e-feed"
-- assertVisible:
-    id: "screen-pay-confirm"
+- extendedWaitUntil:
+    visible:
+      id: "screen-pay-confirm"
+    timeout: 10000
 - tapOn:
     id: "pay-submit"
     waitToSettleTimeoutMs: 500
