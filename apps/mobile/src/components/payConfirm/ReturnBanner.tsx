@@ -1,9 +1,11 @@
 import { useEffect } from "react";
+import Animated from "react-native-reanimated";
 import { AppState, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import { vi } from "@/i18n/vi";
+import { toastMotionProps, useReduceMotion } from "@/lib/motion";
 import { formatVnd } from "@/lib/money";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
@@ -34,6 +36,8 @@ export function ReturnBanner() {
     return () => clearTimeout(t);
   }, [visible, pending]);
 
+  const motion = toastMotionProps(useReduceMotion());
+
   const answer = async (worked: boolean) => {
     const appId = pending?.appId;
     usePendingHandOff.getState().answerPaid();
@@ -57,7 +61,7 @@ export function ReturnBanner() {
   };
 
   return (
-    <View style={styles.bar} testID="handoff-return-banner">
+    <Animated.View style={styles.bar} testID="handoff-return-banner" {...motion}>
       <View style={styles.body}>
         <Text style={styles.text} numberOfLines={1}>
           {vi.handOff.saved(formatVnd(pending.amount), pending.label)}
@@ -92,7 +96,7 @@ export function ReturnBanner() {
       <PressableScale testID="handoff-delete" accessibilityRole="button" onPress={remove} hitSlop={8}>
         <Text style={styles.action}>{vi.handOff.delete}</Text>
       </PressableScale>
-    </View>
+    </Animated.View>
   );
 }
 

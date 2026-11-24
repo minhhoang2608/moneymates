@@ -51,4 +51,12 @@ describe("Toast", () => {
     expect(bar.props.accessible).toBe(true);
     expect(bar.props.accessibilityLiveRegion).toBe("polite");
   });
+
+  it("AC2: renders with entering and exiting animation props", async () => {
+    await render(<Toast />);
+    await act(async () => useToast.getState().show("Xin chào"));
+    const bar = screen.getByTestId("handoff-coach-toast");
+    expect(bar.props.entering).toBeDefined();
+    expect(bar.props.exiting).toBeDefined();
+  });
 });

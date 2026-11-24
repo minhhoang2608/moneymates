@@ -1,4 +1,5 @@
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { PressableScale } from "@/components/PressableScale";
 
 import { useAiAvailable } from "@/api/features";
@@ -27,9 +28,13 @@ export function EntryMenu({
     ["entry-menu-bill", vi.entryMenu.bill, onBill, billAi, null],
   ];
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      {/* bare-pressable-ok: modal backdrop, not a visual button */}
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={vi.entryMenu.cancel} />
+    <AnimatedSheet
+      visible={visible}
+      onClose={onClose}
+      variant="sheet"
+      testID="entry-menu-modal"
+      backdropLabel={vi.entryMenu.cancel}
+    >
       <View style={styles.sheet} testID="entry-menu">
         <Text style={styles.title}>{vi.entryMenu.title}</Text>
         <PressableScale testID="entry-menu-manual" accessibilityRole="button" onPress={onManual} style={styles.item}>
@@ -59,12 +64,11 @@ export function EntryMenu({
           <Text style={[styles.itemText, { color: colors.textMuted }]}>{vi.entryMenu.cancel}</Text>
         </PressableScale>
       </View>
-    </Modal>
+    </AnimatedSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1 },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.sheet,

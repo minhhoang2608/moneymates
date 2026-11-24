@@ -28,13 +28,19 @@ module.exports = (() => {
       return ref.current;
     },
     useAnimatedStyle: (fn) => fn(),
-    withTiming: (to) => to,
+    withTiming: (to, _cfg, cb) => {
+      cb?.(true);
+      return to;
+    },
+    runOnJS: (fn) => fn,
     withRepeat: (anim) => anim,
     withSequence: (...anims) => anims[anims.length - 1],
     cancelAnimation: () => {},
     Easing: { linear: (t) => t, inOut: (f) => f },
     FadeIn: layoutBuilder(),
     FadeOut: layoutBuilder(),
+    SlideInDown: layoutBuilder(),
+    SlideOutDown: layoutBuilder(),
     LinearTransition: layoutBuilder(),
     ReduceMotion: { System: "system", Always: "always", Never: "never" },
   };

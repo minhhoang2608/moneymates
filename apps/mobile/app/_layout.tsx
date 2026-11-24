@@ -14,6 +14,7 @@ import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
+import { stackScreenOptions, useReduceMotion } from "@/lib/motion";
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -23,6 +24,7 @@ export default function RootLayout() {
     Inter_700Bold,
     Inter_800ExtraBold,
   });
+  const reduceMotion = useReduceMotion();
   if (!loaded && !error) return null;
 
   return (
@@ -30,7 +32,7 @@ export default function RootLayout() {
       <DatabaseProvider>
         <RepositoriesProvider>
           <AppLockGate>
-            <Stack screenOptions={{ headerShown: false }}>
+            <Stack screenOptions={stackScreenOptions(reduceMotion)}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="scan" options={{ presentation: "modal" }} />
               <Stack.Screen name="pay-confirm" />

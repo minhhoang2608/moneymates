@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import type { CategoryRow } from "@/db/repositories";
@@ -38,9 +39,7 @@ export function CategoryEditSheet({
   }
 
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      {/* bare-pressable-ok: modal backdrop, not a visual button */}
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={vi.txn.close} />
+    <AnimatedSheet visible onClose={onClose} variant="sheet" testID="category-modal" backdropLabel={vi.txn.close}>
       <View style={styles.sheet} testID="category-sheet">
         {/* bare-pressable-ok: only dismisses the keyboard, no visual button */}
         <Pressable testID="category-sheet-title" accessible accessibilityRole="header" onPress={Keyboard.dismiss}>
@@ -92,12 +91,11 @@ export function CategoryEditSheet({
           </PressableScale>
         ) : null}
       </View>
-    </Modal>
+    </AnimatedSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1 },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.sheet,

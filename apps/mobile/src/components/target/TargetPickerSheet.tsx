@@ -1,16 +1,7 @@
 import { haptics } from "@/lib/haptics";
+import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import Svg, { Path } from "react-native-svg";
 
@@ -97,10 +88,14 @@ export function TargetPickerSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        {/* bare-pressable-ok: modal backdrop, not a visual button */}
-        <Pressable style={styles.flex} onPress={close} accessibilityLabel={vi.target.close} />
+    <AnimatedSheet
+      visible={visible}
+      onClose={close}
+      variant="sheet"
+      testID="target-modal"
+      backdropLabel={vi.target.close}
+    >
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={styles.sheet} testID="target-sheet">
           <View style={styles.handle} />
           <View style={styles.header}>
@@ -157,7 +152,7 @@ export function TargetPickerSheet({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </AnimatedSheet>
   );
 }
 
