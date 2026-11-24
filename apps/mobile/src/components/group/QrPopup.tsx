@@ -117,6 +117,8 @@ export function QrPopup({
                 <QRCode
                   value={qr.payload}
                   size={200}
+                  quietZone={20}
+                  backgroundColor="white"
                   getRef={(c) => {
                     ref.current = c;
                   }}

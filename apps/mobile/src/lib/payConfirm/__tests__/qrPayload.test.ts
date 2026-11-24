@@ -19,6 +19,11 @@ const model: PayConfirmModel = {
 };
 
 describe("buildConfirmedQrPayload", () => {
+  it("leaves out the merchant name so bank apps read it like a bank-issued VietQR", () => {
+    const p = buildConfirmedQrPayload(model, 80000, "Ca phe");
+    expect(p).not.toContain("5912NGUYEN VAN A");
+    expect(p.startsWith("000201010212")).toBe(true);
+  });
   it("uses the edited amount and message with a valid CRC", () => {
     const p = buildConfirmedQrPayload(model, 80000, "Ca phe");
     expect(hasValidCrc(p)).toBe(true);
