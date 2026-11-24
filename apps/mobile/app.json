@@ -10,7 +10,7 @@
     "ios": {
       "bundleIdentifier": "com.moneymates.app",
       "infoPlist": {
-        "LSApplicationQueriesSchemes": ["hydro", "tcb", "vietcombankmobile", "mbbank", "momo", "vietinbankipay"]
+        "LSApplicationQueriesSchemes": ["hydro", "mbbank", "momo", "tcb", "vietcombankmobile", "vietinbankipay"]
       }
     },
     "android": {

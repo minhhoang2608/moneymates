@@ -45,7 +45,7 @@ beforeEach(() => {
 async function open() {
   const view = await renderRouter("./app", { initialUrl: "/settings" });
   await screen.findByTestId("screen-settings", {}, { timeout: 5000 });
-  await screen.findByTestId("settings-app-row-tpbank");
+  await screen.findByTestId("settings-app-row-tpb");
   return view;
 }
 const rowIds = () =>
@@ -53,9 +53,9 @@ const rowIds = () =>
 
 describe("Cài đặt screen", () => {
   it("AC1: reorders payment apps with the up buttons and persists across remount", async () => {
-    await createPaymentAppPrefsRepository(fresh()).setAppOrder(["tpbank", "tcb", "momo", "vcb", "mb"]);
+    await createPaymentAppPrefsRepository(fresh()).setAppOrder(["tpb", "tcb", "momo", "vcb", "mb"]);
     const view = await open();
-    expect(rowIds()).toEqual(["tpbank", "tcb", "momo", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
+    expect(rowIds()).toEqual(["tpb", "tcb", "momo", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
     await fireEvent.press(screen.getByTestId("settings-app-up-momo"));
     await fireEvent.press(screen.getByTestId("settings-app-up-momo"));
     await waitFor(() => expect(rowIds()[0]).toBe("momo"));
@@ -66,7 +66,7 @@ describe("Cài đặt screen", () => {
   });
 
   it("AC1: dragging the handle moves the row", async () => {
-    await createPaymentAppPrefsRepository(fresh()).setAppOrder(["tpbank", "tcb", "momo", "vcb", "mb"]);
+    await createPaymentAppPrefsRepository(fresh()).setAppOrder(["tpb", "tcb", "momo", "vcb", "mb"]);
     await open();
     const handle = screen.getByTestId("settings-app-handle-momo");
     // Drive the PanResponder through its handlers with a synthetic gesture.

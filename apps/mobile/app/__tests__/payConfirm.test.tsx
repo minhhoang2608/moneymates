@@ -1,3 +1,4 @@
+import { SNAPSHOT } from "@/lib/vietqr/bankApps";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import fs from "node:fs";
@@ -153,14 +154,13 @@ describe("pay-confirm screen", () => {
 
   it("AC5: a remembered app is preselected, the list follows the saved order", async () => {
     await createAppSettingRepository(testDb()).set("pay.recent_apps", ["mb"]);
-    await createPaymentAppPrefsRepository(testDb()).setAppOrder(["momo", "tpbank", "tcb", "vcb", "mb"]);
+    await createPaymentAppPrefsRepository(testDb()).setAppOrder(["momo", "tpb", "tcb", "vcb", "mb"]);
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
     await waitFor(() => expect(screen.getByText("Thanh toán 55.000đ qua MBBank")).toBeTruthy());
-    const ids = screen.getAllByTestId(/^app-/).map((n) => n.props.testID);
-    expect(ids[0]).toBe("app-momo");
-    expect(ids).toEqual([
+    const ids = screen.getAllByTestId(/^app-(?!badge-)/).map((n) => n.props.testID);
+    expect(ids.slice(0, 9)).toEqual([
       "app-momo",
-      "app-tpbank",
+      "app-tpb",
       "app-tcb",
       "app-vcb",
       "app-mb",
@@ -169,8 +169,24 @@ describe("pay-confirm screen", () => {
       "app-acb",
       "app-ocb",
     ]);
-    expect(screen.getAllByText("Tự điền")).toHaveLength(5);
-    expect(screen.getAllByText("Quét ảnh QR")).toHaveLength(4);
+    expect(screen.getByTestId("app-badge-mb")).toHaveTextContent("Tự điền");
+    expect(screen.getByTestId("app-badge-tcb")).toHaveTextContent("Quét ảnh QR");
+  });
+
+  it("AC1: the picker lists every bundled registry app without network", async () => {
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await screen.findByTestId("pay-submit");
+    for (const a of SNAPSHOT.apps) expect(screen.getByTestId(`app-${a.app_id}`)).toBeTruthy();
+  });
+
+  it("AC3: search filters the list and shows an empty state", async () => {
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    const search = await screen.findByTestId("pay-app-search");
+    await fireEvent.changeText(search, "tech");
+    await waitFor(() => expect(screen.queryByTestId("app-vcb")).toBeNull());
+    expect(screen.getByTestId("app-tcb")).toBeTruthy();
+    await fireEvent.changeText(search, "zzzz");
+    expect(await screen.findByTestId("pay-app-empty")).toBeTruthy();
   });
 
   it("the saved QR is regenerated from the confirmed amount and note", async () => {

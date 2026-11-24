@@ -12,7 +12,7 @@ import { useAiAvailable } from "@/api/features";
 import { useCategorySuggestion } from "@/api/parseText";
 import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
-import { PAY_APPS, defaultAppId, orderAppsBySaved } from "@/lib/payConfirm/apps";
+import { PAY_APPS, defaultAppId, filterApps, normalizeAppId, orderPickerApps } from "@/lib/payConfirm/apps";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { buildClipboardText } from "@/lib/payConfirm/deeplink";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
@@ -51,6 +51,7 @@ export default function PayConfirmScreen() {
   const [recent, setRecent] = useState<string[]>([]);
   const [savedOrder, setSavedOrder] = useState<string[]>([]);
   const [appId, setAppId] = useState<string | null>(null);
+  const [appQuery, setAppQuery] = useState("");
   const [failed, setFailed] = useState(false);
   const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
   const busy = useRef(false);
@@ -97,9 +98,17 @@ export default function PayConfirmScreen() {
     };
   }, [paymentAppPrefs]);
 
-  const apps = useMemo(() => orderAppsBySaved(PAY_APPS, savedOrder), [savedOrder]);
-  const selectedId = appId ?? defaultAppId(apps, recent, model.bankBin);
+  const recentIds = useMemo(() => recent.map(normalizeAppId), [recent]);
+  const apps = useMemo(
+    () => orderPickerApps(PAY_APPS, { preferred: savedOrder, recent: recentIds, scannedBin: model.bankBin }),
+    [savedOrder, recentIds, model.bankBin],
+  );
+  const selectedId = appId ?? defaultAppId(apps, recentIds, model.bankBin);
   const selected = apps.find((a) => a.id === selectedId) ?? apps[0];
+  const shownApps = useMemo(() => {
+    const hits = filterApps(apps, appQuery);
+    return hits.some((a) => a.id === selected.id) ? hits : [selected, ...hits];
+  }, [apps, appQuery, selected]);
 
   const parsed = parseAmount(amountText);
   const enabled = canSubmit(amountText) && categoryId !== null;
@@ -266,8 +275,22 @@ export default function PayConfirmScreen() {
         ) : null}
 
         <Text style={styles.section}>{vi.payConfirm.payWith}</Text>
+        <TextInput
+          testID="pay-app-search"
+          value={appQuery}
+          onChangeText={setAppQuery}
+          placeholder={vi.bankAccounts.searchBank}
+          placeholderTextColor={colors.neutral}
+          autoCorrect={false}
+          style={styles.search}
+        />
+        {appQuery.trim() && filterApps(apps, appQuery).length === 0 ? (
+          <Text testID="pay-app-empty" style={styles.muted}>
+            {vi.payConfirm.noBankMatch}
+          </Text>
+        ) : null}
         <View style={styles.appList}>
-          {apps.map((a, i) => {
+          {shownApps.map((a, i) => {
             const on = a.id === selected.id;
             return (
               <Pressable
@@ -282,7 +305,9 @@ export default function PayConfirmScreen() {
                   <Text style={styles.appBadgeText}>{a.short}</Text>
                 </View>
                 <Text style={[styles.appName, on && styles.appNameOn]}>{a.name}</Text>
-                <Text style={styles.appMode}>{a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.scanQr}</Text>
+                <Text testID={`app-badge-${a.id}`} style={styles.appMode}>
+                  {a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.scanQr}
+                </Text>
                 {on ? <Text style={styles.check}>✓</Text> : null}
               </Pressable>
             );
@@ -383,6 +408,17 @@ const styles = StyleSheet.create({
   chipOn: { borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.primarySoft },
   chipText: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.text },
   chipTextOn: { fontFamily: fontFamily.semibold, color: colors.primaryDark },
+  search: {
+    height: 40,
+    paddingHorizontal: 12,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.body,
+    color: colors.text,
+  },
   appList: { backgroundColor: colors.surface, borderRadius: radii.card, overflow: "hidden" },
   appRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
   appRowOn: { backgroundColor: colors.primarySoft },

@@ -75,12 +75,12 @@ appId: com.moneymates.app
       id: "app-momo"
 - scrollUntilVisible:
     element:
-      id: "app-tpbank"
+      id: "app-tpb"
 - assertVisible:
     id: "app-momo"
     below:
       id: "pay-confirm-bank"
 - assertVisible:
-    id: "app-tpbank"
+    id: "app-tpb"
     below:
       id: "app-momo"

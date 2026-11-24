@@ -19,7 +19,7 @@ const other: PayConfirmModel = {
   isDynamic: false,
   payload: "y",
 };
-const tpb = PAY_APPS.find((a) => a.id === "tpbank")!;
+const tpb = PAY_APPS.find((a) => a.id === "tpb")!;
 const mb = PAY_APPS.find((a) => a.id === "mb")!;
 
 function setup(over: Partial<HandOffDeps> = {}) {

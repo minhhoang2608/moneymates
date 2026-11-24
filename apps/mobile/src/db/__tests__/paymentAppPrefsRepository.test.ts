@@ -10,21 +10,11 @@ describe("paymentAppPrefsRepository", () => {
   it("AC1: saved order survives close and reopen", async () => {
     const file = tmpDbFile();
     const a = openTestDb(file);
-    await repoFor(a.db).setAppOrder(["tpbank", "tcb", "momo", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
-    await repoFor(a.db).setAppOrder(["momo", "tpbank", "tcb", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
+    await repoFor(a.db).setAppOrder(["tpb", "tcb", "momo", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
+    await repoFor(a.db).setAppOrder(["momo", "tpb", "tcb", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
     a.sqlite.close();
     const b = openTestDb(file);
-    expect(await repoFor(b.db).getAppOrder()).toEqual([
-      "momo",
-      "tpbank",
-      "tcb",
-      "vcb",
-      "mb",
-      "icb",
-      "bidv",
-      "acb",
-      "ocb",
-    ]);
+    expect(await repoFor(b.db).getAppOrder()).toEqual(["momo", "tpb", "tcb", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
     expect(await b.db.select().from(paymentAppPrefs)).toHaveLength(9);
     b.sqlite.close();
   });
@@ -32,9 +22,9 @@ describe("paymentAppPrefsRepository", () => {
   it("defaults to catalogue order, appends missing apps, ignores unknown keys", async () => {
     const { db } = openTestDb();
     const repo = repoFor(db);
-    expect(await repo.getAppOrder()).toEqual(["tpbank", "tcb", "vcb", "mb", "momo", "icb", "bidv", "acb", "ocb"]);
+    expect(await repo.getAppOrder()).toEqual(["tpb", "tcb", "vcb", "mb", "momo", "icb", "bidv", "acb", "ocb"]);
     await repo.setAppOrder(["momo", "unknown", "mb"]);
-    expect(await repo.getAppOrder()).toEqual(["momo", "mb", "tpbank", "tcb", "vcb", "icb", "bidv", "acb", "ocb"]);
+    expect(await repo.getAppOrder()).toEqual(["momo", "mb", "tpb", "tcb", "vcb", "icb", "bidv", "acb", "ocb"]);
   });
 
   it("bumps updated_at and revives soft-deleted rows", async () => {

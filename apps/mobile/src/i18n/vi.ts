@@ -57,6 +57,7 @@ export const vi = {
     autofill: "Tự điền",
     scanQr: "Quét ảnh QR",
     shareQr: "Chia sẻ mã QR",
+    noBankMatch: "Không tìm thấy ngân hàng",
   },
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
