@@ -180,7 +180,11 @@ describe("TransactionForm", () => {
     await mount(<TransactionForm transactionId={row.id} onClose={jest.fn()} photoPicker={noPhoto} />);
     expect(await screen.findByText("Hôm qua, 19:30 ›")).toBeTruthy();
     expect(screen.getByText("Tiền mặt ›")).toBeTruthy();
-    expect(screen.getByTestId("photo-thumbnail").props.source).toEqual({ uri: "file:///doc/p.jpg" });
+    const thumb = screen.getByTestId("photo-thumbnail");
+    expect(thumb.props.accessible).not.toBe(false);
+    expect(screen.getByTestId("photo-thumbnail-image").props.source).toEqual({ uri: "file:///doc/p.jpg" });
+    // Must not be nested in the accessible photo-row, or Android hides its id from Maestro.
+    for (let n = thumb.parent; n; n = n.parent) expect(n.props.testID).not.toBe("photo-row");
   });
 
   it("edit mode prefills and updates instead of creating", async () => {

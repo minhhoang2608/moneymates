@@ -8,6 +8,13 @@ const read = (f: string) => fs.readFileSync(path.join(dir, `${f}.yaml`), "utf8")
 const FLOWS = ["bill-scan", "bill-fill-form"];
 
 describe("bill maestro flows", () => {
+  it("bill-fill-form scrolls until the photo thumbnail is visible before asserting it", () => {
+    const src = read("bill-fill-form");
+    expect(src).toMatch(/scrollUntilVisible:\s*\n\s*element:\s*\n\s*id: "photo-thumbnail"/);
+    expect(src.indexOf("scrollUntilVisible")).toBeLessThan(src.indexOf('assertVisible:\n    id: "photo-thumbnail"'));
+    expect(src.trimEnd().endsWith('- assertVisible: "345.000đ"')).toBe(true);
+  });
+
   it.each(FLOWS)("%s waits on the bill-done id, not heading text", (f) => {
     const src = read(f);
     expect(src).toMatch(/extendedWaitUntil:\s*\n\s*visible:\s*\n\s*id: "bill-done"/);

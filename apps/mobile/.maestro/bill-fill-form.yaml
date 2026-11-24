@@ -22,6 +22,11 @@ appId: com.moneymates.app
 - assertVisible: "Ăn uống"
 - tapOn:
     id: "bill-fill-form"
+- scrollUntilVisible:
+    element:
+      id: "photo-thumbnail"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "photo-thumbnail"
 - assertVisible: "Bánh căn Nhà Chung"
