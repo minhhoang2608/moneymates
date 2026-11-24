@@ -11,21 +11,17 @@ appId: com.moneymates.app
 - tapOn:
     id: "group-name"
 - inputText: "Đà Lạt"
-- tapOn:
-    id: "group-edit-title"
+- pressKey: Enter
 - waitForAnimationToEnd
 - tapOn:
     id: "member-add-input"
 - inputText: "An"
-- tapOn:
-    id: "member-add"
+- pressKey: Enter
+- waitForAnimationToEnd
 - tapOn:
     id: "member-add-input"
 - inputText: "Bình"
-- tapOn:
-    id: "member-add"
-- tapOn:
-    id: "group-edit-title"
+- pressKey: Enter
 - waitForAnimationToEnd
 - assertVisible:
     id: "screen-group-edit"

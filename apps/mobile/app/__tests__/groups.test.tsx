@@ -127,11 +127,23 @@ describe("Tạo/sửa nhóm", () => {
     await fireEvent(input, "submitEditing");
     expect(await screen.findByText("An")).toBeTruthy();
     expect(screen.getByTestId("member-add-input").props.value).toBe("");
+    expect(screen.getByTestId("member-add-input").props.submitBehavior).toBe("blurAndSubmit");
     expect(screen.getByText(`${vi.groups.members} (2)`)).toBeTruthy();
     await fireEvent.press(screen.getByTestId("group-save"));
     await waitFor(async () => expect(await groupsRepo().listGroups()).toHaveLength(1));
     const [g] = await groupsRepo().listGroups();
     expect(g.members.map((m) => m.displayName)).toEqual(["", "An"]);
+  });
+
+  it("submitting the name field blurs it without saving or leaving", async () => {
+    freshFile();
+    await renderEdit();
+    const name = screen.getByTestId("group-name");
+    expect(name.props.submitBehavior).toBe("blurAndSubmit");
+    await fireEvent.changeText(name, "Đà Lạt");
+    await fireEvent(name, "submitEditing", { nativeEvent: { text: "Đà Lạt" } });
+    expect(screen.getByTestId("screen-group-edit")).toBeTruthy();
+    expect(await groupsRepo().listGroups()).toHaveLength(0);
   });
 
   it("submitEditing uses the event text even when state is stale", async () => {

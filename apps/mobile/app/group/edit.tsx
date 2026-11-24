@@ -192,6 +192,8 @@ export default function GroupEditScreen() {
                 setName(v);
                 setError(null);
               }}
+              returnKeyType="next"
+              submitBehavior="blurAndSubmit"
             />
           </View>
           <View style={styles.field}>
@@ -320,7 +322,7 @@ export default function GroupEditScreen() {
               onSubmitEditing={(e) => addMember(e?.nativeEvent?.text)}
               onFocus={scrollToAddRow}
               returnKeyType="done"
-              submitBehavior="submit"
+              submitBehavior="blurAndSubmit"
             />
             <Pressable testID="member-add" style={styles.addBtn} onPress={() => addMember()}>
               <Text style={styles.addBtnText}>{t.add}</Text>
