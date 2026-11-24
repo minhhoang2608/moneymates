@@ -40,7 +40,7 @@ beforeEach(() => {
 async function open() {
   const view = await renderRouter("./app", { initialUrl: "/settings" });
   await screen.findByTestId("screen-settings", {}, { timeout: 5000 });
-  await screen.findByTestId("settings-app-row-tpb");
+  await screen.findByTestId("settings-payment-apps-row");
   return view;
 }
 

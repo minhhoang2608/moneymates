@@ -9,11 +9,7 @@ appId: com.moneymates.app
 - assertVisible:
     id: "screen-settings"
 - assertVisible:
-    id: "settings-app-list"
-- tapOn:
-    id: "settings-app-up-momo"
-- tapOn:
-    id: "settings-app-up-momo"
+    id: "settings-payment-apps-row"
 - scrollUntilVisible:
     element:
       id: "settings-sources-row"

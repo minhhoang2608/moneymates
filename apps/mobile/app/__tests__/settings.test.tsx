@@ -45,67 +45,27 @@ beforeEach(() => {
 async function open() {
   const view = await renderRouter("./app", { initialUrl: "/settings" });
   await screen.findByTestId("screen-settings", {}, { timeout: 5000 });
-  await screen.findByTestId("settings-app-row-tpb");
+  await screen.findByTestId("settings-payment-apps-row");
   return view;
 }
 const rowIds = () =>
   screen.getAllByTestId(/^settings-app-row-/).map((n) => n.props.testID.replace("settings-app-row-", ""));
 
 describe("Cài đặt screen", () => {
-  it("AC1: reorders payment apps with the up buttons and persists across remount", async () => {
-    await createPaymentAppPrefsRepository(fresh()).setAppOrder(["tpb", "tcb", "momo", "vcb", "mb"]);
-    const view = await open();
-    expect(rowIds()).toEqual(["tpb", "tcb", "momo", "vcb", "mb", "icb", "bidv", "acb", "ocb"]);
-    await fireEvent.press(screen.getByTestId("settings-app-up-momo"));
-    await fireEvent.press(screen.getByTestId("settings-app-up-momo"));
-    await waitFor(() => expect(rowIds()[0]).toBe("momo"));
-    await waitFor(async () => expect((await createPaymentAppPrefsRepository(fresh()).getAppOrder())[0]).toBe("momo"));
-    view.unmount();
+  it("AC1: the payment apps row shows the enabled count and opens the page", async () => {
+    await createPaymentAppPrefsRepository(fresh()).setEnabledOrder(["mb", "tpb", "tcb", "momo"]);
     await open();
-    expect(rowIds()[0]).toBe("momo");
+    await waitFor(() => expect(screen.getByText("4 đang bật ›")).toBeTruthy());
+    await fireEvent.press(screen.getByTestId("settings-payment-apps-row"));
+    expect(await screen.findByTestId("screen-payment-apps")).toBeTruthy();
   });
 
-  it("AC1: dragging the handle moves the row", async () => {
-    await createPaymentAppPrefsRepository(fresh()).setAppOrder(["tpb", "tcb", "momo", "vcb", "mb"]);
+  it("AC3: the count follows the enabled apps", async () => {
+    const repo = createPaymentAppPrefsRepository(fresh());
+    await repo.setEnabledOrder(["mb", "tpb", "tcb", "momo"]);
+    await repo.setEnabled("vcb", true);
     await open();
-    const handle = screen.getByTestId("settings-app-handle-momo");
-    // Drive the PanResponder through its handlers with a synthetic gesture.
-    const mk = (y: number, active: boolean) => {
-      const touch = {
-        touchActive: active,
-        startPageX: 0,
-        startPageY: 0,
-        startTimeStamp: 0,
-        currentPageX: 0,
-        currentPageY: y,
-        currentTimeStamp: 1,
-        previousPageX: 0,
-        previousPageY: 0,
-        previousTimeStamp: 0,
-      };
-      return {
-        nativeEvent: {
-          touches: active ? [{ pageX: 0, pageY: y }] : [],
-          changedTouches: [{ pageX: 0, pageY: y }],
-          pageX: 0,
-          pageY: y,
-          timestamp: 1,
-        },
-        touchHistory: {
-          touchBank: [touch],
-          numberActiveTouches: active ? 1 : 0,
-          indexOfSingleActiveTouch: 0,
-          mostRecentTimeStamp: 1,
-        },
-      };
-    };
-    await act(async () => {
-      handle.props.onStartShouldSetResponder(mk(0, true));
-      handle.props.onResponderGrant(mk(0, true));
-      handle.props.onResponderMove(mk(-104, true));
-      handle.props.onResponderRelease(mk(-104, false));
-    });
-    await waitFor(() => expect(rowIds()[0]).toBe("momo"));
+    await waitFor(() => expect(screen.getByText("5 đang bật ›")).toBeTruthy());
   });
 
   it("AC2: adds a money source with a kind; empty name is rejected", async () => {

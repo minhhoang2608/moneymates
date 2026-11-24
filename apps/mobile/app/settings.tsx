@@ -6,12 +6,12 @@ import { PressableScale } from "@/components/PressableScale";
 
 import { DefaultBankSuggestion } from "@/components/settings/DefaultBankSuggestion";
 import { MoneySourceSection } from "@/components/settings/MoneySourceSection";
-import { PaymentAppList } from "@/components/settings/PaymentAppList";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { MoneySourceRow } from "@/db/repositories/moneySourceRepository";
+import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { vi } from "@/i18n/vi";
 import { getAppLockAuth } from "@/lib/appLock/auth";
-import { PAY_APPS, orderAppsBySaved } from "@/lib/payConfirm/apps";
+import { PAY_APPS } from "@/lib/payConfirm/apps";
 import { suggestDefaultApp } from "@/lib/payConfirm/defaultSuggestion";
 import { PREF_KEYS } from "@/lib/preferences/defaults";
 import { useAppLock } from "@/stores/appLock";
@@ -19,8 +19,8 @@ import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { paymentAppPrefs, moneySources, preferences, appSettings, bankAccounts, handOffMemory } = useRepositories();
-  const [order, setOrder] = useState<string[]>([]);
+  const { moneySources, preferences, appSettings, bankAccounts, handOffMemory } = useRepositories();
+  const { enabled, reorder, reload } = useEnabledPayApps();
   const [sources, setSources] = useState<MoneySourceRow[]>([]);
   const [currency, setCurrency] = useState("VND");
   const [alertOn, setAlertOn] = useState(true);
@@ -66,9 +66,9 @@ export default function SettingsScreen() {
   useFocusEffect(
     useCallback(() => {
       let alive = true;
+      void reload().catch(() => {});
       (async () => {
-        const [o, s, c, a, l, avail, rec, accounts, dis] = await Promise.all([
-          paymentAppPrefs.getAppOrder(),
+        const [s, c, a, l, avail, rec, accounts, dis] = await Promise.all([
           moneySources.listSources(),
           preferences.getDefaultCurrency(),
           preferences.getAlertOverLastMonth(),
@@ -81,7 +81,6 @@ export default function SettingsScreen() {
           handOffMemory.getDefaultSuggestionDismissed(),
         ]);
         if (!alive) return;
-        setOrder(o);
         setSources(s);
         setCurrency(c);
         setAlertOn(a);
@@ -94,11 +93,10 @@ export default function SettingsScreen() {
       return () => {
         alive = false;
       };
-    }, [paymentAppPrefs, moneySources, preferences, appSettings, bankAccounts, handOffMemory]),
+    }, [reload, moneySources, preferences, appSettings, bankAccounts, handOffMemory]),
   );
 
-  const fullOrder = orderAppsBySaved(PAY_APPS, order).map((a) => a.id);
-  const suggestedId = suggestDefaultApp({ order: fullOrder, recent, accountBins, dismissed });
+  const suggestedId = suggestDefaultApp({ order: enabled, recent, accountBins, dismissed });
   const suggested = PAY_APPS.find((a) => a.id === suggestedId);
 
   const version = Constants.expoConfig?.version ?? "";
@@ -118,14 +116,12 @@ export default function SettingsScreen() {
         <Text style={styles.title}>{vi.settings.title}</Text>
       </View>
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <Text style={styles.section}>{vi.settings.appsHeading}</Text>
+        <Text style={styles.section}>{vi.settings.paymentHeading}</Text>
         {suggested ? (
           <DefaultBankSuggestion
             appName={suggested.name}
             onAccept={() => {
-              const keys = [suggested.id, ...fullOrder.filter((id) => id !== suggested.id)];
-              setOrder(keys);
-              void paymentAppPrefs.setAppOrder(keys);
+              void reorder([suggested.id, ...enabled.filter((id) => id !== suggested.id)]);
             }}
             onDismiss={() => {
               setDismissed(true);
@@ -133,13 +129,15 @@ export default function SettingsScreen() {
             }}
           />
         ) : null}
-        <PaymentAppList
-          order={order}
-          onChange={(keys) => {
-            setOrder(keys);
-            void paymentAppPrefs.setAppOrder(keys);
-          }}
-        />
+        <PressableScale
+          testID="settings-payment-apps-row"
+          accessibilityRole="button"
+          onPress={() => router.push("/payment-apps")}
+          style={[styles.card, styles.row]}
+        >
+          <Text style={styles.label}>{vi.settings.paymentAppsRow}</Text>
+          <Text style={styles.value}>{vi.settings.enabledCount(enabled.length)}</Text>
+        </PressableScale>
 
         <Text testID="settings-general-heading" style={[styles.section, styles.sectionGap]}>
           {vi.settings.general}
