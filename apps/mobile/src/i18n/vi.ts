@@ -52,6 +52,7 @@ export const vi = {
     category: "Danh mục",
     categoryMore: "Thêm…",
     payWith: "Thanh toán bằng",
+    qrBankLabel: "Ngân hàng trong mã QR",
     submit: (amount: string, app: string) => `Thanh toán ${amount} qua ${app}`,
     submitNoAmount: (app: string) => `Thanh toán qua ${app}`,
     groupHint: (n: number) => `Trong nhóm: người chi là Tôi, chia đều ${n} người.`,
