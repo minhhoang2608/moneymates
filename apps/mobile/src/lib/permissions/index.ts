@@ -33,20 +33,35 @@ export function mapState(resp: PermissionResponse | null | undefined): Permissio
   return "denied";
 }
 
-export async function getPermissionState(kind: PermissionKind): Promise<PermissionState> {
+export type PermissionInfo = { state: PermissionState; canAskAgain: boolean };
+
+function toInfo(resp: PermissionResponse | null | undefined): PermissionInfo {
+  return { state: mapState(resp), canAskAgain: resp?.canAskAgain !== false };
+}
+
+/** State plus whether the system dialog can still be shown (Android denies once, then may ask again). */
+export async function getPermissionInfo(kind: PermissionKind): Promise<PermissionInfo> {
   try {
-    return mapState(await adapter().get(kind));
+    return toInfo(await adapter().get(kind));
   } catch {
-    return "denied";
+    return { state: "denied", canAskAgain: false };
   }
 }
 
-export async function requestPermission(kind: PermissionKind): Promise<PermissionState> {
+export async function requestPermissionInfo(kind: PermissionKind): Promise<PermissionInfo> {
   try {
-    return mapState(await adapter().request(kind));
+    return toInfo(await adapter().request(kind));
   } catch {
-    return "denied";
+    return { state: "denied", canAskAgain: false };
   }
+}
+
+export async function getPermissionState(kind: PermissionKind): Promise<PermissionState> {
+  return (await getPermissionInfo(kind)).state;
+}
+
+export async function requestPermission(kind: PermissionKind): Promise<PermissionState> {
+  return (await requestPermissionInfo(kind)).state;
 }
 
 /** Asks only when the system dialog was never shown; a denied permission is never re-requested. */

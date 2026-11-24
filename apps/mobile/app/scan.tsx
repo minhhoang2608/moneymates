@@ -9,7 +9,7 @@ import { ScanFrame } from "@/components/scanner/ScanFrame";
 import { e2eQr } from "@/e2e/fixtures";
 import { isE2E } from "@/e2e/isE2E";
 import { vi } from "@/i18n/vi";
-import { getPermissionState, openAppSettings, requestPermission, type PermissionState } from "@/lib/permissions";
+import { getPermissionInfo, openAppSettings, requestPermissionInfo, type PermissionInfo } from "@/lib/permissions";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
 import { colors, fontFamily, fontSize, layout } from "@/theme";
 
@@ -18,7 +18,7 @@ const ERROR_MS = 3000;
 export default function ScanScreen() {
   const router = useRouter();
   const e2e = isE2E();
-  const [permission, setPermission] = useState<PermissionState | null>(null);
+  const [permission, setPermission] = useState<PermissionInfo | null>(null);
   const [torch, setTorch] = useState(false);
   const [error, setError] = useState(false);
   const [detected, setDetected] = useState(false);
@@ -29,14 +29,14 @@ export default function ScanScreen() {
 
   useEffect(() => {
     let alive = true;
-    void getPermissionState("camera").then((s) => alive && setPermission(s));
+    void getPermissionInfo("camera").then((i) => alive && setPermission(i));
     return () => {
       alive = false;
     };
   }, []);
 
   async function onGrant() {
-    setPermission(await requestPermission("camera"));
+    setPermission(await requestPermissionInfo("camera"));
   }
 
   function showError() {
@@ -72,8 +72,8 @@ export default function ScanScreen() {
     handle(res.text);
   }
 
-  const showCamera = !e2e && permission === "granted";
-  const denied = !e2e && permission !== null && permission !== "granted";
+  const showCamera = !e2e && permission?.state === "granted";
+  const denied = !e2e && permission !== null && permission.state !== "granted";
 
   return (
     <View style={styles.root} testID="screen-scan">
@@ -119,7 +119,7 @@ export default function ScanScreen() {
       {denied ? (
         <View style={styles.denied}>
           <Text style={styles.hint}>{vi.scan.permissionDenied}</Text>
-          {permission === "not_asked" ? (
+          {permission?.canAskAgain ? (
             <PressableScale testID="scan-grant" accessibilityRole="button" onPress={onGrant}>
               <Text style={styles.link}>{vi.scan.grant}</Text>
             </PressableScale>

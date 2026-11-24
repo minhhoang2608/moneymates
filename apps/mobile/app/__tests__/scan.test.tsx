@@ -150,6 +150,22 @@ describe("scan screen", () => {
     await waitFor(() => expect(screen.getByText(vi.scan.permissionDenied)).toBeTruthy());
   });
 
+  it("denied camera that can ask again: shows scan-grant, pressing it requests once", async () => {
+    const request = (camera as any).Camera.requestCameraPermissionsAsync as jest.Mock;
+    request.mockClear();
+    cam.permission = { status: "denied", granted: false, canAskAgain: true };
+    await open();
+    expect(request).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByTestId("scan-grant")).toBeTruthy());
+    request.mockImplementationOnce(async () => {
+      cam.permission = { status: "granted", granted: true, canAskAgain: true };
+      return cam.permission;
+    });
+    await fireEvent.press(screen.getByTestId("scan-grant"));
+    expect(request).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.getByTestId("camera-view")).toBeTruthy());
+  });
+
   it("E2E mode feeds the fixture without a camera", async () => {
     process.env.EXPO_PUBLIC_E2E = "1";
     await open();
