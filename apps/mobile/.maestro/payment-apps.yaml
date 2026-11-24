@@ -1,0 +1,45 @@
+# App thanh toán: toggle an app on/off (the counter changes), then search and clear.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "row-settings"
+- assertVisible:
+    id: "screen-settings"
+- assertVisible:
+    id: "settings-payment-apps-row"
+- tapOn:
+    id: "settings-payment-apps-row"
+- assertVisible:
+    id: "screen-payment-apps"
+- assertVisible:
+    id: "payment-apps-enabled-heading"
+- scrollUntilVisible:
+    element:
+      id: "payment-app-switch-vnpay"
+- tapOn:
+    id: "payment-app-switch-vnpay"
+- scrollUntilVisible:
+    direction: UP
+    element:
+      id: "payment-apps-search"
+- tapOn:
+    id: "payment-apps-search"
+- inputText: "vnp"
+- assertVisible:
+    id: "payment-app-row-vnpay"
+- assertNotVisible:
+    id: "payment-apps-enabled-heading"
+- eraseText: 3
+- assertVisible:
+    id: "payment-apps-enabled-heading"
+- tapOn:
+    id: "payment-apps-back"
+- assertVisible:
+    id: "screen-settings"

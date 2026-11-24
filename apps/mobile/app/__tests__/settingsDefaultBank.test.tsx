@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import * as Linking from "expo-linking";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import {
@@ -35,6 +36,7 @@ const fresh = () => openTestDb(file).db as unknown as AnyDb;
 afterEach(() => jest.restoreAllMocks());
 
 beforeEach(() => {
+  jest.spyOn(Linking, "canOpenURL").mockResolvedValue(false);
   file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-set-")), "test.db");
   global.__SET_TEST_DB__ = openTestDb(file).db;
 });
@@ -42,12 +44,9 @@ beforeEach(() => {
 async function open() {
   const view = await renderRouter("./app", { initialUrl: "/settings" });
   await screen.findByTestId("screen-settings", {}, { timeout: 5000 });
-  await screen.findByTestId("settings-app-row-tpb");
+  await screen.findByTestId("settings-payment-apps-row");
   return view;
 }
-const rowIds = () =>
-  screen.getAllByTestId(/^settings-app-row-/).map((n) => n.props.testID.replace("settings-app-row-", ""));
-
 describe("Cài đặt default bank suggestion", () => {
   it("is hidden without hints", async () => {
     await open();
@@ -60,8 +59,7 @@ describe("Cài đặt default bank suggestion", () => {
     await screen.findByTestId("settings-default-suggest");
     await fireEvent.press(screen.getByTestId("settings-default-suggest-accept"));
     expect(screen.queryByTestId("settings-default-suggest")).toBeNull();
-    expect(rowIds()[0]).toBe("mb");
-    await waitFor(async () => expect((await createPaymentAppPrefsRepository(fresh()).getAppOrder())[0]).toBe("mb"));
+    await waitFor(async () => expect((await createPaymentAppPrefsRepository(fresh()).getEnabledApps())[0]).toBe("mb"));
   });
 
   it("dismiss is stored and the card stays hidden", async () => {

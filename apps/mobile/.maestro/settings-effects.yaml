@@ -1,4 +1,4 @@
-# Settings take effect: a new money source shows in the entry form, and the saved app order drives pay-confirm.
+# Settings take effect: a new money source shows in the entry form, and pay-confirm lists the enabled apps.
 appId: com.moneymates.app
 ---
 - launchApp:
@@ -12,17 +12,6 @@ appId: com.moneymates.app
     id: "row-settings"
 - assertVisible:
     id: "screen-settings"
-- scrollUntilVisible:
-    element:
-      id: "settings-app-up-momo"
-- tapOn:
-    id: "settings-app-up-momo"
-- tapOn:
-    id: "settings-app-up-momo"
-- tapOn:
-    id: "settings-app-up-momo"
-- tapOn:
-    id: "settings-app-up-momo"
 - scrollUntilVisible:
     element:
       id: "settings-sources-row"
@@ -79,11 +68,3 @@ appId: com.moneymates.app
     element:
       id: "app-tpb"
     centerElement: true
-- assertVisible:
-    id: "app-momo"
-    below:
-      id: "pay-app-search"
-- assertVisible:
-    id: "app-tpb"
-    below:
-      id: "app-momo"

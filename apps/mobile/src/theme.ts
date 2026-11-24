@@ -27,7 +27,19 @@ export const colors = {
   bankTcbFg: "#A3161A",
   bankTpbBg: "#F3E8FF",
   bankTpbFg: "#6B2FB3",
+  switchOff: "#D5D9DF",
 } as const;
+
+/** Background/foreground pairs for the initials tile of an app row (docs/design PaymentApps). */
+export const tileColors = [
+  { bg: "#E0ECFF", fg: "#1D4E9E" },
+  { bg: "#F3E8FF", fg: "#6B2FB3" },
+  { bg: "#FDE8E8", fg: "#A3161A" },
+  { bg: "#FCE7F3", fg: "#9D174D" },
+  { bg: "#E0F2F1", fg: "#0F5E57" },
+  { bg: "#E3F4E8", fg: "#1E6B37" },
+  { bg: "#E0F2FE", fg: "#075985" },
+] as const;
 
 /** Translucent colours (not 6-digit hex) used on dark backdrops. */
 export const overlays = { button: "rgba(255,255,255,0.14)" } as const;

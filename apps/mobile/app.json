@@ -56,6 +56,10 @@
           "speechRecognitionPermission": "MoneyMates cần nhận dạng giọng nói để chuyển lời bạn nói thành giao dịch."
         }
       ],
+      [
+        "./plugins/withAndroidQueries",
+        { "schemes": ["hydro", "mbbank", "momo", "tcb", "vietcombankmobile", "vietinbankipay"] }
+      ],
       "@react-native-community/datetimepicker",
       "expo-sharing",
       [
