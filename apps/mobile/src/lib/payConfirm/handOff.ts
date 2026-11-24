@@ -1,15 +1,22 @@
 import type { PayApp } from "./apps";
-import { buildAutofillUrl, buildClipboardText, buildOpenUrl } from "./deeplink";
+import { buildAutofillUrl, buildPlatformOpenUrl } from "./deeplink";
+import { decideHandOff, type HandOffDecision, type HandOffPlatform, type KnownShareResult } from "./decideHandOff";
 import type { PayConfirmModel } from "./params";
 
 export type HandOffDeps = {
+  platform: HandOffPlatform;
+  /** Opens a web/scheme URL. */
   openUrl: (url: string) => Promise<void>;
+  /** Opens an Android `intent://` URL; rejects when the app is not installed. */
+  openIntent: (url: string) => Promise<void>;
+  /** Sends the QR PNG straight to an Android package; rejects when the app does not accept it. */
+  shareToPackage: (pkg: string) => Promise<void>;
   setClipboard: (text: string) => Promise<void>;
-  /** Saves the QR image to the photo library. */
+  /** Saves the QR image to the MoneyMates album. */
   saveQrImage: () => Promise<void>;
 };
 
-export type HandOffInput = { model: PayConfirmModel; amount: number; note: string };
+export type HandOffInput = { model: PayConfirmModel; amount: number; note: string; knownResult?: KnownShareResult };
 
 async function attempt(step: () => Promise<void>): Promise<void> {
   try {
@@ -21,38 +28,56 @@ async function attempt(step: () => Promise<void>): Promise<void> {
 
 export type HandOffResult = {
   opened: boolean;
-  /** autofill: dl.vietqr.io with the transfer prefilled. direct: scheme open, the user scans the saved QR. */
+  /** autofill: dl.vietqr.io with the transfer prefilled. direct: the user scans / picks the saved QR. */
   mode: "autofill" | "direct";
+  decision: HandOffDecision;
+  /** Only for direct-share: whether the app accepted the QR image. */
+  share?: "shared" | "share_failed";
 };
 
-/** Opens the chosen bank/wallet app. Never throws: `opened:false` tells the caller it failed. */
+/** Hands the payment to the chosen app. Never throws: `opened:false` tells the caller it failed. */
 export function createHandOff(deps: HandOffDeps) {
-  async function open(url: string, mode: HandOffResult["mode"]): Promise<HandOffResult> {
+  async function open(url: string): Promise<boolean> {
     try {
-      await deps.openUrl(url);
-      return { opened: true, mode };
+      if (deps.platform === "android" && url.startsWith("intent:")) await deps.openIntent(url);
+      else await deps.openUrl(url);
+      return true;
     } catch (e) {
       console.warn("could not open bank app", e);
-      return { opened: false, mode };
+      return false;
     }
   }
 
   return async function handOff(app: PayApp, input: HandOffInput): Promise<HandOffResult> {
     const { model, amount, note } = input;
-    if (app.supportsAutofill && model.kind === "vietqr") {
-      const url = buildAutofillUrl(app, {
-        account: model.account,
-        bin: model.bankBin,
-        amount,
-        message: note,
-        name: model.name,
-      });
-      if (url) return open(url, "autofill");
+    let decision = decideHandOff(app, deps.platform, input.knownResult);
+    if (decision === "autofill-link") {
+      const url =
+        model.kind === "vietqr"
+          ? buildAutofillUrl(app, {
+              account: model.account,
+              bin: model.bankBin,
+              amount,
+              message: note,
+              name: model.name,
+            })
+          : null;
+      if (url) return { opened: await open(url), mode: "autofill", decision };
+      decision = app.androidPackage && deps.platform === "android" ? "direct-share" : "open-only";
     }
-    if (model.kind === "vietqr") {
-      await attempt(() => deps.setClipboard(buildClipboardText({ account: model.account, amount, message: note })));
-    }
+    if (model.kind === "vietqr") await attempt(() => deps.setClipboard(model.account));
     await attempt(deps.saveQrImage);
-    return open(buildOpenUrl(app), "direct");
+
+    if (decision === "direct-share" && app.androidPackage) {
+      try {
+        await deps.shareToPackage(app.androidPackage);
+        return { opened: true, mode: "direct", decision, share: "shared" };
+      } catch (e) {
+        console.warn("direct share failed", e);
+        const opened = await open(buildPlatformOpenUrl(app, deps.platform));
+        return { opened, mode: "direct", decision, share: "share_failed" };
+      }
+    }
+    return { opened: await open(buildPlatformOpenUrl(app, deps.platform)), mode: "direct", decision };
   };
 }

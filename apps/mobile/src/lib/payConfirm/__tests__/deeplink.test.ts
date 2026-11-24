@@ -1,5 +1,13 @@
 import { PAY_APPS } from "../apps";
-import { bankCodeForBin, buildAutofillUrl, buildClipboardText, buildOpenUrl, buildTn } from "../deeplink";
+import {
+  bankCodeForBin,
+  buildAndroidIntentUrl,
+  buildPlatformOpenUrl,
+  buildAutofillUrl,
+  buildClipboardText,
+  buildOpenUrl,
+  buildTn,
+} from "../deeplink";
 
 const app = (id: string) => PAY_APPS.find((a) => a.id === id)!;
 
@@ -74,5 +82,21 @@ describe("buildClipboardText", () => {
   it("leaves out an invalid amount", () => {
     expect(buildClipboardText({ account: "0123", amount: 0, message: "A" })).toBe("0123 A");
     expect(buildClipboardText({ account: "0123", amount: 1.5 })).toBe("0123");
+  });
+});
+
+describe("android intent urls", () => {
+  it("buildAndroidIntentUrl", () => {
+    expect(buildAndroidIntentUrl("vn.com.techcombank.bb.app")).toBe(
+      "intent://#Intent;package=vn.com.techcombank.bb.app;end",
+    );
+  });
+  it("buildPlatformOpenUrl: android with package (and no scheme) → intent", () => {
+    const noScheme = { ...app("tcb"), scheme: undefined };
+    expect(buildPlatformOpenUrl(noScheme, "android")).toBe("intent://#Intent;package=vn.com.techcombank.bb.app;end");
+  });
+  it("buildPlatformOpenUrl: ios → scheme, or dl.vietqr.io without scheme", () => {
+    expect(buildPlatformOpenUrl(app("tcb"), "ios")).toBe("tcb://");
+    expect(buildPlatformOpenUrl({ ...app("tcb"), scheme: undefined }, "ios")).toBe("https://dl.vietqr.io/pay?app=tcb");
   });
 });

@@ -86,3 +86,9 @@ jest.mock("@react-native-community/datetimepicker", () => {
 
 // The app database is native expo-sqlite: back it with an in-memory better-sqlite3 db under Jest.
 jest.mock("@/db/client", () => ({ db: require("./src/db/testing/testDb").openTestDb().db }));
+
+// Local Android-only native module has no native side under Jest.
+jest.mock("./modules/bank-hand-off", () => ({
+  openIntentUri: jest.fn(async () => {}),
+  sharePng: jest.fn(async () => {}),
+}));
