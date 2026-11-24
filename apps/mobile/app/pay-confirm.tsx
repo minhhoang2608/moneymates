@@ -407,7 +407,16 @@ export default function PayConfirmScreen() {
       </View>
 
       <View style={styles.hiddenQr} pointerEvents="none" accessibilityElementsHidden>
-        <QRCode value={qrPayload || " "} size={300} getRef={(r) => (qrRef.current = r)} />
+        {/* Bank apps decode the saved PNG from the gallery: large, white background, 4-module quiet zone. */}
+        <QRCode
+          value={qrPayload || " "}
+          size={640}
+          quietZone={64}
+          ecl="M"
+          color="black"
+          backgroundColor="white"
+          getRef={(r) => (qrRef.current = r)}
+        />
       </View>
 
       {coachOpen ? <CoachSheet bankName={selected.name} onConfirm={confirmCoach} onClose={closeCoach} /> : null}
