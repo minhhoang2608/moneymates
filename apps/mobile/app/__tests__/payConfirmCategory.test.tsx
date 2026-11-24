@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import qr from "../../e2e/fixtures/qr.json";
-import { createAppSettingRepository, createCategoryRepository, createTransactionRepository } from "@/db/repositories";
+import { createCategoryRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";

@@ -1,4 +1,4 @@
-# Bank without autofill (TPBank fixture): a how-to line under the pay button, and no coach sheet on the first payment.
+# Bank without autofill (TPBank fixture): a how-to line under the pay button, and no sheet on the first payment.
 appId: com.moneymates.app
 ---
 - launchApp:
