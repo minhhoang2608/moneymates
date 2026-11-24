@@ -135,6 +135,33 @@ describe("Cài đặt screen", () => {
     expect(await createPreferencesRepository(fresh()).getDefaultCurrency()).toBe("VND");
   });
 
+  it("non-autofill row: default, pick, persist", async () => {
+    await open();
+    expect(screen.getByText("Khi app không tự điền")).toBeTruthy();
+    expect(screen.getByText("iOS · “Không lưu ảnh” = copy STK để dán")).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getByTestId("settings-non-autofill-value").props.children).toBe("Ảnh QR, tự xoá ›"),
+    );
+    await fireEvent.press(screen.getByTestId("settings-non-autofill-row"));
+    expect(await screen.findByTestId("non-autofill-option-qr_image")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("non-autofill-option-no_image"));
+    await waitFor(() =>
+      expect(screen.getByTestId("settings-non-autofill-value").props.children).toBe("Không lưu ảnh ›"),
+    );
+    await waitFor(async () => expect(await createPreferencesRepository(fresh()).getNonAutofillMode()).toBe("no_image"));
+  });
+
+  it("non-autofill row shows the stored mode on open and can switch back", async () => {
+    await createPreferencesRepository(fresh()).setNonAutofillMode("no_image");
+    await open();
+    await waitFor(() =>
+      expect(screen.getByTestId("settings-non-autofill-value").props.children).toBe("Không lưu ảnh ›"),
+    );
+    await fireEvent.press(screen.getByTestId("settings-non-autofill-row"));
+    await fireEvent.press(await screen.findByTestId("non-autofill-option-qr_image"));
+    await waitFor(async () => expect(await createPreferencesRepository(fresh()).getNonAutofillMode()).toBe("qr_image"));
+  });
+
   it("AC5: the alert toggle persists", async () => {
     const view = await open();
     await waitFor(() => expect(screen.getByTestId("settings-alert-toggle").props.value).toBe(true));

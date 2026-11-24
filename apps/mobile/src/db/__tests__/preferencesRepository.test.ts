@@ -1,5 +1,5 @@
 import { DEFAULT_CATEGORIES } from "../../lib/category/defaults";
-import { createPreferencesRepository, createTransactionRepository } from "../repositories";
+import { createAppSettingRepository, createPreferencesRepository, createTransactionRepository } from "../repositories";
 import type { AnyDb } from "../seed";
 import { openTestDb } from "../testing/testDb";
 import { tmpDbFile } from "../testing/tmpFile";
@@ -51,5 +51,37 @@ describe("preferencesRepository app lock", () => {
     expect(await repo.getAppLockEnabled()).toBe(true);
     await repo.setAppLockEnabled(false);
     expect(await repo.getAppLockEnabled()).toBe(false);
+  });
+
+  describe("non-autofill mode", () => {
+    it("AC1: defaults to qr_image", async () => {
+      const { db } = openTestDb();
+      expect(await createPreferencesRepository(db as unknown as AnyDb).getNonAutofillMode()).toBe("qr_image");
+    });
+
+    it("AC2: persists across reopen", async () => {
+      const file = tmpDbFile();
+      const a = openTestDb(file).db as unknown as AnyDb;
+      await createPreferencesRepository(a).setNonAutofillMode("no_image");
+      const b = openTestDb(file).db as unknown as AnyDb;
+      expect(await createPreferencesRepository(b).getNonAutofillMode()).toBe("no_image");
+    });
+
+    it("AC3: invalid stored values fall back to qr_image", async () => {
+      const { db } = openTestDb();
+      const d = db as unknown as AnyDb;
+      const repo = createPreferencesRepository(d);
+      const raw = createAppSettingRepository(d);
+      await raw.set("non_autofill_mode", "bogus");
+      expect(await repo.getNonAutofillMode()).toBe("qr_image");
+      await raw.set("non_autofill_mode", 42);
+      expect(await repo.getNonAutofillMode()).toBe("qr_image");
+    });
+
+    it("rejects an invalid mode", async () => {
+      const { db } = openTestDb();
+      const repo = createPreferencesRepository(db as unknown as AnyDb);
+      await expect(repo.setNonAutofillMode("x" as never)).rejects.toMatchObject({ code: "invalid_mode" });
+    });
   });
 });

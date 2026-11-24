@@ -13,7 +13,8 @@ import { vi } from "@/i18n/vi";
 import { getAppLockAuth } from "@/lib/appLock/auth";
 import { PAY_APPS } from "@/lib/payConfirm/apps";
 import { suggestDefaultApp } from "@/lib/payConfirm/defaultSuggestion";
-import { PREF_KEYS } from "@/lib/preferences/defaults";
+import { SheetPicker } from "@/components/transaction/SheetPicker";
+import { DEFAULT_NON_AUTOFILL_MODE, PREF_KEYS, type NonAutofillMode } from "@/lib/preferences/defaults";
 import { useAppLock } from "@/stores/appLock";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
@@ -30,6 +31,10 @@ export default function SettingsScreen() {
   const [recent, setRecent] = useState<string[]>([]);
   const [accountBins, setAccountBins] = useState<string[]>([]);
   const [dismissed, setDismissed] = useState(true);
+  const [nonAutofill, setNonAutofill] = useState<NonAutofillMode>(DEFAULT_NON_AUTOFILL_MODE);
+  const [modeOpen, setModeOpen] = useState(false);
+  const modeLabel = (m: NonAutofillMode) =>
+    m === "no_image" ? vi.settings.nonAutofillNoImage : vi.settings.nonAutofillQrImage;
 
   const onLockChange = async (v: boolean) => {
     if (!v) {
@@ -68,7 +73,7 @@ export default function SettingsScreen() {
       let alive = true;
       void reload().catch(() => {});
       (async () => {
-        const [s, c, a, l, avail, rec, accounts, dis] = await Promise.all([
+        const [s, c, a, l, avail, rec, accounts, dis, mode] = await Promise.all([
           moneySources.listSources(),
           preferences.getDefaultCurrency(),
           preferences.getAlertOverLastMonth(),
@@ -79,6 +84,7 @@ export default function SettingsScreen() {
           appSettings.get<string[]>(PREF_KEYS.recentPayApps),
           bankAccounts.listAccounts(),
           handOffMemory.getDefaultSuggestionDismissed(),
+          preferences.getNonAutofillMode(),
         ]);
         if (!alive) return;
         setSources(s);
@@ -89,6 +95,7 @@ export default function SettingsScreen() {
         setRecent(Array.isArray(rec) ? rec : []);
         setAccountBins(accounts.map((x) => x.bank_bin));
         setDismissed(dis);
+        setNonAutofill(mode);
       })();
       return () => {
         alive = false;
@@ -129,15 +136,31 @@ export default function SettingsScreen() {
             }}
           />
         ) : null}
-        <PressableScale
-          testID="settings-payment-apps-row"
-          accessibilityRole="button"
-          onPress={() => router.push("/payment-apps")}
-          style={[styles.card, styles.row]}
-        >
-          <Text style={styles.label}>{vi.settings.paymentAppsRow}</Text>
-          <Text style={styles.value}>{vi.settings.enabledCount(enabled.length)}</Text>
-        </PressableScale>
+        <View style={styles.card}>
+          <PressableScale
+            testID="settings-payment-apps-row"
+            accessibilityRole="button"
+            onPress={() => router.push("/payment-apps")}
+            style={[styles.row, styles.divider]}
+          >
+            <Text style={styles.label}>{vi.settings.paymentAppsRow}</Text>
+            <Text style={styles.value}>{vi.settings.enabledCount(enabled.length)}</Text>
+          </PressableScale>
+          <PressableScale
+            testID="settings-non-autofill-row"
+            accessibilityRole="button"
+            onPress={() => setModeOpen(true)}
+            style={styles.row}
+          >
+            <View style={styles.flex}>
+              <Text style={styles.label}>{vi.settings.nonAutofillRow}</Text>
+              <Text style={styles.hint}>{vi.settings.nonAutofillHint}</Text>
+            </View>
+            <Text style={styles.value} testID="settings-non-autofill-value">
+              {`${modeLabel(nonAutofill)} ›`}
+            </Text>
+          </PressableScale>
+        </View>
 
         <Text testID="settings-general-heading" style={[styles.section, styles.sectionGap]}>
           {vi.settings.general}
@@ -200,6 +223,23 @@ export default function SettingsScreen() {
           {`${vi.settings.footer} ${version}`}
         </Text>
       </ScrollView>
+      <SheetPicker
+        visible={modeOpen}
+        title={vi.settings.nonAutofillRow}
+        options={(["qr_image", "no_image"] as const).map((m) => ({
+          key: m,
+          label: modeLabel(m),
+          testID: `non-autofill-option-${m}`,
+        }))}
+        selectedKey={nonAutofill}
+        onSelect={(k) => {
+          const mode = k as NonAutofillMode;
+          setNonAutofill(mode);
+          setModeOpen(false);
+          void preferences.setNonAutofillMode(mode);
+        }}
+        onClose={() => setModeOpen(false)}
+      />
     </View>
   );
 }

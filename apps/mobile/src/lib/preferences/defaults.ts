@@ -20,10 +20,23 @@ export const PREF_KEYS = {
   defaultBankSuggestionDismissed: "default_bank_suggestion_dismissed",
   recentPayApps: "pay.recent_apps",
   lastPayAppByBank: "pay.last_app_by_bank",
+  nonAutofillMode: "non_autofill_mode",
 } as const;
 
+export type NonAutofillMode = "qr_image" | "no_image";
+
+export const NON_AUTOFILL_MODES: NonAutofillMode[] = ["qr_image", "no_image"];
+
+export const DEFAULT_NON_AUTOFILL_MODE: NonAutofillMode = "qr_image";
+
+/** Unknown or invalid values fall back to the default. A legacy "paste" (docs name) reads as "no_image". */
+export function normalizeNonAutofillMode(v: unknown): NonAutofillMode {
+  if (v === "paste") return "no_image";
+  return NON_AUTOFILL_MODES.find((m) => m === v) ?? DEFAULT_NON_AUTOFILL_MODE;
+}
+
 export class PreferencesError extends Error {
-  constructor(public code: "name_required" | "invalid_kind" | "not_found" | "invalid_currency") {
+  constructor(public code: "name_required" | "invalid_kind" | "not_found" | "invalid_currency" | "invalid_mode") {
     super(code);
   }
 }
