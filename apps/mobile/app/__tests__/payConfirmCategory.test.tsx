@@ -77,8 +77,6 @@ beforeEach(async () => {
   mockHandOff.mockImplementation(async () => ({ opened: true }));
   const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-paycat-")), "test.db");
   global.__PAY_TEST_DB__ = openTestDb(file).db;
-  // These tests are not about the coach sheet: the default bank (TPBank) has it dismissed.
-  await createAppSettingRepository(global.__PAY_TEST_DB__ as unknown as AnyDb).set("pay.coach_dismissed", ["tpb"]);
 });
 afterEach(() => {
   global.fetch = original;

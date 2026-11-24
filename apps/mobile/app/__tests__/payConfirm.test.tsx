@@ -78,8 +78,6 @@ describe("pay-confirm screen", () => {
     mockHandOff.mockImplementation(async () => ({ opened: true }));
     const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-pay-")), "test.db");
     global.__PAY_TEST_DB__ = openTestDb(file).db;
-    // The coach sheet has its own tests: here the default bank (TPBank) has it dismissed.
-    await createAppSettingRepository(testDb()).set("pay.coach_dismissed", ["tpb"]);
   });
 
   afterEach(() => setHapticsEnabled(true));
