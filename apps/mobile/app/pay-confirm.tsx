@@ -12,7 +12,8 @@ import { useAiAvailable } from "@/api/features";
 import { useCategorySuggestion } from "@/api/parseText";
 import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
-import { PAY_APPS, defaultAppId, filterApps, normalizeAppId, orderPickerApps } from "@/lib/payConfirm/apps";
+import { useBankApps } from "@/api/bankApps";
+import { buildPayApps, defaultAppId, filterApps, normalizeAppId, orderPickerApps } from "@/lib/payConfirm/apps";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { buildClipboardText } from "@/lib/payConfirm/deeplink";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
@@ -99,9 +100,11 @@ export default function PayConfirmScreen() {
   }, [paymentAppPrefs]);
 
   const recentIds = useMemo(() => recent.map(normalizeAppId), [recent]);
+  const bankApps = useBankApps();
+  const payApps = useMemo(() => buildPayApps(bankApps, Platform.OS === "ios" ? "ios" : "android"), [bankApps]);
   const apps = useMemo(
-    () => orderPickerApps(PAY_APPS, { preferred: savedOrder, recent: recentIds, scannedBin: model.bankBin }),
-    [savedOrder, recentIds, model.bankBin],
+    () => orderPickerApps(payApps, { preferred: savedOrder, recent: recentIds, scannedBin: model.bankBin }),
+    [payApps, savedOrder, recentIds, model.bankBin],
   );
   const selectedId = appId ?? defaultAppId(apps, recentIds, model.bankBin);
   const selected = apps.find((a) => a.id === selectedId) ?? apps[0];

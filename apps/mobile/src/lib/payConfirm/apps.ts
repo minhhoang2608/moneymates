@@ -1,11 +1,13 @@
 import { Platform } from "react-native";
 
-import { SNAPSHOT, registryPayApps } from "../vietqr/bankApps";
+import { SNAPSHOT, registryPayApps, type BankAppsResponse } from "../vietqr/bankApps";
 
 export type PayApp = {
   id: string;
   name: string;
   short: string;
+  /** NAPAS BIN of the bank, when the registry knows it. */
+  bin?: string;
   /** Custom URL scheme used to open the app directly (no browser). Unknown for some autofill apps. */
   scheme?: string;
   /** Android package name (data only). */
@@ -29,7 +31,12 @@ const MOMO: PayApp = {
 };
 
 /** Bank apps from the bundled VietQR registry snapshot, plus MoMo (a wallet, not in the bank registry). */
-export const PAY_APPS: PayApp[] = [...registryPayApps(platform), MOMO];
+export function buildPayApps(data: BankAppsResponse, os: "android" | "ios" = platform): PayApp[] {
+  const apps = registryPayApps(os, data);
+  return apps.some((a) => a.id === MOMO.id) ? apps : [...apps, MOMO];
+}
+
+export const PAY_APPS: PayApp[] = buildPayApps(SNAPSHOT);
 
 /** Apps shown in the Cài đặt reorder list: the hand-off apps verified in #206 plus MoMo. */
 export const FEATURED_APP_IDS = ["tpb", "tcb", "vcb", "mb", "momo", "icb", "bidv", "acb", "ocb"];
@@ -39,11 +46,9 @@ export const LEGACY_APP_IDS: Record<string, string> = { tpbank: "tpb" };
 
 export const normalizeAppId = (id: string): string => LEGACY_APP_IDS[id] ?? id;
 
-const BIN_TO_APP: Record<string, string> = Object.fromEntries(
-  SNAPSHOT.apps.filter((a) => a.bin).map((a) => [a.bin as string, a.app_id]),
-);
-
-export const appIdForBin = (bin?: string): string | undefined => (bin ? BIN_TO_APP[bin] : undefined);
+/** App id of the bank with this BIN, looked up in the given list (default: the snapshot). */
+export const appIdForBin = (bin?: string, apps: PayApp[] = PAY_APPS): string | undefined =>
+  bin ? apps.find((a) => a.bin === bin)?.id : undefined;
 
 const fold = (s: string) =>
   s
@@ -77,7 +82,7 @@ export function orderPickerApps(
   };
   opts.preferred.forEach(push);
   opts.recent.forEach(push);
-  push(appIdForBin(opts.scannedBin));
+  push(appIdForBin(opts.scannedBin, apps));
   [...apps].sort((a, b) => a.name.localeCompare(b.name, "vi")).forEach((a) => push(a.id));
   return out;
 }
@@ -94,6 +99,6 @@ export function orderAppsBySaved(apps: PayApp[], savedOrder: string[]): PayApp[]
 export function defaultAppId(ordered: PayApp[], recentIds: string[], scannedBin?: string): string {
   const lastUsed = recentIds.find((id) => ordered.some((a) => a.id === id));
   if (lastUsed) return lastUsed;
-  const byBin = appIdForBin(scannedBin);
+  const byBin = appIdForBin(scannedBin, ordered);
   return ordered.find((a) => a.id === byBin)?.id ?? ordered.find((a) => a.supportsAutofill)?.id ?? ordered[0].id;
 }
