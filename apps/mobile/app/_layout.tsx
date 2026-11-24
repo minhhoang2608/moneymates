@@ -47,6 +47,7 @@ export default function RootLayout() {
               <Stack.Screen name="settings" />
               <Stack.Screen name="onboarding/permissions" />
               <Stack.Screen name="payment-apps" />
+              <Stack.Screen name="notif-access" />
               <Stack.Screen name="stats" />
               <Stack.Screen name="group/[id]" />
               <Stack.Screen name="group/summary" />

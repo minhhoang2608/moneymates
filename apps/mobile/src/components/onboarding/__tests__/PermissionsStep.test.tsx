@@ -1,4 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Platform } from "react-native";
+
+import { isAccessGranted } from "../../../../modules/notification-listener";
 
 import { PermissionRow } from "@/components/onboarding/PermissionRow";
 import { PermissionsStep } from "@/components/onboarding/PermissionsStep";
@@ -14,13 +17,60 @@ function fakeAdapter(initial: Record<string, "undetermined" | "granted" | "denie
   return adapter;
 }
 
-afterEach(() => setPermissionAdapter(null));
+jest.mock("../../../../modules/notification-listener", () => ({
+  isAccessGranted: jest.fn(async () => false),
+  openAccessSettings: jest.fn(async () => undefined),
+}));
+
+const setOS = (os: string) => Object.defineProperty(Platform, "OS", { get: () => os, configurable: true });
+
+afterEach(() => {
+  setPermissionAdapter(null);
+  setOS("ios");
+  (isAccessGranted as jest.Mock).mockResolvedValue(false);
+});
 
 async function renderStep(onNext = jest.fn(), onSkip = jest.fn()) {
   await render(<PermissionsStep onNext={onNext} onSkip={onSkip} />);
   await waitFor(() => expect(screen.queryByTestId("perm-ask-camera")).toBeTruthy());
   return { onNext, onSkip };
 }
+
+describe("PermissionsStep bank notification row", () => {
+  it("AC3: is absent off Android", async () => {
+    fakeAdapter({});
+    setOS("ios");
+    await renderStep();
+    expect(screen.queryByTestId("perm-row-bank-notif")).toBeNull();
+  });
+
+  it("AC5: Android shows the row and its button opens the explainer", async () => {
+    fakeAdapter({});
+    setOS("android");
+    const onOpen = jest.fn();
+    await render(
+      <PermissionsStep
+        onNext={jest.fn()}
+        onSkip={jest.fn()}
+        onOpenBankNotif={onOpen}
+        bankNotifAppNames={["TPBank", "MoMo"]}
+      />,
+    );
+    await waitFor(() => expect(screen.queryByTestId("perm-ask-camera")).toBeTruthy());
+    expect(screen.getByText("Thông báo ngân hàng")).toBeTruthy();
+    expect(screen.getByText(/Chỉ đọc thông báo của TPBank, MoMo/)).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("perm-ask-bank-notif"));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC5: shows Đã bật when access is granted", async () => {
+    fakeAdapter({});
+    setOS("android");
+    (isAccessGranted as jest.Mock).mockResolvedValue(true);
+    await render(<PermissionsStep onNext={jest.fn()} onSkip={jest.fn()} />);
+    await waitFor(() => expect(screen.queryByTestId("perm-granted-bank-notif")).toBeTruthy());
+  });
+});
 
 describe("PermissionsStep", () => {
   it("renders copy and three rows without requesting anything", async () => {
