@@ -64,6 +64,9 @@ appId: com.moneymates.app
 - assertVisible: "Visa"
 - tapOn: "Visa"
 - assertVisible: "Visa ›"
+# The manual form is a stack route without the tab bar; close it to get back to the tabs.
+- tapOn:
+    id: "close-button"
 - tapOn:
     id: "tab-qr"
 - tapOn:
