@@ -1,0 +1,67 @@
+# UI audit: the Tester compares every screen in apps/mobile with its design export in docs/design/screens
+# and files a type:bug for each UI defect right away (via tester.sh apply, `regressions[]`).
+# Manual only: run it after UI work lands on dev.
+name: UI audit
+run-name: UI audit on dev
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ui-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Audit screens against design
+    if: vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+      actions: write
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+      - uses: ./.github/actions/factory-setup
+      - name: Empty ticket list
+        run: |
+          mkdir -p .factory
+          jq -n --arg sha "$GITHUB_SHA" '{dev_sha: $sha, tests_job: "n/a", e2e_job: "n/a", e2e_sha: "", issues: []}' >.factory/input.json
+      - name: UI audit (Tester)
+        id: agent
+        uses: ./.github/actions/run-agent
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: ${{ env.MODEL_TESTER }}
+          max_turns: 80
+          allowed_tools: "Read,Glob,Grep,Write,Skill,Bash(gh issue list:*),Bash(gh issue view:*),Bash(git log:*)"
+          prompt: |
+            You are the **Tester** of the MoneyMates AI software factory, doing a UI audit of `dev`.
+            Read `CLAUDE.md`, `.claude/agents/tester.md` and `docs/design/README.md` (screen table and design tokens).
+
+            For EVERY screen in the README table, compare the implementation in `apps/mobile` (the expo-router screen
+            and its components) with `docs/design/screens/<Name>.dc.html` (and `VoiceStates.dc.html` for the voice
+            states). Check: layout and element order, colours and tokens, font sizes and weights, radii, spacing,
+            icons, the Vietnamese strings, empty/loading/error states shown in the design, and tab bar. Ignore sample
+            data. Only report real, specific deviations you can point at (file and line vs the design CSS); do not
+            report taste or things the design does not show. Run `gh issue list --state open --label type:bug` first
+            and do not repeat a defect that already has an open bug.
+
+            Write `.factory/result.json` as `{"results":[],"regressions":[{"title":"UI: <Screen> – <defect>","body":"<markdown: screen, design file, expected (design CSS), actual (app file:line), acceptance criterion for the fix>","area":"area:mobile","priority":"priority:p2"}]}`.
+            One entry per defect (group trivial ones on the same screen). Use p1 for a broken or missing element,
+            p2 for visual differences, p3 for minor polish. Do not modify repository files.
+      - name: File UI bugs
+        if: steps.agent.outcome == 'success'
+        env:
+          OUTCOME: ${{ steps.agent.outputs.outcome }}
+        run: '"$FACTORY_BIN/tester.sh" apply'
