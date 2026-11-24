@@ -78,3 +78,39 @@ describe("filterApps", () => {
   });
   it("returns everything for a blank query", () => expect(filterApps(PAY_APPS, "  ")).toEqual(PAY_APPS));
 });
+
+describe("buildPayApps (live list)", () => {
+  const { buildPayApps, appIdForBin: binLookup } = jest.requireActual("../apps") as typeof import("../apps");
+  const live = {
+    updated_at: "x",
+    stale: false,
+    apps: [
+      {
+        app_id: "momo",
+        name: "MoMo",
+        logo: null,
+        bank_code: null,
+        bin: null,
+        autofill: { android: false, ios: false },
+        ios_scheme: null,
+        android_package: null,
+      },
+      {
+        app_id: "zzz",
+        name: "ZZZ",
+        logo: null,
+        bank_code: "ZZZ",
+        bin: "970999",
+        autofill: { android: true, ios: true },
+        ios_scheme: null,
+        android_package: null,
+      },
+    ],
+  };
+  it("does not duplicate momo", () => {
+    expect(buildPayApps(live, "android").filter((a) => a.id === "momo")).toHaveLength(1);
+  });
+  it("resolves a BIN on the live list", () => {
+    expect(binLookup("970999", buildPayApps(live, "android"))).toBe("zzz");
+  });
+});
