@@ -1,14 +1,17 @@
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { PressableScale } from "@/components/PressableScale";
 import { SkeletonCard } from "@/components/Skeleton";
 import { EntryMenu } from "@/components/EntryMenu";
+import { CalendarIcon, PlusIcon } from "@/components/icons";
+import { SheetPicker } from "@/components/transaction/SheetPicker";
 import { TransactionListItem } from "@/components/transaction/TransactionListItem";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import { vi } from "@/i18n/vi";
+import { monthNumber, recentMonths } from "@/lib/history/filter";
 import { formatVnd } from "@/lib/money";
 import { fadeInProps, useReduceMotion } from "@/lib/motion";
 import { loadOverview, type OverviewData } from "@/lib/stats/loadOverview";
@@ -25,6 +28,9 @@ export default function OverviewScreen() {
   const [data, setData] = useState<OverviewData | null>(null);
   const [name, setName] = useState("");
   const [alertOn, setAlertOn] = useState(true);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickedMonth, setPickedMonth] = useState<string | null>(null);
+  const months = useMemo(() => recentMonths(new Date()), []);
 
   const deletedVersion = usePendingHandOff((s) => s.deletedVersion);
 
@@ -33,7 +39,10 @@ export default function OverviewScreen() {
       let alive = true;
       void deletedVersion; // reload after the return banner deletes a payment
       Promise.all([
-        loadOverview(repos, { myShares: repos.groupExpenses.mySharesInMonth }),
+        loadOverview(repos, {
+          myShares: repos.groupExpenses.mySharesInMonth,
+          ...(pickedMonth ? { now: new Date(`${pickedMonth}-15T00:00:00Z`) } : {}),
+        }),
         profile.getProfile(),
         repos.preferences.getAlertOverLastMonth(),
       ]).then(([d, p, a]) => {
@@ -45,7 +54,7 @@ export default function OverviewScreen() {
       return () => {
         alive = false;
       };
-    }, [repos, profile, deletedVersion]),
+    }, [repos, profile, deletedVersion, pickedMonth]),
   );
 
   const o = data?.overview;
@@ -57,18 +66,18 @@ export default function OverviewScreen() {
     <View style={styles.root} testID="screen-overview">
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>{vi.overview.greeting(name)}</Text>
-            {data ? <Text style={styles.subtitle}>{vi.overview.monthTitle(data.month)}</Text> : null}
+          <View style={styles.headerText}>
+            <Text style={styles.greeting}>{vi.overview.greeting(name)}</Text>
+            {data ? <Text style={styles.title}>{vi.overview.monthTitle(data.month)}</Text> : null}
           </View>
           <PressableScale
-            testID="overview-add-button"
+            testID="overview-month-button"
             accessibilityRole="button"
-            accessibilityLabel={vi.overview.add}
-            onPress={() => setMenuOpen(true)}
-            style={styles.add}
+            accessibilityLabel={vi.overview.changeMonth}
+            onPress={() => setPickerOpen(true)}
+            style={styles.monthButton}
           >
-            <Text style={styles.addText}>+</Text>
+            <CalendarIcon color={colors.text} size={20} />
           </PressableScale>
         </View>
 
@@ -159,6 +168,30 @@ export default function OverviewScreen() {
           </>
         )}
       </ScrollView>
+      <PressableScale
+        testID="overview-add-button"
+        accessibilityRole="button"
+        accessibilityLabel={vi.overview.add}
+        onPress={() => setMenuOpen(true)}
+        style={styles.fab}
+      >
+        <PlusIcon color={colors.primary} size={24} />
+      </PressableScale>
+      <SheetPicker
+        visible={pickerOpen}
+        title={vi.stats.monthPickerTitle}
+        options={months.map((m) => ({
+          key: m,
+          label: vi.stats.monthOption(monthNumber(m), m.slice(0, 4)),
+          testID: `overview-pick-month-${m}`,
+        }))}
+        selectedKey={data?.month ?? null}
+        onSelect={(m) => {
+          setPickedMonth(m);
+          setPickerOpen(false);
+        }}
+        onClose={() => setPickerOpen(false)}
+      />
       <EntryMenu
         visible={menuOpen}
         onClose={() => setMenuOpen(false)}
@@ -177,19 +210,39 @@ export default function OverviewScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingTop: 56, backgroundColor: colors.background },
-  scroll: { paddingHorizontal: layout.screenPadding, paddingBottom: 24, gap: 12 },
+  scroll: { paddingHorizontal: layout.screenPadding, paddingBottom: 96, gap: 12 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  headerText: { gap: 2 },
+  greeting: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.textMuted },
   title: { fontFamily: fontFamily.bold, fontSize: fontSize.heading, color: colors.text },
-  subtitle: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.textMuted },
-  add: {
+  monthButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  addText: { fontFamily: fontFamily.bold, fontSize: 24, color: colors.onPrimary },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.text,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
   hero: { backgroundColor: colors.primary, borderRadius: radii.hero, padding: 20 },
   heroLabel: { fontFamily: fontFamily.medium, fontSize: fontSize.secondary, color: colors.onPrimary },
   heroAmount: { fontFamily: fontFamily.extrabold, fontSize: fontSize.hero, color: colors.onPrimary },

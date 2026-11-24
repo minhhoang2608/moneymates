@@ -280,6 +280,7 @@ export const vi = {
   },
   overview: {
     add: "Thêm giao dịch",
+    changeMonth: "Đổi tháng",
     recent: "Giao dịch gần đây",
     empty: "Chưa có giao dịch nào",
     greeting: (name: string) => (name ? `Xin chào, ${name}` : "Xin chào"),
