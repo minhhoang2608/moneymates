@@ -1,7 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { PressableScale } from "@/components/PressableScale";
+import { VoiceRings } from "@/components/VoiceRings";
 
 import { useAiAvailable } from "@/api/features";
 import { parseText } from "@/api/parseText";
@@ -9,8 +11,10 @@ import { useTargetDefault } from "@/components/target/useTargetDefault";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { CategoryRow, GroupMember } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
+import { haptics } from "@/lib/haptics";
 import { formatVnd } from "@/lib/money";
-import { parseSpokenExpense, resolveVoiceEntry } from "@/lib/voice";
+import { durations, useReduceMotion } from "@/lib/motion";
+import { initialVoiceState, parseSpokenExpense, resolveVoiceEntry, voiceReducer } from "@/lib/voice";
 import { getSpeechRecognizer, VOICE_LANG } from "@/voice/speech";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
@@ -26,9 +30,15 @@ export default function VoiceScreen() {
   const ai = useAiAvailable("parse_text");
 
   const [text, setText] = useState("");
-  const [listening, setListening] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [voice, dispatch] = useReducer(voiceReducer, initialVoiceState);
+  const { status, error } = voice;
+  const listening = status === "listening";
+  const busy = status === "processing" || status === "done";
+  const [level, setLevel] = useState<number | null>(null);
+  const reduceMotion = useReduceMotion();
+  const holding = useRef(false);
+  const releasedEarly = useRef(false);
+  const navTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cats, setCats] = useState<CategoryRow[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const session = useRef(0);
@@ -50,7 +60,14 @@ export default function VoiceScreen() {
     };
   }, [groups, targetGroupId]);
 
-  useEffect(() => () => void getSpeechRecognizer().stop(), []);
+  useEffect(
+    () => () => {
+      session.current++;
+      if (navTimer.current) clearTimeout(navTimer.current);
+      getSpeechRecognizer().stop();
+    },
+    [],
+  );
 
   const spokenCats = useMemo(() => cats.map((c) => ({ id: c.id, name: c.name, type: c.type })), [cats]);
   const spokenMembers = useMemo(
@@ -64,52 +81,81 @@ export default function VoiceScreen() {
 
   const begin = async () => {
     const rec = getSpeechRecognizer();
-    setError(null);
-    if (!(await rec.requestPermission())) {
-      setError(vi.voice.permissionDenied);
+    const id = ++session.current;
+    holding.current = true;
+    releasedEarly.current = false;
+    setLevel(null);
+    dispatch({ type: "START" });
+    haptics.light(); // feedback right away, before the permission round trip
+    const granted = await rec.requestPermission();
+    if (id !== session.current) return;
+    if (!granted) {
+      holding.current = false;
+      dispatch({ type: "ERROR", message: vi.voice.permissionDenied });
       return;
     }
-    const id = ++session.current;
-    setListening(true);
     rec.start(VOICE_LANG, {
       onText: (t) => id === session.current && setText(t),
-      onEnd: () => id === session.current && setListening(false),
+      onVolume: (l) => id === session.current && setLevel(l),
+      onEnd: () => {
+        if (id !== session.current) return;
+        holding.current = false;
+        dispatch({ type: "RECOGNIZER_END" });
+      },
       onError: () => {
         if (id !== session.current) return;
-        setListening(false);
-        setError(vi.voice.speechError);
+        holding.current = false;
+        dispatch({ type: "ERROR", message: vi.voice.speechError });
       },
     });
+    // Released before the recognizer was up (a quick tap): stop it right away; the transcript is kept.
+    if (releasedEarly.current) rec.stop();
   };
 
   const end = () => {
-    if (listening) getSpeechRecognizer().stop();
+    if (!holding.current) return;
+    holding.current = false;
+    releasedEarly.current = true;
+    haptics.light();
+    getSpeechRecognizer().stop();
+    dispatch({ type: "STOP" });
   };
 
   const retry = () => {
     getSpeechRecognizer().stop();
     session.current++;
+    holding.current = false;
     setText("");
-    setError(null);
+    dispatch({ type: "CANCEL" });
     void begin();
   };
 
   const use = async () => {
-    if (!text.trim() || busy) return;
-    setBusy(true);
-    const r = await resolveVoiceEntry(text, {
-      categories: spokenCats,
-      members: spokenMembers,
-      aiAvailable: ai.available,
-      parseTextFn: parseText,
-    });
+    if (!text.trim() || status !== "idle") return;
+    dispatch({ type: "PROCESS" });
+    let r: Awaited<ReturnType<typeof resolveVoiceEntry>>;
+    try {
+      r = await resolveVoiceEntry(text, {
+        categories: spokenCats,
+        members: spokenMembers,
+        aiAvailable: ai.available,
+        parseTextFn: parseText,
+      });
+    } catch {
+      dispatch({ type: "PARSE_FAIL" }); // back to idle; the transcript and buttons stay usable
+      return;
+    }
     const params: Record<string, string> = { source: "voice", note: r.aiError && !r.note ? text : r.note };
     if (r.amount) params.amount = String(r.amount);
     if (r.categoryId) params.categoryId = r.categoryId;
     if (r.payerMemberId) params.payerMemberId = r.payerMemberId;
     if (r.aiError) params.aiError = r.aiError;
     if (targetGroupId) params.groupId = targetGroupId;
-    router.replace({ pathname: "/transaction/new", params });
+    dispatch({ type: "PARSE_OK" });
+    navTimer.current = setTimeout(
+      () => router.replace({ pathname: "/transaction/new", params }),
+      reduceMotion ? 0 : durations.slow,
+    );
   };
 
   const payerName = preview?.payer.matched ? preview.payer.name : null;
@@ -139,6 +185,17 @@ export default function VoiceScreen() {
         <Text testID="voice-transcript" style={[styles.transcript, !text && styles.placeholder]}>
           {text ? `“${text}”` : vi.voice.placeholder}
         </Text>
+        {listening ? (
+          <Text testID="voice-listening-label" style={styles.statusLabel}>
+            {vi.voice.listening}
+          </Text>
+        ) : null}
+        {status === "processing" ? (
+          <View style={styles.processing}>
+            <ActivityIndicator testID="voice-processing" color={colors.primary} />
+            <Text style={styles.statusLabel}>{vi.voice.processing}</Text>
+          </View>
+        ) : null}
         {error ? (
           <Text testID="voice-error" style={styles.error}>
             {error}
@@ -178,16 +235,20 @@ export default function VoiceScreen() {
             />
           ))}
         </View>
-        <PressableScale
-          testID="voice-mic"
-          accessibilityRole="button"
-          accessibilityLabel={vi.voice.micLabel}
-          onPressIn={() => void begin()}
-          onPressOut={end}
-          style={styles.mic}
-        >
-          <Text style={styles.micGlyph}>🎤</Text>
-        </PressableScale>
+        <View style={styles.micWrap}>
+          <VoiceRings active={listening} reduceMotion={reduceMotion} level={level} />
+          <PressableScale
+            testID="voice-mic"
+            accessibilityRole="button"
+            accessibilityLabel={vi.voice.micLabel}
+            accessibilityState={{ busy: listening }}
+            onPressIn={() => void begin()}
+            onPressOut={end}
+            style={[styles.mic, listening && styles.micActive]}
+          >
+            <Text style={styles.micGlyph}>🎤</Text>
+          </PressableScale>
+        </View>
         <Text style={styles.hold}>{vi.voice.hold}</Text>
         <View style={styles.buttons}>
           <PressableScale
@@ -209,6 +270,16 @@ export default function VoiceScreen() {
           </PressableScale>
         </View>
       </View>
+      {status === "done" ? (
+        <Animated.View
+          testID="voice-done"
+          style={styles.doneOverlay}
+          entering={reduceMotion ? undefined : FadeIn.duration(durations.slow)}
+        >
+          <Text style={styles.doneCheck}>✓</Text>
+          <Text style={styles.statusLabel}>{vi.voice.done}</Text>
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
@@ -276,6 +347,18 @@ const styles = StyleSheet.create({
     borderColor: colors.primarySoft2,
     boxSizing: "content-box",
   },
+  micWrap: { alignItems: "center", justifyContent: "center" },
+  micActive: { backgroundColor: colors.primaryDark },
+  statusLabel: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.primary },
+  processing: { flexDirection: "row", alignItems: "center", gap: 8 },
+  doneOverlay: {
+    ...(StyleSheet.absoluteFill as object),
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: colors.background,
+  },
+  doneCheck: { fontSize: 56, color: colors.primary },
   micGlyph: { fontSize: 30 },
   hold: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.textMuted },
   buttons: { width: "100%", flexDirection: "row", gap: 10 },

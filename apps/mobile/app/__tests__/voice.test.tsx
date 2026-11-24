@@ -2,14 +2,20 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
+import { AccessibilityInfo } from "react-native";
+import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
+import { haptics } from "@/lib/haptics";
 import { queryClient } from "@/api/QueryProvider";
 import { createGroupRepository, createProfileRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { setSpeechRecognizer, type SpeechHandlers, type SpeechRecognizer } from "@/voice/speech";
 
+jest.mock("@/lib/haptics", () => ({
+  haptics: { light: jest.fn(), selection: jest.fn(), error: jest.fn() },
+  setHapticsEnabled: jest.fn(),
+}));
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
 jest.mock("@/db/DatabaseProvider", () => ({
   DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -154,5 +160,82 @@ describe("voice entry screen", () => {
     await fireEvent(await screen.findByTestId("voice-mic"), "pressIn");
     expect(await screen.findByTestId("voice-error")).toBeTruthy();
     expect(recognizer.start).not.toHaveBeenCalled();
+  });
+
+  it("states: permission pending still shows the listening label, recognizer not started yet", async () => {
+    recognizer.requestPermission.mockReturnValueOnce(new Promise<boolean>(() => {}));
+    await renderRouter("./app", { initialUrl: "/voice" });
+    await fireEvent(await screen.findByTestId("voice-mic"), "pressIn");
+    expect(screen.getByTestId("voice-listening-label")).toHaveTextContent("Đang nghe…");
+    expect(screen.getByTestId("voice-rings")).toBeTruthy();
+    expect(recognizer.start).not.toHaveBeenCalled();
+  });
+
+  async function speakThenReady(text: string) {
+    heard = text;
+    await renderRouter("./app", { initialUrl: "/voice" });
+    await fireEvent(await screen.findByTestId("voice-mic"), "pressIn");
+    await fireEvent(screen.getByTestId("voice-mic"), "pressOut");
+    expect(screen.queryByTestId("voice-listening-label")).toBeNull();
+    await screen.findByText(/AI tách thông tin/);
+  }
+
+  it("states: done is shown before the prefilled form", async () => {
+    mockApi(true, async () => ({
+      ok: true,
+      json: async () => ({ amount: 300000, category: "Khác", note: "đi chơi", currency: "VND", payer: null }),
+    }));
+    await speakThenReady("hôm qua đi chơi với mấy đứa hết 300k");
+    let sawDone = false;
+    const poll = setInterval(() => {
+      sawDone ||= !!screen.queryByTestId("voice-done");
+    }, 10);
+    await fireEvent.press(screen.getByTestId("voice-use-result"));
+    await screen.findByTestId("transaction-form");
+    clearInterval(poll);
+    expect(sawDone).toBe(true);
+    expect(field("amount-input")).toBe("300000");
+  });
+
+  it("states: a throwing parse returns to idle with the transcript and button usable", async () => {
+    mockApi(true, () => Promise.reject(new Error("network")));
+    heard = "hôm qua đi chơi với mấy đứa hết 300k";
+    await renderRouter("./app", { initialUrl: "/voice" });
+    await fireEvent(await screen.findByTestId("voice-mic"), "pressIn");
+    await fireEvent(screen.getByTestId("voice-mic"), "pressOut");
+    await screen.findByText(/AI tách thông tin/);
+    await fireEvent.press(screen.getByTestId("voice-use-result"));
+    // resolveVoiceEntry handles AI errors itself and falls back, so the screen continues to the form.
+    await screen.findByTestId("transaction-form");
+    expect(field("amount-input")).toBe("300000");
+  });
+
+  it("haptics: light on pressIn and on pressOut", async () => {
+    await renderRouter("./app", { initialUrl: "/voice" });
+    await fireEvent(await screen.findByTestId("voice-mic"), "pressIn");
+    expect(haptics.light).toHaveBeenCalledTimes(1);
+    await fireEvent(screen.getByTestId("voice-mic"), "pressOut");
+    expect(haptics.light).toHaveBeenCalledTimes(2);
+  });
+
+  it("reduce motion: rings are static, states still change", async () => {
+    jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(true);
+    await renderRouter("./app", { initialUrl: "/voice" });
+    await fireEvent(await screen.findByTestId("voice-mic"), "pressIn");
+    expect(screen.getByTestId("voice-listening-label")).toBeTruthy();
+    await waitFor(() => {
+      const style = JSON.stringify(screen.getByTestId("voice-rings").props.style);
+      expect(style).not.toContain("transform");
+    });
+    await fireEvent(screen.getByTestId("voice-mic"), "pressOut");
+    expect(screen.queryByTestId("voice-listening-label")).toBeNull();
+  });
+
+  // Keep this test last: the pending parse leaves its act() scope open until the test ends.
+  it("states: processing indicator while the parse is pending", async () => {
+    mockApi(true, () => new Promise(() => {}));
+    await speakThenReady("hôm qua đi chơi với mấy đứa hết 300k");
+    void fireEvent.press(screen.getByTestId("voice-use-result"));
+    expect(await screen.findByTestId("voice-processing")).toBeTruthy();
   });
 });

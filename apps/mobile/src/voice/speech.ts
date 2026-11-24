@@ -4,6 +4,8 @@ import { createE2eRecognizer } from "@/e2e/voice";
 export type SpeechHandlers = {
   /** Latest transcript (interim or final); replaces the previous one. */
   onText: (text: string) => void;
+  /** Optional input level, normalised to 0..1. Recognizers without a level meter never call it. */
+  onVolume?: (level: number) => void;
   onEnd: () => void;
   onError: (message: string) => void;
 };
@@ -36,13 +38,21 @@ export function createLiveRecognizer(): SpeechRecognizer {
         ExpoSpeechRecognitionModule.addListener("result", (e: { results?: { transcript?: string }[] }) =>
           h.onText(e.results?.[0]?.transcript ?? ""),
         ),
+        ExpoSpeechRecognitionModule.addListener("volumechange", (e: { value?: number }) =>
+          // Native value is about -2..10; normalise and clamp to 0..1.
+          h.onVolume?.(Math.min(1, Math.max(0, ((e.value ?? -2) + 2) / 12))),
+        ),
         ExpoSpeechRecognitionModule.addListener("end", () => {
           clear();
           h.onEnd();
         }),
         ExpoSpeechRecognitionModule.addListener("error", (e: { message?: string }) => h.onError(e.message ?? "error")),
       ];
-      ExpoSpeechRecognitionModule.start({ lang, interimResults: true });
+      ExpoSpeechRecognitionModule.start({
+        lang,
+        interimResults: true,
+        volumeChangeEventOptions: { enabled: true, intervalMillis: 100 },
+      });
     },
     stop() {
       ExpoSpeechRecognitionModule.stop();

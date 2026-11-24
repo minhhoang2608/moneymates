@@ -248,6 +248,9 @@ export const vi = {
     offlineHint: "Chỉ dùng quy tắc offline",
     permissionDenied: "Chưa có quyền dùng micro. Hãy cấp quyền trong Cài đặt hoặc nhập tay.",
     speechError: "Không nhận dạng được giọng nói. Hãy thử lại hoặc nhập tay.",
+    listening: "Đang nghe…",
+    processing: "Đang xử lý…",
+    done: "Xong",
   },
   bill: {
     title: "Chụp bill",
