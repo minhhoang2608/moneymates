@@ -9,6 +9,7 @@ describe("qrImage", () => {
   it("saves to the gallery when permission is granted", async () => {
     expect(await saveQrToGallery("AAAA")).toBe("saved");
     expect(MediaLibrary.saveToLibraryAsync).toHaveBeenCalledTimes(1);
+    expect(MediaLibrary.createAssetAsync).not.toHaveBeenCalled();
   });
 
   it("skips saving when permission is denied", async () => {

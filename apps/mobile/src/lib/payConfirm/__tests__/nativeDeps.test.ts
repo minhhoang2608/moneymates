@@ -2,6 +2,8 @@ import * as Clipboard from "expo-clipboard";
 import * as Linking from "expo-linking";
 import * as MediaLibrary from "expo-media-library/legacy";
 
+import { Platform } from "react-native";
+
 import { openIntentUri, sharePng } from "../../../../modules/bank-hand-off";
 import { createNativeDeps } from "../nativeDeps";
 
@@ -9,6 +11,7 @@ jest.mock("expo-clipboard", () => ({ setStringAsync: jest.fn(async () => true) }
 jest.mock("expo-linking", () => ({ openURL: jest.fn(async () => true) }));
 jest.mock("expo-media-library/legacy", () => ({
   requestPermissionsAsync: jest.fn(async () => ({ granted: false })),
+  getPermissionsAsync: jest.fn(async () => ({ granted: false })),
   createAssetAsync: jest.fn(async () => ({ id: "a1" })),
   getAlbumAsync: jest.fn(async () => null),
   createAlbumAsync: jest.fn(async () => ({})),
@@ -65,5 +68,39 @@ describe("nativeDeps", () => {
     expect(sharePng).toHaveBeenCalledWith("AAAA", "com.x");
     expect(openIntentUri).toHaveBeenCalledWith("intent://#Intent;package=com.x;end");
     await expect(createNativeDeps(async () => null).shareToPackage("com.x")).rejects.toThrow();
+  });
+
+  it("returns the asset id on Android", async () => {
+    jest.mocked(MediaLibrary.requestPermissionsAsync).mockResolvedValueOnce({ granted: true } as never);
+    expect(await createNativeDeps(async () => "AAAA").saveQrImage()).toEqual({ assetId: "a1", access: "read-write" });
+  });
+
+  describe("iOS", () => {
+    const original = Platform.OS;
+    beforeEach(() => {
+      Platform.OS = "ios";
+    });
+    afterEach(() => {
+      Platform.OS = original;
+    });
+
+    it("reports limited access", async () => {
+      jest
+        .mocked(MediaLibrary.requestPermissionsAsync)
+        .mockResolvedValueOnce({ granted: true, accessPrivileges: "limited" } as never);
+      expect(await createNativeDeps(async () => "AAAA").saveQrImage()).toEqual({ assetId: "a1", access: "limited" });
+    });
+
+    it("saves with add-only access when read/write is denied but write-only is granted", async () => {
+      jest.mocked(MediaLibrary.getPermissionsAsync).mockResolvedValueOnce({ granted: true } as never);
+      expect(await createNativeDeps(async () => "AAAA").saveQrImage()).toEqual({ assetId: "a1", access: "add-only" });
+      expect(MediaLibrary.getPermissionsAsync).toHaveBeenCalledWith(true);
+    });
+
+    it("skips when nothing is granted", async () => {
+      jest.mocked(MediaLibrary.createAssetAsync).mockClear();
+      expect(await createNativeDeps(async () => "AAAA").saveQrImage()).toBeNull();
+      expect(MediaLibrary.createAssetAsync).not.toHaveBeenCalled();
+    });
   });
 });

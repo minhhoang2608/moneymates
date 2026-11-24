@@ -33,6 +33,8 @@ import * as Clipboard from "expo-clipboard";
 import { formatVnd, parseAmount } from "@/lib/money";
 import { PREF_KEYS } from "@/lib/preferences/defaults";
 import { knownResultFor } from "@/lib/payConfirm/shareMemory";
+import { recordQrImage } from "@/lib/qrImage/record";
+import { useToast } from "@/stores/toast";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
@@ -50,6 +52,7 @@ export default function PayConfirmScreen() {
     groupExpenses,
     handOffMemory,
     handOffs,
+    preferences,
   } = useRepositories();
   const targetState = useTargetDefault();
   const { target } = targetState;
@@ -201,12 +204,13 @@ export default function PayConfirmScreen() {
       const handOff = makeHandOff(getQrBase64);
       const started_at = new Date();
       const memory = await handOffMemory.getShareMemory().catch(() => ({}));
-      const { opened, mode, decision, share } = await handOff(selected, {
+      const handOffResult = await handOff(selected, {
         model,
         amount,
         note: text,
         knownResult: knownResultFor(memory, selected.id),
       });
+      const { opened, mode, decision, share } = handOffResult;
       const pendingTx = usePendingHandOff.getState().pending?.txId;
       if (pendingTx) {
         try {
@@ -217,6 +221,17 @@ export default function PayConfirmScreen() {
             started_at,
           });
           usePendingHandOff.getState().setHandOffId(row.id);
+          await recordQrImage(
+            {
+              platform: Platform.OS === "android" ? "android" : "ios",
+              handOffs,
+              preferences,
+              showToast: useToast.getState().show,
+              addOnlyMessage: vi.qrImage.addOnlyPermission,
+            },
+            row.id,
+            handOffResult,
+          ).catch((e) => console.warn("could not record QR image", e));
         } catch (e) {
           console.warn("could not record hand-off", e);
         }

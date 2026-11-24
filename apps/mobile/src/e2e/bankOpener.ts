@@ -18,5 +18,5 @@ export const e2eHandOffDeps: HandOffDeps = {
     throw new Error("e2e: bank app not opened");
   },
   setClipboard: async () => {},
-  saveQrImage: async () => {},
+  saveQrImage: async () => null,
 };
