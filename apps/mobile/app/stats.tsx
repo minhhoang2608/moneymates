@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 import Svg, { Circle, G } from "react-native-svg";
 
 import { SheetPicker } from "@/components/transaction/SheetPicker";
@@ -73,7 +74,7 @@ export default function StatsScreen() {
   return (
     <View style={styles.root} testID="screen-stats">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="stats-back"
           accessibilityRole="button"
           accessibilityLabel={vi.stats.back}
@@ -81,16 +82,16 @@ export default function StatsScreen() {
           style={styles.back}
         >
           <Text style={styles.backText}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{vi.stats.title}</Text>
-        <Pressable testID="stats-month-button" onPress={() => setPickerOpen(true)} style={styles.chip}>
+        <PressableScale testID="stats-month-button" onPress={() => setPickerOpen(true)} style={styles.chip}>
           <Text style={styles.chipText}>{vi.stats.month(monthNumber(month))}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.segment} accessibilityRole="radiogroup">
           {(["expense", "income"] as const).map((k) => (
-            <Pressable
+            <PressableScale
               key={k}
               testID={`stats-kind-${k}`}
               accessibilityRole="radio"
@@ -99,7 +100,7 @@ export default function StatsScreen() {
               style={[styles.segItem, kind === k && styles.segActive]}
             >
               <Text style={[styles.segText, kind === k && styles.segTextActive]}>{vi.stats[k]}</Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </View>
 

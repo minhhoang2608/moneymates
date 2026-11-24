@@ -1,4 +1,5 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
@@ -9,9 +10,9 @@ export function LockScreen({ onRetry }: { onRetry: () => void }) {
       <Image source={require("../../../assets/icon.png")} style={styles.logo} />
       <Text style={styles.title}>{vi.appLock.title}</Text>
       <Text style={styles.subtitle}>{vi.appLock.subtitle}</Text>
-      <Pressable testID="app-lock-retry" accessibilityRole="button" onPress={onRetry} style={styles.button}>
+      <PressableScale testID="app-lock-retry" accessibilityRole="button" onPress={onRetry} style={styles.button}>
         <Text style={styles.buttonText}>{vi.appLock.retry}</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

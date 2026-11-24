@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, TextInput, ToastAndroid, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { CoachSheet } from "@/components/payConfirm/CoachSheet";
 import { TargetLine } from "@/components/target/TargetLine";
@@ -245,7 +246,7 @@ export default function PayConfirmScreen() {
   return (
     <View style={styles.root} testID="screen-pay-confirm">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="pay-back"
           accessibilityRole="button"
           accessibilityLabel={vi.payConfirm.back}
@@ -253,7 +254,7 @@ export default function PayConfirmScreen() {
           style={styles.back}
         >
           <Text style={styles.backText}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{vi.payConfirm.title}</Text>
       </View>
 
@@ -301,7 +302,7 @@ export default function PayConfirmScreen() {
           {chips.map((c) => {
             const on = c.id === categoryId;
             return (
-              <Pressable
+              <PressableScale
                 key={c.id}
                 testID={`pay-category-${c.id}`}
                 accessibilityRole="button"
@@ -310,17 +311,17 @@ export default function PayConfirmScreen() {
                 style={[styles.chip, on && styles.chipOn]}
               >
                 <Text style={[styles.chipText, on && styles.chipTextOn]}>{c.name}</Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
-          <Pressable
+          <PressableScale
             testID="pay-category-more"
             accessibilityRole="button"
             onPress={() => setPicker(true)}
             style={styles.chip}
           >
             <Text style={styles.chipText}>{vi.payConfirm.categoryMore}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
 
         <TargetLine
@@ -356,7 +357,7 @@ export default function PayConfirmScreen() {
           {shownApps.map((a, i) => {
             const on = a.id === selected.id;
             return (
-              <Pressable
+              <PressableScale
                 key={a.id}
                 testID={`app-${a.id}`}
                 accessibilityRole="button"
@@ -372,7 +373,7 @@ export default function PayConfirmScreen() {
                   {a.supportsAutofill ? vi.payConfirm.autofill : vi.payConfirm.scanQr}
                 </Text>
                 {on ? <Text style={styles.check}>✓</Text> : null}
-              </Pressable>
+              </PressableScale>
             );
           })}
         </View>
@@ -384,7 +385,7 @@ export default function PayConfirmScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
+        <PressableScale
           testID="pay-submit"
           accessibilityRole="button"
           accessibilityState={{ disabled: !enabled }}
@@ -397,11 +398,11 @@ export default function PayConfirmScreen() {
               ? vi.payConfirm.submit(formatVnd(parsed.vnd), selected.name)
               : vi.payConfirm.submitNoAmount(selected.name)}
           </Text>
-        </Pressable>
+        </PressableScale>
         {Platform.OS === "android" && model.kind === "vietqr" ? (
-          <Pressable testID="pay-share-qr" accessibilityRole="button" onPress={share} style={styles.shareBtn}>
+          <PressableScale testID="pay-share-qr" accessibilityRole="button" onPress={share} style={styles.shareBtn}>
             <Text style={styles.shareText}>{vi.payConfirm.shareQr}</Text>
-          </Pressable>
+          </PressableScale>
         ) : null}
         <Text style={styles.footNote}>{vi.payConfirm.saveNote}</Text>
       </View>

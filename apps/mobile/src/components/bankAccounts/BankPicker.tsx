@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Modal, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { toAsciiText } from "@/lib/vietqr/message";
@@ -36,7 +37,7 @@ export function BankPicker({
           data={items}
           keyExtractor={(b) => b.bin}
           renderItem={({ item }) => (
-            <Pressable
+            <PressableScale
               testID={`bank-option-${item.code}`}
               style={styles.row}
               onPress={() => {
@@ -45,12 +46,12 @@ export function BankPicker({
               }}
             >
               <Text style={styles.rowText}>{item.shortName}</Text>
-            </Pressable>
+            </PressableScale>
           )}
         />
-        <Pressable testID="bank-picker-close" style={styles.close} onPress={onClose}>
+        <PressableScale testID="bank-picker-close" style={styles.close} onPress={onClose}>
           <Text style={styles.rowText}>{vi.bankAccounts.cancel}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </Modal>
   );

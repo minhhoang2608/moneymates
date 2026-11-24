@@ -1,6 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { GroupExpenseListRow, GroupWithMembers } from "@/db/repositories";
@@ -76,7 +77,7 @@ export default function GroupDetailScreen() {
   return (
     <View style={styles.root} testID="screen-group-detail">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="group-back"
           accessibilityRole="button"
           accessibilityLabel={t.back}
@@ -84,12 +85,12 @@ export default function GroupDetailScreen() {
           style={styles.iconBtn}
         >
           <Text style={styles.backText}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title} numberOfLines={1}>
           {group?.name ?? ""}
         </Text>
         {group ? (
-          <Pressable
+          <PressableScale
             testID="group-edit"
             accessibilityRole="button"
             accessibilityLabel={t.edit}
@@ -97,7 +98,7 @@ export default function GroupDetailScreen() {
             style={styles.iconBtn}
           >
             <Text style={styles.editText}>{vi.detail.edit}</Text>
-          </Pressable>
+          </PressableScale>
         ) : null}
       </View>
 
@@ -115,14 +116,14 @@ export default function GroupDetailScreen() {
               <Text style={styles.heroTotal} testID="group-total">
                 {formatVnd(data?.total ?? 0)}
               </Text>
-              <Pressable
+              <PressableScale
                 testID="group-summary"
                 accessibilityRole="button"
                 style={styles.primaryBtn}
                 onPress={() => router.push({ pathname: "/group/summary", params: { id: groupId } })}
               >
                 <Text style={styles.primaryText}>{t.summary}</Text>
-              </Pressable>
+              </PressableScale>
             </View>
 
             <View style={styles.card}>
@@ -159,19 +160,24 @@ export default function GroupDetailScreen() {
               ))}
             </View>
 
-            <Pressable testID="group-delete" accessibilityRole="button" style={styles.delete} onPress={confirmDelete}>
+            <PressableScale
+              testID="group-delete"
+              accessibilityRole="button"
+              style={styles.delete}
+              onPress={confirmDelete}
+            >
               <Text style={styles.deleteText}>{t.delete}</Text>
-            </Pressable>
+            </PressableScale>
           </ScrollView>
           <View style={styles.footer}>
-            <Pressable
+            <PressableScale
               testID="group-add-expense"
               accessibilityRole="button"
               style={styles.outlineBtn}
               onPress={() => router.push({ pathname: "/transaction/new", params: { groupId } })}
             >
               <Text style={styles.outlineText}>{t.addExpense}</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </>
       ) : null}

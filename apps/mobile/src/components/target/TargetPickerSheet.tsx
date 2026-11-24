@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 import Svg, { Path } from "react-native-svg";
 
 import { GroupGlyph } from "@/components/group/GroupIconTile";
@@ -96,12 +97,13 @@ export function TargetPickerSheet({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        {/* bare-pressable-ok: modal backdrop, not a visual button */}
         <Pressable style={styles.flex} onPress={close} accessibilityLabel={vi.target.close} />
         <View style={styles.sheet} testID="target-sheet">
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>{vi.target.pickerTitle}</Text>
-            <Pressable
+            <PressableScale
               testID="target-close"
               accessibilityRole="button"
               accessibilityLabel={vi.target.close}
@@ -109,7 +111,7 @@ export function TargetPickerSheet({
               hitSlop={8}
             >
               <Text style={styles.close}>✕</Text>
-            </Pressable>
+            </PressableScale>
           </View>
           <TextInput
             testID="target-search"
@@ -175,14 +177,19 @@ function Row({
   onPress: () => void;
 }) {
   return (
-    <Pressable testID={testID} accessibilityRole="button" onPress={onPress} style={[styles.row, muted && styles.muted]}>
+    <PressableScale
+      testID={testID}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.row, muted && styles.muted]}
+    >
       {tile}
       <View style={styles.flex}>
         <Text style={styles.rowTitle}>{title}</Text>
         {subtitle !== "" && <Text style={styles.rowSub}>{subtitle}</Text>}
       </View>
       {checked && <Text style={styles.check}>✓</Text>}
-    </Pressable>
+    </PressableScale>
   );
 }
 

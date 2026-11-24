@@ -1,6 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { TransactionRow } from "@/db/repositories";
@@ -80,7 +81,7 @@ export default function TransactionDetailScreen() {
   return (
     <View style={styles.root} testID="screen-transaction-detail">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="detail-back"
           accessibilityRole="button"
           accessibilityLabel={vi.detail.back}
@@ -88,17 +89,17 @@ export default function TransactionDetailScreen() {
           style={styles.back}
         >
           <Text style={styles.backText}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.headerTitle}>{vi.detail.title}</Text>
         {txn ? (
-          <Pressable
+          <PressableScale
             testID="detail-edit"
             accessibilityRole="button"
             onPress={() => router.push({ pathname: "/transaction/new", params: { transactionId: txn.id } })}
             style={styles.edit}
           >
             <Text style={styles.editText}>{vi.detail.edit}</Text>
-          </Pressable>
+          </PressableScale>
         ) : null}
       </View>
 
@@ -181,14 +182,14 @@ export default function TransactionDetailScreen() {
             ) : null}
           </ScrollView>
           <View style={styles.footer}>
-            <Pressable
+            <PressableScale
               testID="detail-delete"
               accessibilityRole="button"
               onPress={() => confirmDelete(txn)}
               style={styles.delete}
             >
               <Text style={styles.deleteText}>{vi.detail.delete}</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </>
       ) : null}

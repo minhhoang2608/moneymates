@@ -2,6 +2,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { pickAndDecodeQr } from "@/components/scanner/decodeImage";
 import { ScanFrame } from "@/components/scanner/ScanFrame";
@@ -74,7 +75,7 @@ export default function ScanScreen() {
       ) : null}
 
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="scan-close-button"
           accessibilityRole="button"
           accessibilityLabel={vi.scan.close}
@@ -82,9 +83,9 @@ export default function ScanScreen() {
           onPress={() => router.back()}
         >
           <Text style={styles.roundText}>✕</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{vi.scan.heading}</Text>
-        <Pressable
+        <PressableScale
           testID="scan-flash-button"
           accessibilityRole="button"
           accessibilityLabel={torch ? vi.scan.flashOff : vi.scan.flashOn}
@@ -93,11 +94,12 @@ export default function ScanScreen() {
           onPress={() => setTorch((t) => !t)}
         >
           <Text style={styles.roundText}>⚡</Text>
-        </Pressable>
+        </PressableScale>
       </View>
 
       <View style={styles.frameWrap}>
         <ScanFrame detected={detected} />
+        {/* bare-pressable-ok: invisible E2E-only feed target */}
         {e2e ? <Pressable testID="scan-e2e-feed" style={styles.feed} onPress={() => handle(e2eQr.dynamic)} /> : null}
       </View>
 
@@ -105,13 +107,13 @@ export default function ScanScreen() {
         <View style={styles.denied}>
           <Text style={styles.hint}>{vi.scan.permissionDenied}</Text>
           {permission?.canAskAgain ? (
-            <Pressable testID="scan-grant" accessibilityRole="button" onPress={requestPermission}>
+            <PressableScale testID="scan-grant" accessibilityRole="button" onPress={requestPermission}>
               <Text style={styles.link}>{vi.scan.grant}</Text>
-            </Pressable>
+            </PressableScale>
           ) : null}
-          <Pressable testID="scan-open-settings" accessibilityRole="button" onPress={() => Linking.openSettings()}>
+          <PressableScale testID="scan-open-settings" accessibilityRole="button" onPress={() => Linking.openSettings()}>
             <Text style={styles.link}>{vi.scan.openSettings}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       ) : (
         <Text style={styles.hint}>{vi.scan.hint}</Text>
@@ -124,12 +126,17 @@ export default function ScanScreen() {
       ) : null}
 
       <View style={styles.bottom}>
-        <Pressable testID="scan-gallery-button" accessibilityRole="button" style={styles.gallery} onPress={onGallery}>
+        <PressableScale
+          testID="scan-gallery-button"
+          accessibilityRole="button"
+          style={styles.gallery}
+          onPress={onGallery}
+        >
           <Text style={styles.galleryText}>{vi.scan.gallery}</Text>
-        </Pressable>
-        <Pressable testID="scan-manual-link" accessibilityRole="link" onPress={() => router.back()}>
+        </PressableScale>
+        <PressableScale testID="scan-manual-link" accessibilityRole="link" onPress={() => router.back()}>
           <Text style={styles.link}>{vi.scan.manual}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );

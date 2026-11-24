@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { useAiAvailable } from "@/api/features";
 import { ApiError } from "@/api/errors";
@@ -125,7 +126,7 @@ export default function BillScreen() {
   return (
     <View style={styles.root} testID="screen-bill">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="bill-close"
           accessibilityRole="button"
           accessibilityLabel={vi.bill.close}
@@ -133,7 +134,7 @@ export default function BillScreen() {
           style={styles.close}
         >
           <Text style={styles.closeText}>✕</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{vi.bill.title}</Text>
         <View style={styles.close} />
       </View>
@@ -157,22 +158,22 @@ export default function BillScreen() {
             <Text style={styles.sheetTitle}>{vi.bill.privacyTitle}</Text>
             <Text style={styles.privacy}>{vi.bill.privacy}</Text>
             <View style={styles.buttons}>
-              <Pressable
+              <PressableScale
                 testID="bill-manual"
                 accessibilityRole="button"
                 onPress={manual}
                 style={[styles.btn, styles.ghost]}
               >
                 <Text style={styles.ghostText}>{vi.bill.manual}</Text>
-              </Pressable>
-              <Pressable
+              </PressableScale>
+              <PressableScale
                 testID="bill-accept"
                 accessibilityRole="button"
                 onPress={accept}
                 style={[styles.btn, styles.primary]}
               >
                 <Text style={styles.primaryText}>{vi.bill.accept}</Text>
-              </Pressable>
+              </PressableScale>
             </View>
           </View>
         ) : null}
@@ -188,22 +189,22 @@ export default function BillScreen() {
           <View style={styles.gap}>
             <Text style={styles.privacy}>{vi.bill.idle}</Text>
             <View style={styles.buttons}>
-              <Pressable
+              <PressableScale
                 testID="bill-pick"
                 accessibilityRole="button"
                 onPress={() => void upload(true)}
                 style={[styles.btn, styles.ghost]}
               >
                 <Text style={styles.ghostText}>{vi.bill.pick}</Text>
-              </Pressable>
-              <Pressable
+              </PressableScale>
+              <PressableScale
                 testID="bill-retake"
                 accessibilityRole="button"
                 onPress={() => void upload(false)}
                 style={[styles.btn, styles.primary]}
               >
                 <Text style={styles.primaryText}>{vi.bill.retake}</Text>
-              </Pressable>
+              </PressableScale>
             </View>
           </View>
         ) : null}
@@ -214,14 +215,14 @@ export default function BillScreen() {
               {message}
             </Text>
             <View style={styles.buttons}>
-              <Pressable
+              <PressableScale
                 testID="bill-manual"
                 accessibilityRole="button"
                 onPress={manual}
                 style={[styles.btn, styles.primary]}
               >
                 <Text style={styles.primaryText}>{vi.bill.manual}</Text>
-              </Pressable>
+              </PressableScale>
             </View>
           </View>
         ) : null}
@@ -248,22 +249,22 @@ export default function BillScreen() {
             </View>
             <Text style={styles.privacy}>{vi.bill.privacy}</Text>
             <View style={styles.buttons}>
-              <Pressable
+              <PressableScale
                 testID="bill-retake"
                 accessibilityRole="button"
                 onPress={() => void upload(false)}
                 style={[styles.btn, styles.ghost]}
               >
                 <Text style={styles.ghostText}>{vi.bill.retake}</Text>
-              </Pressable>
-              <Pressable
+              </PressableScale>
+              <PressableScale
                 testID="bill-fill-form"
                 accessibilityRole="button"
                 onPress={fill}
                 style={[styles.btn, styles.primary]}
               >
                 <Text style={styles.primaryText}>{vi.bill.fillForm}</Text>
-              </Pressable>
+              </PressableScale>
             </View>
           </View>
         ) : null}

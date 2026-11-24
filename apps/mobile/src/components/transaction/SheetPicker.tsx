@@ -1,4 +1,5 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
@@ -23,12 +24,13 @@ export function SheetPicker({
 }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      {/* bare-pressable-ok: modal backdrop, not a visual button */}
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={vi.txn.close} />
       <View style={styles.sheet}>
         <Text style={styles.title}>{title}</Text>
         <ScrollView>
           {options.map((o) => (
-            <Pressable
+            <PressableScale
               key={o.key}
               testID={o.testID}
               accessibilityRole="button"
@@ -36,7 +38,7 @@ export function SheetPicker({
               style={styles.item}
             >
               <Text style={[styles.itemText, o.key === selectedKey && styles.itemSelected]}>{o.label}</Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </ScrollView>
       </View>

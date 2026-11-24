@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import type { SummaryItemView } from "@/lib/group/summaryView";
@@ -21,18 +22,18 @@ export function SettlementRow({
     <View style={[styles.row, !last && styles.border]} testID={`settle-item-${item.memberId}`}>
       <Text style={styles.label}>{item.label}</Text>
       {item.hasQr ? (
-        <Pressable testID={`qr-${item.memberId}`} accessibilityRole="button" style={styles.qrBtn} onPress={onQr}>
+        <PressableScale testID={`qr-${item.memberId}`} accessibilityRole="button" style={styles.qrBtn} onPress={onQr}>
           <Text style={styles.qrText}>{t.qr}</Text>
-        </Pressable>
+        </PressableScale>
       ) : null}
-      <Pressable
+      <PressableScale
         testID={`mark-paid-${item.memberId}`}
         accessibilityRole="button"
         style={styles.paidBtn}
         onPress={onMarkPaid}
       >
         <Text style={styles.paidText}>{t.markPaid}</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

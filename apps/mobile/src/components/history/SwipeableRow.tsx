@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, PanResponder, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize } from "@/theme";
@@ -48,7 +49,7 @@ export function SwipeableRow({ id, onDelete, children }: { id: string; onDelete:
         if (e.nativeEvent.actionName === "delete") deleteRef.current();
       }}
     >
-      <Pressable
+      <PressableScale
         testID={`history-delete-${id}`}
         accessibilityRole="button"
         accessibilityLabel={vi.history.delete}
@@ -56,7 +57,7 @@ export function SwipeableRow({ id, onDelete, children }: { id: string; onDelete:
         style={styles.action}
       >
         <Text style={styles.actionText}>{vi.history.delete}</Text>
-      </Pressable>
+      </PressableScale>
       <Animated.View style={{ transform: [{ translateX: x }] }} {...pan.panHandlers}>
         {children}
       </Animated.View>

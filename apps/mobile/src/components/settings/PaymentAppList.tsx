@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, PanResponder, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
 import { PAY_APPS } from "@/lib/payConfirm/apps";
@@ -70,7 +71,7 @@ function Row({
       <Text style={[styles.mode, app.supportsAutofill && styles.modeAuto]}>
         {app.supportsAutofill ? vi.settings.autofill : vi.settings.scanQr}
       </Text>
-      <Pressable
+      <PressableScale
         testID={`settings-app-up-${id}`}
         accessibilityRole="button"
         accessibilityLabel={`${vi.settings.moveUp} ${app.name}`}
@@ -79,8 +80,8 @@ function Row({
         style={[styles.arrow, index === 0 && styles.arrowOff]}
       >
         <Text style={styles.arrowText}>▲</Text>
-      </Pressable>
-      <Pressable
+      </PressableScale>
+      <PressableScale
         testID={`settings-app-down-${id}`}
         accessibilityRole="button"
         accessibilityLabel={`${vi.settings.moveDown} ${app.name}`}
@@ -89,7 +90,7 @@ function Row({
         style={[styles.arrow, index === count - 1 && styles.arrowOff]}
       >
         <Text style={styles.arrowText}>▼</Text>
-      </Pressable>
+      </PressableScale>
     </Animated.View>
   );
 }

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import type { CategoryRow as Row } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
@@ -22,17 +23,22 @@ export function CategoryRow({
     <View style={[styles.row, !last && styles.border]} testID={`category-row-${item.id}`}>
       <CategoryBadge icon={item.icon} color={item.color} />
       <Text style={styles.name}>{item.name}</Text>
-      <Pressable testID={`category-edit-${item.id}`} accessibilityRole="button" onPress={onEdit} style={styles.btn}>
+      <PressableScale
+        testID={`category-edit-${item.id}`}
+        accessibilityRole="button"
+        onPress={onEdit}
+        style={styles.btn}
+      >
         <Text style={styles.btnText}>{vi.categories.edit}</Text>
-      </Pressable>
-      <Pressable
+      </PressableScale>
+      <PressableScale
         testID={`category-delete-${item.id}`}
         accessibilityRole="button"
         onPress={onDelete}
         style={[styles.btn, styles.danger]}
       >
         <Text style={[styles.btnText, { color: colors.expense }]}>{vi.categories.delete}</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

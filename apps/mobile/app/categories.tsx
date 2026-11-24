@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { CategoryEditSheet, type CategoryDraft } from "@/components/category/CategoryEditSheet";
 import { CategoryRow } from "@/components/category/CategoryRow";
@@ -62,7 +63,7 @@ export default function CategoriesScreen() {
   return (
     <View style={styles.root} testID="screen-categories">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="category-back"
           accessibilityRole="button"
           accessibilityLabel={vi.categories.back}
@@ -70,9 +71,9 @@ export default function CategoriesScreen() {
           style={styles.iconBtn}
         >
           <Text style={styles.back}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{vi.categories.title}</Text>
-        <Pressable
+        <PressableScale
           testID="category-add"
           accessibilityRole="button"
           accessibilityLabel={vi.categories.add}
@@ -80,12 +81,12 @@ export default function CategoriesScreen() {
           style={styles.iconBtn}
         >
           <Text style={styles.plus}>+</Text>
-        </Pressable>
+        </PressableScale>
       </View>
       <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.segment} accessibilityRole="radiogroup" accessibilityLabel={vi.categories.kindLabel}>
           {(["expense", "income"] as const).map((k) => (
-            <Pressable
+            <PressableScale
               key={k}
               testID={`category-tab-${k}`}
               accessibilityRole="radio"
@@ -94,7 +95,7 @@ export default function CategoriesScreen() {
               style={[styles.segBtn, kind === k && styles.segOn]}
             >
               <Text style={[styles.segText, kind === k && styles.segTextOn]}>{vi.categories[k]}</Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </View>
         <Text style={styles.section}>{vi.categories.defaults}</Text>

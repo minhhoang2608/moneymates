@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { useAiAvailable } from "@/api/features";
 import { parseText } from "@/api/parseText";
@@ -121,7 +122,7 @@ export default function VoiceScreen() {
   return (
     <View style={styles.root} testID="screen-voice">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="voice-close"
           accessibilityRole="button"
           accessibilityLabel={vi.voice.close}
@@ -129,7 +130,7 @@ export default function VoiceScreen() {
           style={styles.close}
         >
           <Text style={styles.closeText}>✕</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.title}>{vi.voice.title}</Text>
       </View>
 
@@ -177,7 +178,7 @@ export default function VoiceScreen() {
             />
           ))}
         </View>
-        <Pressable
+        <PressableScale
           testID="voice-mic"
           accessibilityRole="button"
           accessibilityLabel={vi.voice.micLabel}
@@ -186,18 +187,18 @@ export default function VoiceScreen() {
           style={styles.mic}
         >
           <Text style={styles.micGlyph}>🎤</Text>
-        </Pressable>
+        </PressableScale>
         <Text style={styles.hold}>{vi.voice.hold}</Text>
         <View style={styles.buttons}>
-          <Pressable
+          <PressableScale
             testID="voice-retry"
             accessibilityRole="button"
             onPress={retry}
             style={[styles.btn, styles.btnGhost]}
           >
             <Text style={styles.btnGhostText}>{vi.voice.retry}</Text>
-          </Pressable>
-          <Pressable
+          </PressableScale>
+          <PressableScale
             testID="voice-use-result"
             accessibilityRole="button"
             accessibilityState={{ disabled: !text.trim() || busy }}
@@ -205,7 +206,7 @@ export default function VoiceScreen() {
             style={[styles.btn, styles.btnPrimary, !text.trim() && styles.btnDisabled]}
           >
             <Text style={styles.btnPrimaryText}>{vi.voice.use}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
     </View>

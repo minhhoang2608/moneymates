@@ -1,6 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { QrPopup, type QrMode } from "@/components/group/QrPopup";
 import { MemberExpensesSheet } from "@/components/group/MemberExpensesSheet";
@@ -102,7 +103,7 @@ export default function GroupSummaryScreen() {
   return (
     <View style={styles.root} testID="screen-group-summary">
       <View style={styles.header}>
-        <Pressable
+        <PressableScale
           testID="summary-back"
           accessibilityRole="button"
           accessibilityLabel={t.back}
@@ -110,7 +111,7 @@ export default function GroupSummaryScreen() {
           style={styles.iconBtn}
         >
           <Text style={styles.backText}>‹</Text>
-        </Pressable>
+        </PressableScale>
         <View style={styles.headerText}>
           <Text style={styles.title}>{t.title}</Text>
           {group ? (
@@ -138,7 +139,7 @@ export default function GroupSummaryScreen() {
                 <Text style={[styles.cell2, styles.headText]}>{t.balance}</Text>
               </View>
               {view.rows.map((r, i) => (
-                <Pressable
+                <PressableScale
                   key={r.memberId}
                   testID={`summary-row-${r.memberId}`}
                   accessibilityRole="button"
@@ -161,7 +162,7 @@ export default function GroupSummaryScreen() {
                   >
                     {r.balance}
                   </Text>
-                </Pressable>
+                </PressableScale>
               ))}
               <Text style={styles.hint}>{t.hint}</Text>
             </View>
@@ -199,14 +200,14 @@ export default function GroupSummaryScreen() {
             </View>
           </ScrollView>
           <View style={styles.footer}>
-            <Pressable
+            <PressableScale
               testID="qr-group"
               accessibilityRole="button"
               style={styles.outlineBtn}
               onPress={() => setQr({ memberId: null, mode: "group" })}
             >
               <Text style={styles.outlineText}>{t.qrGroup}</Text>
-            </Pressable>
+            </PressableScale>
             <Text style={styles.footerHint}>{t.qrGroupHint}</Text>
           </View>
         </>

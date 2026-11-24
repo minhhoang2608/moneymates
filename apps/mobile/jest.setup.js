@@ -92,7 +92,9 @@ jest.mock("expo-haptics", () => ({
   NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
 }));
 // Reanimated needs its native runtime: a minimal JS stand-in keeps component tests deterministic.
+// expo-router's testing-library re-mocks reanimated from "react-native-reanimated/mock" (falling back to {}), so register both.
 jest.mock("react-native-reanimated", () => require("./jest.reanimated-mock"));
+jest.mock("react-native-reanimated/mock", () => require("./jest.reanimated-mock"));
 
 // The app database is native expo-sqlite: back it with an in-memory better-sqlite3 db under Jest.
 jest.mock("@/db/client", () => ({ db: require("./src/db/testing/testDb").openTestDb().db }));

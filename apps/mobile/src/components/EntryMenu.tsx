@@ -1,4 +1,5 @@
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import { useAiAvailable } from "@/api/features";
 import { vi } from "@/i18n/vi";
@@ -27,16 +28,17 @@ export function EntryMenu({
   ];
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      {/* bare-pressable-ok: modal backdrop, not a visual button */}
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={vi.entryMenu.cancel} />
       <View style={styles.sheet} testID="entry-menu">
         <Text style={styles.title}>{vi.entryMenu.title}</Text>
-        <Pressable testID="entry-menu-manual" accessibilityRole="button" onPress={onManual} style={styles.item}>
+        <PressableScale testID="entry-menu-manual" accessibilityRole="button" onPress={onManual} style={styles.item}>
           <Text style={styles.itemText}>{vi.entryMenu.manual}</Text>
-        </Pressable>
+        </PressableScale>
         {aiItems.map(([id, label, onPress, ai, hint]) => {
           const enabled = !!onPress && ai;
           return (
-            <Pressable
+            <PressableScale
               key={id}
               testID={id}
               accessibilityRole="button"
@@ -50,12 +52,12 @@ export function EntryMenu({
                   {hint}
                 </Text>
               ) : null}
-            </Pressable>
+            </PressableScale>
           );
         })}
-        <Pressable testID="entry-menu-cancel" accessibilityRole="button" onPress={onClose} style={styles.item}>
+        <PressableScale testID="entry-menu-cancel" accessibilityRole="button" onPress={onClose} style={styles.item}>
           <Text style={[styles.itemText, { color: colors.textMuted }]}>{vi.entryMenu.cancel}</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </Modal>
   );

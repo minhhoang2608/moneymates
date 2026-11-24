@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Modal, StyleSheet, Text, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 import QRCode from "react-native-qrcode-svg";
 
 import { vi } from "@/i18n/vi";
@@ -67,7 +68,7 @@ export function QrPopup({
         <View style={styles.card} testID="qr-popup" accessibilityLabel={t.a11y}>
           <View style={styles.head}>
             <Text style={styles.title}>{title}</Text>
-            <Pressable
+            <PressableScale
               testID="qr-popup-close"
               accessibilityRole="button"
               accessibilityLabel={t.close}
@@ -75,13 +76,13 @@ export function QrPopup({
               onPress={close}
             >
               <Text style={styles.closeText}>✕</Text>
-            </Pressable>
+            </PressableScale>
           </View>
 
           {memberName ? (
             <View style={styles.segment} accessibilityRole="radiogroup">
               {(["member", "group"] as const).map((m) => (
-                <Pressable
+                <PressableScale
                   key={m}
                   testID={m === "member" ? "qr-tab-member" : "qr-tab-group"}
                   accessibilityRole="radio"
@@ -92,7 +93,7 @@ export function QrPopup({
                   <Text style={[styles.segText, mode === m && styles.segTextActive]}>
                     {m === "member" ? t.byMember : t.byGroup}
                   </Text>
-                </Pressable>
+                </PressableScale>
               ))}
             </View>
           ) : null}
@@ -102,14 +103,14 @@ export function QrPopup({
               <Text style={styles.noAccount} testID="qr-no-account">
                 {t.noAccount}
               </Text>
-              <Pressable
+              <PressableScale
                 testID="qr-add-account"
                 accessibilityRole="button"
                 style={[styles.btn, styles.primary, styles.full]}
                 onPress={onAddAccount}
               >
                 <Text style={styles.primaryText}>{t.addAccount}</Text>
-              </Pressable>
+              </PressableScale>
             </>
           ) : (
             <>
@@ -131,22 +132,22 @@ export function QrPopup({
                 {qr.message ? <Text style={styles.meta}>{t.message(qr.message)}</Text> : null}
               </View>
               <View style={styles.buttons}>
-                <Pressable
+                <PressableScale
                   testID="qr-download"
                   accessibilityRole="button"
                   style={[styles.btn, styles.outline]}
                   onPress={() => run(saveQrToGallery)}
                 >
                   <Text style={styles.outlineText}>{t.download}</Text>
-                </Pressable>
-                <Pressable
+                </PressableScale>
+                <PressableScale
                   testID="qr-share"
                   accessibilityRole="button"
                   style={[styles.btn, styles.primary]}
                   onPress={() => run(shareQr)}
                 >
                   <Text style={styles.primaryText}>{t.share}</Text>
-                </Pressable>
+                </PressableScale>
               </View>
               <Text style={styles.hint}>{mode === "member" && memberName ? t.hint(memberName) : t.hintGroup}</Text>
             </>

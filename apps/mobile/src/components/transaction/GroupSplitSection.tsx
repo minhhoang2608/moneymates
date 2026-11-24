@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableScale } from "@/components/PressableScale";
 
 import type { GroupMember } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
@@ -69,7 +70,7 @@ export function GroupSplitSection(p: Props) {
           {p.members.map((m) => {
             const active = p.payerId === m.id;
             return (
-              <Pressable
+              <PressableScale
                 key={m.id}
                 testID={`payer-${m.id}`}
                 accessibilityRole="button"
@@ -78,7 +79,7 @@ export function GroupSplitSection(p: Props) {
                 style={[styles.chip, active && styles.chipActive]}
               >
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{m.displayName}</Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
         </View>
@@ -92,7 +93,7 @@ export function GroupSplitSection(p: Props) {
           {modes.map((m) => {
             const active = p.mode === m.key;
             return (
-              <Pressable
+              <PressableScale
                 key={m.key}
                 testID={`split-mode-${m.key}`}
                 accessibilityRole="button"
@@ -101,7 +102,7 @@ export function GroupSplitSection(p: Props) {
                 style={[styles.chip, active && styles.chipActive]}
               >
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{m.label}</Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
         </View>
@@ -110,7 +111,7 @@ export function GroupSplitSection(p: Props) {
           const on = p.ticked.has(m.id);
           return (
             <View key={m.id} style={styles.memberRow}>
-              <Pressable
+              <PressableScale
                 testID={`member-tick-${m.id}`}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: on }}
@@ -119,7 +120,7 @@ export function GroupSplitSection(p: Props) {
               >
                 <Text style={[styles.tickBox, on && styles.tickBoxOn]}>{on ? "✓" : ""}</Text>
                 <Text style={styles.memberName}>{m.displayName}</Text>
-              </Pressable>
+              </PressableScale>
               {on && p.mode === "amount" ? (
                 <TextInput
                   testID={`split-amount-${m.id}`}
