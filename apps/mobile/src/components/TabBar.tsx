@@ -1,10 +1,11 @@
 import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/layouts/Tabs";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { vi } from "@/i18n/vi";
+import { ensurePermission } from "@/lib/permissions";
 import { colors, fontFamily, fontSize, layout } from "@/theme";
 
 import { EntryMenu } from "./EntryMenu";
@@ -28,6 +29,7 @@ const RIGHT: TabDef[] = [
 
 export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   const router = useRouter();
+  const opening = useRef(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const activeRoute = state.routes[state.index]?.name;
 
@@ -62,7 +64,16 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         testID="tab-qr"
         accessibilityRole="button"
         accessibilityLabel={vi.scan.title}
-        onPress={() => router.push("/scan")}
+        onPress={async () => {
+          if (opening.current) return;
+          opening.current = true;
+          try {
+            await ensurePermission("camera");
+            router.push("/scan");
+          } finally {
+            opening.current = false;
+          }
+        }}
         onLongPress={() => setMenuOpen(true)}
         style={styles.qr}
       >

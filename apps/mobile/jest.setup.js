@@ -14,6 +14,10 @@ jest.mock("expo-camera", () => {
       return React.createElement(View, { testID: "camera-view" });
     },
     useCameraPermissions: () => [state.permission, jest.fn()],
+    Camera: {
+      getCameraPermissionsAsync: jest.fn(async () => state.permission),
+      requestCameraPermissionsAsync: jest.fn(async () => state.permission),
+    },
     scanFromURLAsync: jest.fn(async () => []),
   };
 });
@@ -23,6 +27,7 @@ jest.mock("expo-image-picker", () => ({
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: null })),
   requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  getMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
 }));
 jest.mock("expo-image-manipulator", () => ({
   SaveFormat: { JPEG: "jpeg" },
@@ -57,6 +62,7 @@ jest.mock("expo-media-library/legacy", () => ({
 jest.mock("expo-speech-recognition", () => ({
   ExpoSpeechRecognitionModule: {
     requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+    getPermissionsAsync: jest.fn(async () => ({ granted: true })),
     addListener: jest.fn(() => ({ remove: jest.fn() })),
     start: jest.fn(),
     stop: jest.fn(),
