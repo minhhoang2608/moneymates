@@ -1,29 +1,231 @@
-{"v":3,"createdOnFiles":{"v":1,"at":"2026-11-22T10:00:00Z"},"title":"App thu chi – Mockup 18 màn","launch":{"view":"canvas"},"pages":[],
-"boards":{
-"Main.dc.html":{"x":0,"y":300,"w":390,"h":844,"title":"01 Tổng quan"},
-"Scan.dc.html":{"x":470,"y":300,"w":390,"h":844,"title":"02 Quét QR"},
-"PayConfirm.dc.html":{"x":940,"y":300,"w":390,"h":844,"title":"03 Xác nhận thanh toán"},
-"AddTxn.dc.html":{"x":1410,"y":300,"w":390,"h":844,"title":"04 Nhập giao dịch"},
-"Voice.dc.html":{"x":1880,"y":300,"w":390,"h":844,"title":"05 Voice"},
-"BillScan.dc.html":{"x":2350,"y":300,"w":390,"h":844,"title":"06 Chụp bill"},
-"TargetPicker.dc.html":{"x":2820,"y":300,"w":390,"h":844,"title":"19 Chọn nơi ghi"},
-"History.dc.html":{"x":0,"y":1484,"w":390,"h":844,"title":"07 Lịch sử"},
-"TxnDetail.dc.html":{"x":470,"y":1484,"w":390,"h":844,"title":"08 Chi tiết giao dịch"},
-"Groups.dc.html":{"x":940,"y":1484,"w":390,"h":844,"title":"09 Danh sách nhóm"},
-"GroupDetail.dc.html":{"x":1410,"y":1484,"w":390,"h":844,"title":"10 Chi tiết nhóm"},
-"GroupEdit.dc.html":{"x":1880,"y":1484,"w":390,"h":844,"title":"11 Tạo/sửa nhóm"},
-"GroupSummary.dc.html":{"x":2350,"y":1484,"w":390,"h":844,"title":"12 Tổng kết nhóm"},
-"QrPopup.dc.html":{"x":0,"y":2668,"w":390,"h":844,"title":"13 Popup QR"},
-"Stats.dc.html":{"x":470,"y":2668,"w":390,"h":844,"title":"14 Thống kê"},
-"Profile.dc.html":{"x":940,"y":2668,"w":390,"h":844,"title":"15 Hồ sơ"},
-"BankAccounts.dc.html":{"x":1410,"y":2668,"w":390,"h":844,"title":"16 Tài khoản nhận tiền"},
-"Categories.dc.html":{"x":1880,"y":2668,"w":390,"h":844,"title":"17 Danh mục"},
-"Settings.dc.html":{"x":2350,"y":2668,"w":390,"h":844,"title":"18 Cài đặt"}
+{
+"v": 3,
+"createdOnFiles": {
+"v": 1,
+"at": "2026-11-22T10:00:00Z"
 },
-"order":["Main.dc.html","Scan.dc.html","PayConfirm.dc.html","AddTxn.dc.html","Voice.dc.html","BillScan.dc.html","TargetPicker.dc.html","History.dc.html","TxnDetail.dc.html","Groups.dc.html","GroupDetail.dc.html","GroupEdit.dc.html","GroupSummary.dc.html","QrPopup.dc.html","Stats.dc.html","Profile.dc.html","BankAccounts.dc.html","Categories.dc.html","Settings.dc.html"],
-"notes":{
-"row1":{"x":0,"y":0,"text":"Ghi chép: quét QR, nhập tay, voice, ảnh bill","kind":"title1","maxW":3210},
-"row2":{"x":0,"y":1184,"text":"Lịch sử & chi tiêu nhóm","kind":"title1","maxW":2740},
-"row3":{"x":0,"y":2368,"text":"QR đòi tiền, thống kê & hồ sơ","kind":"title1","maxW":2740}
+"title": "App thu chi – Mockup 18 màn",
+"launch": {
+"view": "canvas"
 },
-"designSystems":[]}
+"pages": [],
+"boards": {
+"Main.dc.html": {
+"x": 0,
+"y": 300,
+"w": 390,
+"h": 844,
+"title": "01 Tổng quan"
+},
+"Scan.dc.html": {
+"x": 470,
+"y": 300,
+"w": 390,
+"h": 844,
+"title": "02 Quét QR"
+},
+"PayConfirm.dc.html": {
+"x": 940,
+"y": 300,
+"w": 390,
+"h": 844,
+"title": "03 Xác nhận thanh toán"
+},
+"AddTxn.dc.html": {
+"x": 1410,
+"y": 300,
+"w": 390,
+"h": 844,
+"title": "04 Nhập giao dịch"
+},
+"Voice.dc.html": {
+"x": 1880,
+"y": 300,
+"w": 390,
+"h": 844,
+"title": "05 Voice"
+},
+"BillScan.dc.html": {
+"x": 2350,
+"y": 300,
+"w": 390,
+"h": 844,
+"title": "06 Chụp bill"
+},
+"TargetPicker.dc.html": {
+"x": 2820,
+"y": 300,
+"w": 390,
+"h": 844,
+"title": "19 Chọn nơi ghi"
+},
+"History.dc.html": {
+"x": 0,
+"y": 1484,
+"w": 390,
+"h": 844,
+"title": "07 Lịch sử"
+},
+"TxnDetail.dc.html": {
+"x": 470,
+"y": 1484,
+"w": 390,
+"h": 844,
+"title": "08 Chi tiết giao dịch"
+},
+"Groups.dc.html": {
+"x": 940,
+"y": 1484,
+"w": 390,
+"h": 844,
+"title": "09 Danh sách nhóm"
+},
+"GroupDetail.dc.html": {
+"x": 1410,
+"y": 1484,
+"w": 390,
+"h": 844,
+"title": "10 Chi tiết nhóm"
+},
+"GroupEdit.dc.html": {
+"x": 1880,
+"y": 1484,
+"w": 390,
+"h": 844,
+"title": "11 Tạo/sửa nhóm"
+},
+"GroupSummary.dc.html": {
+"x": 2350,
+"y": 1484,
+"w": 390,
+"h": 844,
+"title": "12 Tổng kết nhóm"
+},
+"QrPopup.dc.html": {
+"x": 0,
+"y": 2668,
+"w": 390,
+"h": 844,
+"title": "13 Popup QR"
+},
+"Stats.dc.html": {
+"x": 470,
+"y": 2668,
+"w": 390,
+"h": 844,
+"title": "14 Thống kê"
+},
+"Profile.dc.html": {
+"x": 940,
+"y": 2668,
+"w": 390,
+"h": 844,
+"title": "15 Hồ sơ"
+},
+"BankAccounts.dc.html": {
+"x": 1410,
+"y": 2668,
+"w": 390,
+"h": 844,
+"title": "16 Tài khoản nhận tiền"
+},
+"Categories.dc.html": {
+"x": 1880,
+"y": 2668,
+"w": 390,
+"h": 844,
+"title": "17 Danh mục"
+},
+"Settings.dc.html": {
+"x": 2350,
+"y": 2668,
+"w": 390,
+"h": 844,
+"title": "18 Cài đặt"
+},
+"PayCoachSheet.dc.html": {
+"x": 0,
+"y": 3852,
+"w": 390,
+"h": 844,
+"title": "03b Hướng dẫn chuyển (coach sheet)"
+},
+"HandoffReturn.dc.html": {
+"x": 470,
+"y": 3852,
+"w": 390,
+"h": 844,
+"title": "03c Sau khi chuyển"
+},
+"VoiceStates.dc.html": {
+"x": 940,
+"y": 3852,
+"w": 390,
+"h": 844,
+"title": "05b Voice – trạng thái mic"
+}
+},
+"order": [
+"Main.dc.html",
+"Scan.dc.html",
+"PayConfirm.dc.html",
+"AddTxn.dc.html",
+"Voice.dc.html",
+"BillScan.dc.html",
+"TargetPicker.dc.html",
+"History.dc.html",
+"TxnDetail.dc.html",
+"Groups.dc.html",
+"GroupDetail.dc.html",
+"GroupEdit.dc.html",
+"GroupSummary.dc.html",
+"QrPopup.dc.html",
+"Stats.dc.html",
+"Profile.dc.html",
+"BankAccounts.dc.html",
+"Categories.dc.html",
+"Settings.dc.html",
+"PayCoachSheet.dc.html",
+"HandoffReturn.dc.html",
+"VoiceStates.dc.html"
+],
+"notes": {
+"row1": {
+"x": 0,
+"y": 0,
+"text": "Ghi chép: quét QR, nhập tay, voice, ảnh bill",
+"kind": "title1",
+"maxW": 3210
+},
+"row2": {
+"x": 0,
+"y": 1184,
+"text": "Lịch sử & chi tiêu nhóm",
+"kind": "title1",
+"maxW": 2740
+},
+"row3": {
+"x": 0,
+"y": 2368,
+"text": "QR đòi tiền, thống kê & hồ sơ",
+"kind": "title1",
+"maxW": 2740
+},
+"row4": {
+"x": 0,
+"y": 3552,
+"text": "Thanh toán mọi ngân hàng & phản hồi chạm (24/11)",
+"kind": "title1",
+"maxW": 1800
+},
+"motion": {
+"x": 1410,
+"y": 3852,
+"w": 420,
+"fill": "teal",
+"size": "m",
+"text": "Chuyển động & phản hồi chạm (#265)\n\n• Mọi nút, hàng, chip, tab: khi nhấn thu nhỏ còn 0.97 hoặc mờ, 100–150 ms.\n• Bottom sheet (Ghi vào, coach sheet, danh mục, Popup QR): trượt lên + nền mờ dần, ≤ 250 ms.\n• Toast/banner: trượt + mờ vào/ra.\n• Màn stack: hiệu ứng trượt gốc của hệ điều hành.\n• Lịch sử: hàng mới/xóa có animation; Tổng quan và cảnh báo >20% hiện dần; khi tải dữ liệu dùng skeleton.\n• Quét QR (02): khung quét có vệt quét chạy; nháy sáng ngắn khi nhận được mã.\n• Rung: nhẹ khi lưu/thanh toán/chuyển app, selection khi chọn, rung lỗi khi nhập sai.\n• “Giảm chuyển động” bật: đổi trạng thái tức thì, vẫn giữ rung."
+}
+},
+"designSystems": []
+}
