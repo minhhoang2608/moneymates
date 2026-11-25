@@ -54,7 +54,7 @@ for n in $(gh issue list --state open --label needs-human --limit 100 --json num
   for dep in $deps; do dep_satisfied "$dep" || { all=false; break; }; done
   [[ "$all" == true ]] || continue
   gh issue edit "$n" --remove-label needs-human >/dev/null
-  dep_list="$(sed 's/^/#/' <<<"$deps" | paste -sd, - | sed 's/,/, /g')"
+  dep_list="#${deps//$'\n'/, #}"
   comment "$n" "<!-- factory:auto-unblock -->
 :unlock: Every dependency ($dep_list) is merged into dev, so \`needs-human\` was removed automatically. ([run]($RUN_URL))"
   role="$(role_of_issue "$n")"
