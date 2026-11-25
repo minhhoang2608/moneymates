@@ -1,4 +1,4 @@
-# Bill scan flow (E2E mode, fake image source + fixture AI): long-press QR -> Chụp bill -> accept notice -> result card.
+# Bill scan flow (E2E mode, fake image source + fixture AI): Tổng quan Chụp bill button -> accept notice -> result card.
 # The fixture is e2e/fixtures/bill.json; no camera and no network.
 appId: com.moneymates.app
 ---
@@ -7,10 +7,8 @@ appId: com.moneymates.app
 - extendedWaitUntil:
     visible: "Tổng quan"
     timeout: 30000
-- longPressOn:
-    id: "tab-qr"
 - tapOn:
-    id: "entry-menu-bill"
+    id: "overview-entry-bill"
 - assertVisible:
     id: "bill-privacy"
 - tapOn:

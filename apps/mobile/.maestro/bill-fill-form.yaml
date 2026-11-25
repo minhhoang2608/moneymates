@@ -6,10 +6,8 @@ appId: com.moneymates.app
 - extendedWaitUntil:
     visible: "Tổng quan"
     timeout: 30000
-- longPressOn:
-    id: "tab-qr"
 - tapOn:
-    id: "entry-menu-bill"
+    id: "overview-entry-bill"
 - tapOn:
     id: "bill-accept"
 - extendedWaitUntil:

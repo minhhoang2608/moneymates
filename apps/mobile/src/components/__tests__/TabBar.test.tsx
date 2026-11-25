@@ -9,6 +9,9 @@ import { TabBar } from "../TabBar";
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
 
+const mockEnsurePermission = jest.fn(async (_p: string) => true);
+jest.mock("@/lib/permissions", () => ({ ensurePermission: (p: string) => mockEnsurePermission(p) }));
+
 const original = global.fetch;
 
 function setFeatures(mode: boolean | "fail") {
@@ -29,7 +32,6 @@ async function renderBar() {
       <TabBar {...props} />
     </QueryClientProvider>,
   );
-  await fireEvent(screen.getByTestId("tab-qr"), "longPress");
 }
 
 beforeEach(() => {
@@ -41,31 +43,23 @@ afterEach(() => {
   global.fetch = original;
 });
 
-describe("TabBar entry menu: Chụp bill", () => {
-  it("navigates to /bill when ai_parse_bill is on", async () => {
+describe("TabBar QR button", () => {
+  it("has no long-press handler and long press opens nothing", async () => {
     setFeatures(true);
     await renderBar();
-    await waitFor(() => expect(screen.getByTestId("entry-menu-bill")).not.toBeDisabled());
-    await fireEvent.press(screen.getByTestId("entry-menu-bill"));
-    expect(mockPush).toHaveBeenCalledWith("/bill");
+    expect(screen.getByTestId("tab-qr").props.onLongPress).toBeUndefined();
+    await fireEvent(screen.getByTestId("tab-qr"), "longPress");
+    expect(screen.queryByTestId("entry-menu")).toBeNull();
+    expect(screen.queryByTestId("entry-menu-modal")).toBeNull();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("explains it is off and does not navigate when ai_parse_bill is off", async () => {
-    setFeatures(false);
+  it("tap asks for camera permission then opens /scan", async () => {
+    setFeatures(true);
     await renderBar();
-    await new Promise((r) => setTimeout(r, 20));
-    expect(screen.getByTestId("entry-menu-bill-hint")).toBeTruthy();
-    await fireEvent.press(screen.getByTestId("entry-menu-bill"));
-    expect(mockPush).not.toHaveBeenCalledWith("/bill");
-  });
-
-  it("explains the failure and does not navigate when /me/features fails", async () => {
-    setFeatures("fail");
-    await renderBar();
-    await new Promise((r) => setTimeout(r, 20));
-    expect(screen.getByTestId("entry-menu-bill-hint")).toBeTruthy();
-    await fireEvent.press(screen.getByTestId("entry-menu-bill"));
-    expect(mockPush).not.toHaveBeenCalledWith("/bill");
+    await fireEvent.press(screen.getByTestId("tab-qr"));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/scan"));
+    expect(mockEnsurePermission).toHaveBeenCalledWith("camera");
   });
 });
 
