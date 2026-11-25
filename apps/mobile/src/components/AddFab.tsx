@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { Keyboard, Platform, StyleSheet } from "react-native";
 
 import { EntryMenu } from "@/components/EntryMenu";
 import { PlusIcon } from "@/components/icons";
@@ -16,17 +16,30 @@ export const FAB_CLEARANCE = SIZE + MARGIN + 24;
 export function AddFab({ testID }: { testID: string }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  // Android pushes the button above the keyboard, so hide it while typing.
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   return (
     <>
-      <PressableScale
-        testID={testID}
-        accessibilityRole="button"
-        accessibilityLabel={vi.overview.add}
-        onPress={() => setMenuOpen(true)}
-        style={styles.fab}
-      >
-        <PlusIcon color={colors.primary} size={24} />
-      </PressableScale>
+      {keyboardOpen ? null : (
+        <PressableScale
+          testID={testID}
+          accessibilityRole="button"
+          accessibilityLabel={vi.overview.add}
+          onPress={() => setMenuOpen(true)}
+          style={styles.fab}
+        >
+          <PlusIcon color={colors.primary} size={24} />
+        </PressableScale>
+      )}
       <EntryMenu
         visible={menuOpen}
         onClose={() => setMenuOpen(false)}

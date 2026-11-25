@@ -50,7 +50,7 @@ export default function GroupsScreen() {
           <Text style={styles.createText}>+ {t.create}</Text>
         </PressableScale>
       </View>
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView contentContainerStyle={styles.body} testID="groups-list">
         {!loaded && <SkeletonList testID="groups-skeleton" count={3} />}
         {loaded && rows.length === 0 && (
           <View style={styles.empty}>
