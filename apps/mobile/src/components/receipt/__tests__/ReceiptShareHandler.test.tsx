@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { StyleSheet } from "react-native";
 
 import { Toast } from "@/components/Toast";
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
@@ -12,8 +13,10 @@ import { generateVietQr } from "@/lib/vietqr";
 import { useReceiptSheet } from "@/stores/receiptSheet";
 import { useToast } from "@/stores/toast";
 
+import { emitE2eSharedImage } from "@/e2e/incomingShare";
 import { ReceiptShareHandler } from "../ReceiptShareHandler";
 
+jest.mock("@/e2e/incomingShare", () => ({ emitE2eSharedImage: jest.fn() }));
 jest.mock("@/db/client", () => ({ db: {} }));
 
 const mockPush = jest.fn();
@@ -158,5 +161,27 @@ describe("ReceiptShareHandler", () => {
     await act(async () => fireEvent.press(await screen.findByTestId("receipt-save")));
     expect(await screen.findByTestId("receipt-error")).toBeTruthy();
     expect(await transactions.list()).toHaveLength(0);
+  });
+
+  describe("E2E share trigger", () => {
+    afterEach(() => {
+      delete process.env.EXPO_PUBLIC_E2E;
+    });
+
+    it("AC1: in E2E mode it is a 1x1 box at the right-middle edge, not top-left, and still emits", async () => {
+      process.env.EXPO_PUBLIC_E2E = "1";
+      await setup({ pending: false, lines: LINES });
+      const trigger = screen.getByTestId("e2e-share-receipt");
+      const style = StyleSheet.flatten(trigger.props.style);
+      expect(style).toMatchObject({ position: "absolute", right: 0, top: "50%", width: 1, height: 1 });
+      expect(style.left).toBeUndefined();
+      await act(async () => fireEvent.press(trigger));
+      expect(emitE2eSharedImage).toHaveBeenCalled();
+    });
+
+    it("is not rendered outside E2E mode", async () => {
+      await setup({ pending: false, lines: LINES });
+      expect(screen.queryByTestId("e2e-share-receipt")).toBeNull();
+    });
   });
 });
