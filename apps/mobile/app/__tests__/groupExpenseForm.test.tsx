@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
+import { fireEvent, renderRouter, screen, within } from "expo-router/testing-library";
 
 import { createGroupExpenseRepository, createGroupRepository, createProfileRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
@@ -164,5 +164,26 @@ describe("group expense form", () => {
     const { shares } = await sharesOf(g.id);
     expect(shares).toHaveLength(3);
     expect(shares.reduce((a, b) => a + b, 0)).toBe(1_000_000);
+  });
+
+  it("labels my payer chip Tôi even when the profile name is empty", async () => {
+    const g = await createGroupRepository(d()).createGroup({ name: "Huế", members: ["An", "Minh"] });
+    const me = g.members.find((m) => m.isMe)!;
+    await renderRouter("./app", { initialUrl: `/transaction/new?groupId=${g.id}` });
+    await screen.findByTestId("payer-picker");
+    expect(within(screen.getByTestId(`payer-${me.id}`)).getByText("Tôi")).toBeTruthy();
+    expect(within(screen.getByTestId(`member-tick-${me.id}`)).getByText("Tôi")).toBeTruthy();
+    expect(screen.getAllByText("An").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Minh").length).toBeGreaterThan(0);
+  });
+
+  it("prefills the note and amount from a bill in group mode", async () => {
+    const g = await createGroupRepository(d()).createGroup({ name: "Huế", members: ["An"] });
+    await renderRouter("./app", {
+      initialUrl: `/transaction/new?groupId=${g.id}&source=bill&amount=345000&note=${encodeURIComponent("Bánh căn Nhà Chung")}`,
+    });
+    await screen.findByTestId("payer-picker");
+    expect(screen.getByTestId("note-input").props.value).toBe("Bánh căn Nhà Chung");
+    expect(screen.getByTestId("amount-input").props.value).toMatch(/345/);
   });
 });

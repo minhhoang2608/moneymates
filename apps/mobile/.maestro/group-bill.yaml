@@ -47,6 +47,7 @@ appId: com.moneymates.app
     id: "bill-fill-form"
 - assertVisible:
     id: "payer-picker"
+- assertVisible: "Tôi"
 - scrollUntilVisible:
     element:
       id: "note-input"
