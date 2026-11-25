@@ -11,7 +11,7 @@ import { SwipeableRow } from "@/components/history/SwipeableRow";
 import { UndoSnackbar } from "@/components/history/UndoSnackbar";
 import { SheetPicker, type SheetOption } from "@/components/transaction/SheetPicker";
 import { useRepositories } from "@/db/RepositoriesProvider";
-import type { TransactionRow } from "@/db/repositories";
+import type { TransactionWithReceiptFlag } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
 import {
   defaultFilters,
@@ -35,7 +35,7 @@ export default function HistoryScreen() {
   const reduceMotion = useReduceMotion();
   const { transactions, categories, groups: groupRepo } = useRepositories();
   const [filters, setFilters] = useState<HistoryFilters>(() => defaultFilters());
-  const [rows, setRows] = useState<TransactionRow[]>([]);
+  const [rows, setRows] = useState<TransactionWithReceiptFlag[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [names, setNames] = useState<Record<string, string>>({});
   const [groupNames, setGroupNames] = useState<Record<string, string>>({});
@@ -51,7 +51,7 @@ export default function HistoryScreen() {
       void version; // reload after delete / undo
       void deletedVersion; // ...and after the return banner deletes a payment
       Promise.all([
-        transactions.list(toTransactionFilter(filters)),
+        transactions.listWithReceiptFlag(toTransactionFilter(filters)),
         categories.listByKind("expense"),
         categories.listByKind("income"),
         groupRepo.listGroups(),
@@ -197,6 +197,7 @@ export default function HistoryScreen() {
                     <HistoryRow
                       txn={t}
                       categoryName={names[t.category_id] ?? ""}
+                      hasReceipt={t.hasReceipt}
                       groupName={t.group_id ? groupNames[t.group_id] : undefined}
                     />
                   </PressableScale>

@@ -35,7 +35,7 @@ type Props = {
   /** Prefill (voice entry). Applied at mount; the payer only if that member exists in the group. */
   initial?: FormInitial;
   /** Stored on the new transaction. */
-  source?: "manual" | "voice" | "bill";
+  source?: "manual" | "voice" | "bill" | "receipt";
   /** Banner shown above the fields (e.g. the AI fallback message). */
   notice?: string;
 };

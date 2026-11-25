@@ -9,6 +9,7 @@ import { nowUtc } from "../columns";
 import { newId } from "../ids";
 import { expenseShares, groupMembers, groups, transactions } from "../schema";
 import type { AnyDb } from "../seed";
+import type { TransactionSource } from "./transactionRepository";
 
 export type ExpenseShareRow = typeof expenseShares.$inferSelect;
 export type GroupExpenseListRow = typeof transactions.$inferSelect & { share_count: number };
@@ -29,7 +30,7 @@ export type NewGroupExpense = {
   categoryId?: string;
   note?: string;
   /** Defaults to "manual". */
-  source?: "manual" | "qr" | "voice" | "bill";
+  source?: TransactionSource;
   /** Raw QR payload for `source: "qr"`; defaults to null. */
   qrData?: string | null;
 };

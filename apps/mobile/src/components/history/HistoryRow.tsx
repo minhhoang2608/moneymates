@@ -14,10 +14,12 @@ export function HistoryRow({
   txn,
   categoryName,
   groupName,
+  hasReceipt,
 }: {
   txn: TransactionRow;
   categoryName: string;
   groupName?: string;
+  hasReceipt?: boolean;
 }) {
   const title = txn.note || categoryName;
   const source = vi.history.sources[txn.source] ?? txn.money_source;
@@ -35,6 +37,11 @@ export function HistoryRow({
             ? `${categoryName} · ${vi.history.groupLabel(groupName)} · ${timeOf(txn.occurred_at)}`
             : `${categoryName} · ${source} · ${timeOf(txn.occurred_at)}`}
         </Text>
+        {hasReceipt ? (
+          <Text style={styles.receipt} testID={`history-receipt-${txn.id}`}>
+            {vi.receipt.hasReceipt}
+          </Text>
+        ) : null}
       </View>
       <Text style={[styles.amount, { color: txn.type === "expense" ? colors.expense : colors.primary }]}>
         {signedAmountLabel(txn.type, txn.amount)}
@@ -66,5 +73,6 @@ const styles = StyleSheet.create({
   main: { flex: 1, paddingHorizontal: 12 },
   title: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.text },
   sub: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
+  receipt: { fontFamily: fontFamily.medium, fontSize: fontSize.caption, color: colors.primary },
   amount: { fontFamily: fontFamily.bold, fontSize: fontSize.row },
 });

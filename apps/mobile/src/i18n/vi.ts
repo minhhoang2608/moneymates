@@ -116,6 +116,27 @@ export const vi = {
     undo: "Hoàn tác",
     reopen: (bank: string) => `Mở lại ${bank}`,
   },
+  receipt: {
+    attached: (recipient: string) =>
+      recipient ? `Đã đính kèm biên lai · ${recipient} đã trả` : "Đã đính kèm biên lai · đã trả",
+    undo: "Hoàn tác",
+    sheetTitle: "Biên lai chuyển khoản",
+    from: (bank: string) => `Từ ${bank} · đọc trên máy`,
+    fromUnknown: "Đọc trên máy",
+    amount: "Số tiền",
+    recipient: "Người nhận",
+    account: "Tài khoản",
+    message: "Nội dung",
+    amountPlaceholder: "Nhập số tiền",
+    recipientPlaceholder: "Nhập người nhận",
+    messagePlaceholder: "Nhập nội dung",
+    noMatch: "Không khớp giao dịch nào đang chờ. Ghi thành giao dịch mới, danh mục tự chọn: ",
+    save: "Ghi giao dịch",
+    edit: "Sửa",
+    skip: "Bỏ qua",
+    saveError: "Không thể ghi giao dịch. Hãy kiểm tra số tiền.",
+    hasReceipt: "có biên lai",
+  },
   qrImage: {
     deletedOnReturn: "Đã xoá ảnh QR tạm khỏi Ảnh",
     addOnlyPermission:
