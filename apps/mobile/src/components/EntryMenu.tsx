@@ -22,15 +22,29 @@ export function EntryMenu({
   onBill?: () => void;
 }) {
   const refreshFeatures = useRefreshFeatures();
+  const bill = useAiAvailable("parse_bill");
   useEffect(() => {
     if (visible) refreshFeatures();
   }, [visible, refreshFeatures]);
   const voiceAi = useAiAvailable("parse_text").available;
-  const billAi = useAiAvailable("parse_bill").available;
+  const billAi = bill.available;
   // Voice also works offline (rules only), so it is never gated on AI; bill capture needs the AI.
+  // Chụp bill is never greyed out for good: while the AI is not confirmed available, a tap re-checks the server
+  // and the row says why (a disabled button on a phone gave no clue and no way to retry).
+  const billHint = billAi
+    ? null
+    : bill.reason === "loading"
+      ? vi.entryMenu.billChecking
+      : bill.reason === "disabled"
+        ? vi.entryMenu.billDisabled
+        : vi.entryMenu.billRetry(
+            vi.apiErrors[bill.errorCode === "unknown" || !bill.errorCode ? "network" : bill.errorCode],
+            bill.errorCode ?? "?",
+          );
+  const onBillPress = onBill ? (billAi ? onBill : () => refreshFeatures(true)) : undefined;
   const aiItems: [string, string, (() => void) | undefined, boolean, string | null][] = [
     ["entry-menu-voice", vi.entryMenu.voice, onVoice, true, voiceAi ? null : vi.voice.offlineHint],
-    ["entry-menu-bill", vi.entryMenu.bill, onBill, billAi, null],
+    ["entry-menu-bill", vi.entryMenu.bill, onBillPress, billAi, billHint],
   ];
   return (
     <AnimatedSheet
@@ -46,7 +60,8 @@ export function EntryMenu({
           <Text style={styles.itemText}>{vi.entryMenu.manual}</Text>
         </PressableScale>
         {aiItems.map(([id, label, onPress, ai, hint]) => {
-          const enabled = !!onPress && ai;
+          const enabled = !!onPress;
+          const dim = !onPress || !ai;
           return (
             <PressableScale
               key={id}
@@ -56,7 +71,7 @@ export function EntryMenu({
               onPress={onPress}
               style={styles.item}
             >
-              <Text style={[styles.itemText, enabled ? null : { color: colors.neutral }]}>{label}</Text>
+              <Text style={[styles.itemText, dim ? { color: colors.neutral } : null]}>{label}</Text>
               {enabled && hint ? (
                 <Text testID={`${id}-hint`} style={styles.hint}>
                   {hint}

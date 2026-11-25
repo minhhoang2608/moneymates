@@ -102,7 +102,7 @@ describe("useAiAvailable", () => {
     await act(async () => {
       await jest.advanceTimersByTimeAsync(11000);
     });
-    expect(result.current).toEqual({ available: false, reason: "offline" });
+    expect(result.current).toEqual({ available: false, reason: "offline", errorCode: "timeout" });
   });
 
   it("AC3: AI on → available, reason null", async () => {
@@ -115,7 +115,7 @@ describe("useAiAvailable", () => {
   it("AC3: pending → unavailable, loading", async () => {
     mockFetch(() => new Promise(() => {}));
     const { result } = await renderHook(() => useAiAvailable(), { wrapper: wrapper() });
-    expect(result.current).toEqual({ available: false, reason: "loading" });
+    expect(result.current).toEqual({ available: false, reason: "loading", errorCode: null });
   });
 
   it("AC4: E2E returns the fixture without fetch", async () => {
@@ -124,7 +124,7 @@ describe("useAiAvailable", () => {
     const { result } = await renderHook(() => ({ ai: useAiAvailable("parse_bill"), f: useFeatures() }), {
       wrapper: wrapper(),
     });
-    expect(result.current.ai).toEqual({ available: true, reason: null });
+    expect(result.current.ai).toEqual({ available: true, reason: null, errorCode: null });
     expect(result.current.f).toEqual(e2eFeatures);
     expect(fetchFn).not.toHaveBeenCalled();
   });

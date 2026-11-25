@@ -5,6 +5,7 @@ import { e2eFeatures } from "@/e2e/fixtures";
 import { isE2E } from "@/e2e/isE2E";
 
 import { apiGet } from "./client";
+import type { ApiErrorCode } from "./errors";
 
 export type Features = {
   ai_enabled: boolean;
@@ -36,9 +37,10 @@ export async function fetchFeatures(): Promise<Features> {
   };
 }
 
-type FeaturesStatus = { ok: true; features: Features } | { ok: false };
+/** `code` is why the check failed (shown to the user so a failure on a phone can be diagnosed). */
+type FeaturesStatus = { ok: true; features: Features } | { ok: false; code: ApiErrorCode | "unknown" };
 
-/** Never throws: any failure (no URL, network, timeout, HTTP error, bad JSON) becomes `{ ok: false }`. */
+/** Never throws: any failure (no URL, network, timeout, HTTP error, bad JSON) becomes `{ ok: false, code }`. */
 function useFeaturesStatus() {
   const e2e = isE2E();
   const { data } = useQuery<FeaturesStatus>({
@@ -46,8 +48,9 @@ function useFeaturesStatus() {
     queryFn: async () => {
       try {
         return { ok: true, features: await fetchFeatures() };
-      } catch {
-        return { ok: false };
+      } catch (e) {
+        const code = (e as { code?: ApiErrorCode } | null)?.code;
+        return { ok: false, code: code ?? "unknown" };
       }
     },
     enabled: !e2e,
@@ -58,16 +61,22 @@ function useFeaturesStatus() {
   return e2e ? ({ ok: true, features: e2eFeatures } as FeaturesStatus) : data;
 }
 
-/** Returns a callback that re-checks /me/features unless a successful result is still fresh. No-op in E2E. */
-export function useRefreshFeatures(): () => void {
+/**
+ * Returns a callback that re-checks /me/features unless a successful result is still fresh (`force` skips that
+ * check, for a user tap on a disabled feature). No-op in E2E.
+ */
+export function useRefreshFeatures(): (force?: boolean) => void {
   const client = useQueryClient();
-  return useCallback(() => {
-    if (isE2E()) return;
-    const state = client.getQueryState<FeaturesStatus>(FEATURES_KEY);
-    const fresh = state?.data?.ok && Date.now() - state.dataUpdatedAt < FEATURES_FRESH_MS;
-    if (fresh) return;
-    void client.refetchQueries({ queryKey: FEATURES_KEY });
-  }, [client]);
+  return useCallback(
+    (force?: boolean) => {
+      if (isE2E()) return;
+      const state = client.getQueryState<FeaturesStatus>(FEATURES_KEY);
+      const fresh = state?.data?.ok && Date.now() - state.dataUpdatedAt < FEATURES_FRESH_MS;
+      if (fresh && !force) return;
+      void client.refetchQueries({ queryKey: FEATURES_KEY });
+    },
+    [client],
+  );
 }
 
 /** Always yields a Features value; never throws. */
@@ -82,11 +91,15 @@ export type AiUnavailableReason = "disabled" | "offline" | "loading";
 export function useAiAvailable(feature?: "parse_text" | "parse_bill"): {
   available: boolean;
   reason: AiUnavailableReason | null;
+  /** Why the /me/features check failed, when `reason` is "offline". */
+  errorCode: ApiErrorCode | "unknown" | null;
 } {
   const status = useFeaturesStatus();
-  if (!status) return { available: false, reason: "loading" };
-  if (!status.ok) return { available: false, reason: "offline" };
+  if (!status) return { available: false, reason: "loading", errorCode: null };
+  if (!status.ok) return { available: false, reason: "offline", errorCode: status.code };
   const f = status.features;
   const on = f.ai_enabled && (feature ? f[`ai_${feature}`] : true);
-  return on ? { available: true, reason: null } : { available: false, reason: "disabled" };
+  return on
+    ? { available: true, reason: null, errorCode: null }
+    : { available: false, reason: "disabled", errorCode: null };
 }
