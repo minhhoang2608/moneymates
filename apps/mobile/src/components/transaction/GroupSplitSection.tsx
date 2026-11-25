@@ -46,6 +46,8 @@ function statusText(draft: SplitDraft): string | null {
   }
 }
 
+const memberLabel = (m: GroupMember) => (m.isMe ? vi.groups.me : m.displayName);
+
 export function GroupSplitSection(p: Props) {
   const modes: { key: DraftMode; label: string }[] = [
     { key: "equal", label: vi.groupSplit.equal },
@@ -74,11 +76,12 @@ export function GroupSplitSection(p: Props) {
                 key={m.id}
                 testID={`payer-${m.id}`}
                 accessibilityRole="button"
+                accessibilityLabel={memberLabel(m)}
                 accessibilityState={{ selected: active }}
                 onPress={() => p.onPayer(m.id)}
                 style={[styles.chip, active && styles.chipActive]}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{m.displayName}</Text>
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{memberLabel(m)}</Text>
               </PressableScale>
             );
           })}
@@ -119,7 +122,7 @@ export function GroupSplitSection(p: Props) {
                 style={styles.memberTick}
               >
                 <Text style={[styles.tickBox, on && styles.tickBoxOn]}>{on ? "✓" : ""}</Text>
-                <Text style={styles.memberName}>{m.displayName}</Text>
+                <Text style={styles.memberName}>{memberLabel(m)}</Text>
               </PressableScale>
               {on && p.mode === "amount" ? (
                 <TextInput
