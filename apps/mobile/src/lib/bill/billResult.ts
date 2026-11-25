@@ -31,8 +31,10 @@ export function toFormParams(
   r: ParseBillResponse | null,
   imageUri: string | null,
   categoryId: string | null,
+  groupId?: string | null,
 ): Record<string, string> {
   const p: Record<string, string> = { source: "bill" };
+  if (groupId) p.groupId = groupId;
   if (r?.amount) p.amount = String(r.amount);
   if (r?.shop) p.note = r.shop;
   if (categoryId) p.categoryId = categoryId;

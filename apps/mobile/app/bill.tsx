@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
@@ -20,6 +20,7 @@ type Phase = "init" | "consent" | "idle" | "uploading" | "result" | "error";
 
 export default function BillScreen() {
   const router = useRouter();
+  const { groupId } = useLocalSearchParams<{ groupId?: string }>();
   const { categories: catRepo, appSettings } = useRepositories();
   const ai = useAiAvailable("parse_bill");
   const [phase, setPhase] = useState<Phase>("init");
@@ -101,12 +102,12 @@ export default function BillScreen() {
   const fill = () =>
     router.replace({
       pathname: "/transaction/new",
-      params: toFormParams(result, persisted(imageUri), categoryId(result)),
+      params: toFormParams(result, persisted(imageUri), categoryId(result), groupId),
     });
   const manual = () =>
     router.replace({
       pathname: "/transaction/new",
-      params: toFormParams(null, phase === "error" ? persisted(imageUri) : null, categoryId(null)),
+      params: toFormParams(null, phase === "error" ? persisted(imageUri) : null, categoryId(null), groupId),
     });
 
   const unavailable = ai.reason !== null && ai.reason !== "loading";

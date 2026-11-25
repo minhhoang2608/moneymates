@@ -201,4 +201,59 @@ describe("bill scan screen", () => {
       expect(row!.photo_uri).toMatch(/^file:\/\/\/doc\/attachments\/[0-9a-f-]{36}\.jpg$/);
     },
   );
+  describe("group flow (#430)", () => {
+    const url = "/bill?groupId=g1";
+    it("AC1: Điền vào form keeps the groupId", async () => {
+      await accept();
+      await renderRouter("./app", { initialUrl: url });
+      await screen.findByTestId("bill-result");
+      await fireEvent.press(screen.getByTestId("bill-fill-form"));
+      await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
+      expect(screen).toHaveSearchParams({
+        source: "bill",
+        groupId: "g1",
+        amount: "345000",
+        note: "Bánh căn Nhà Chung",
+        categoryId: expect.any(String),
+        date: "2026-11-22",
+        attachmentUri: expect.any(String),
+      });
+    });
+
+    it("AC2: AI unavailable → Nhập tay opens the group form without an amount", async () => {
+      setup(false);
+      await accept();
+      await renderRouter("./app", { initialUrl: url });
+      expect(await screen.findByTestId("bill-error")).toBeTruthy();
+      expect(source.capture).not.toHaveBeenCalled();
+      await fireEvent.press(screen.getByTestId("bill-manual"));
+      await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
+      expect(screen).toHaveSearchParams({ source: "bill", groupId: "g1", categoryId: expect.any(String) });
+    });
+
+    it("AC2: upload error → Nhập tay keeps the groupId", async () => {
+      await accept();
+      postMultipart.mockImplementation(async () => {
+        throw new ApiError("timeout");
+      });
+      await renderRouter("./app", { initialUrl: url });
+      await screen.findByTestId("bill-error");
+      await fireEvent.press(screen.getByTestId("bill-manual"));
+      await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
+      expect(screen).toHaveSearchParams({
+        source: "bill",
+        groupId: "g1",
+        categoryId: expect.any(String),
+        attachmentUri: expect.any(String),
+      });
+    });
+
+    it("AC2: consent screen Nhập tay keeps the groupId", async () => {
+      await renderRouter("./app", { initialUrl: url });
+      await screen.findByTestId("bill-privacy");
+      await fireEvent.press(screen.getByTestId("bill-manual"));
+      await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
+      expect(screen).toHaveSearchParams({ source: "bill", groupId: "g1", categoryId: expect.any(String) });
+    });
+  });
 });

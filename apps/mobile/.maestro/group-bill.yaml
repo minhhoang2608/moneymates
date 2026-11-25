@@ -1,0 +1,67 @@
+# Group bill entry (E2E mode, fake image source + fixture AI): group -> Thêm chi tiêu -> Chụp bill -> prefilled group form -> save.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "tab-groups"
+- tapOn:
+    id: "group-empty-create"
+- tapOn:
+    id: "group-name"
+- inputText: "Đà Lạt"
+- pressKey: Enter
+- waitForAnimationToEnd
+- tapOn:
+    id: "member-add-input"
+- inputText: "An"
+- pressKey: Enter
+- waitForAnimationToEnd
+- tapOn:
+    id: "member-add-input"
+- inputText: "Minh"
+- pressKey: Enter
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "group-save"
+- tapOn:
+    id: "group-save"
+- tapOn:
+    text: "Đà Lạt"
+- tapOn:
+    id: "group-add-expense"
+- assertVisible:
+    id: "entry-mode-manual"
+- tapOn:
+    id: "entry-mode-bill"
+- tapOn:
+    id: "bill-accept"
+- extendedWaitUntil:
+    visible:
+      id: "bill-done"
+    timeout: 10000
+- assertVisible: "345.000đ"
+- assertVisible: "Bánh căn Nhà Chung"
+- tapOn:
+    id: "bill-fill-form"
+- assertVisible:
+    id: "payer-picker"
+- assertVisible: "Bánh căn Nhà Chung"
+- scrollUntilVisible:
+    element:
+      id: "split-mode-amount"
+- tapOn:
+    id: "split-mode-amount"
+- tapOn:
+    id: "split-mode-equal"
+- scrollUntilVisible:
+    element:
+      id: "save-button"
+- tapOn:
+    id: "save-button"
+- assertVisible:
+    id: "screen-group-detail"
+- assertVisible:
+    id: "group-total"
+    text: "345.000đ"
