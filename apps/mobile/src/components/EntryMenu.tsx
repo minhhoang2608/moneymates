@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { PressableScale } from "@/components/PressableScale";
 
-import { useAiAvailable } from "@/api/features";
+import { useAiAvailable, useRefreshFeatures } from "@/api/features";
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
@@ -20,6 +21,10 @@ export function EntryMenu({
   onVoice?: () => void;
   onBill?: () => void;
 }) {
+  const refreshFeatures = useRefreshFeatures();
+  useEffect(() => {
+    if (visible) refreshFeatures();
+  }, [visible, refreshFeatures]);
   const voiceAi = useAiAvailable("parse_text").available;
   const billAi = useAiAvailable("parse_bill").available;
   // Voice also works offline (rules only), so it is never gated on AI; bill capture needs the AI.

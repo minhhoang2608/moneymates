@@ -13,13 +13,17 @@ function setAi(on: boolean | "offline" | "http-error") {
   }) as unknown as typeof fetch;
 }
 
-async function renderMenu(props: Partial<React.ComponentProps<typeof EntryMenu>> = {}) {
-  const client = new QueryClient({ defaultOptions: { queries: { gcTime: 0 } } });
-  await render(
+function menu(client: QueryClient, props: Partial<React.ComponentProps<typeof EntryMenu>> = {}) {
+  return (
     <QueryClientProvider client={client}>
       <EntryMenu visible onManual={jest.fn()} onClose={jest.fn()} {...props} />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+}
+
+async function renderMenu(props: Partial<React.ComponentProps<typeof EntryMenu>> = {}) {
+  const client = new QueryClient({ defaultOptions: { queries: { gcTime: 0 } } });
+  await render(menu(client, props));
 }
 
 beforeEach(() => {
@@ -78,5 +82,46 @@ describe("Nhập tay with AI unavailable", () => {
     await renderMenu({ onManual, onVoice: jest.fn(), onBill: jest.fn() });
     await fireEvent.press(screen.getByTestId("entry-menu-manual"));
     expect(onManual).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Chụp bill gate", () => {
+  it("is enabled and calls onBill when flags are on", async () => {
+    setAi(true);
+    const onBill = jest.fn();
+    await renderMenu({ onBill });
+    await waitFor(() => expect(screen.getByTestId("entry-menu-bill")).not.toBeDisabled());
+    await fireEvent.press(screen.getByTestId("entry-menu-bill"));
+    expect(onBill).toHaveBeenCalledTimes(1);
+  });
+
+  it("is disabled while loading and when the flag is off", async () => {
+    global.fetch = jest.fn(() => new Promise(() => {})) as unknown as typeof fetch;
+    await renderMenu({ onBill: jest.fn() });
+    expect(screen.getByTestId("entry-menu-bill")).toBeDisabled();
+  });
+
+  it("recovers when the sheet is reopened after a failed check", async () => {
+    setAi("offline");
+    const client = new QueryClient({ defaultOptions: { queries: { gcTime: 0 } } });
+    const props = { onBill: jest.fn() };
+    const view = await render(menu(client, { ...props, visible: true }));
+    await waitFor(() => expect(screen.getByTestId("entry-menu-bill")).toBeDisabled());
+    await view.rerender(menu(client, { ...props, visible: false }));
+    setAi(true);
+    await view.rerender(menu(client, { ...props, visible: true }));
+    await waitFor(() => expect(screen.getByTestId("entry-menu-bill")).not.toBeDisabled());
+  });
+
+  it("stays disabled when reopened while still failing", async () => {
+    setAi("offline");
+    const client = new QueryClient({ defaultOptions: { queries: { gcTime: 0 } } });
+    const props = { onBill: jest.fn() };
+    const view = await render(menu(client, { ...props, visible: true }));
+    await waitFor(() => expect(screen.getByTestId("entry-menu-bill")).toBeDisabled());
+    await view.rerender(menu(client, { ...props, visible: false }));
+    await view.rerender(menu(client, { ...props, visible: true }));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.getByTestId("entry-menu-bill")).toBeDisabled();
   });
 });
