@@ -84,4 +84,33 @@ describe("parseSpokenExpense", () => {
   it("does not read a headcount as money", () => {
     expect(parseSpokenExpense("ăn phở 2 người 100k", { categories }).amount).toBe(100_000);
   });
+
+  describe("payer with a leading filler word", () => {
+    const group = [
+      { id: "m-me", name: "Tôi", isMe: true },
+      { id: "m-an", name: "An", isMe: false },
+      { id: "m-minh", name: "Minh", isMe: false },
+    ];
+    it.each([["An Minh tra 300k an toi"], ["Anh Minh trả 300k ăn tối"]])("%s -> Minh pays", (text) => {
+      const r = parseSpokenExpense(text, { categories, members: group });
+      expect(r.amount).toBe(300_000);
+      expect(r.payer).toMatchObject({ memberId: "m-minh", matched: true });
+      expect(r.note).not.toBe("");
+      expect(r.note.toLowerCase()).not.toContain("minh");
+    });
+    it("still matches a plain name and falls back to me for an unknown one", () => {
+      expect(parseSpokenExpense("An trả 300k ăn tối", { categories, members: group }).payer.memberId).toBe("m-an");
+      expect(parseSpokenExpense("Nam trả 300k ăn tối", { categories, members: group }).payer.memberId).toBe("m-me");
+    });
+    it("is ambiguous when two members end with the same word", () => {
+      const two = [
+        { id: "m-me", name: "Tôi", isMe: true },
+        { id: "m-a", name: "Lan Minh", isMe: false },
+        { id: "m-b", name: "Hoàng Minh", isMe: false },
+      ];
+      const r = parseSpokenExpense("Anh Minh trả 300k ăn tối", { categories, members: two });
+      expect(r.payer).toMatchObject({ memberId: "m-me", matched: false });
+      expect(r.needsAi).toBe(true);
+    });
+  });
 });
