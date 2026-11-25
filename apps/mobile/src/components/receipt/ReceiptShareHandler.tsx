@@ -73,7 +73,7 @@ export function ReceiptShareHandler({ deps }: { deps?: Partial<SharedReceiptDeps
         <PressableScale
           testID="e2e-share-receipt"
           accessibilityLabel="e2e-share-receipt"
-          style={styles.hidden}
+          style={E2E_SHARE_TRIGGER_STYLE}
           onPress={() => emitE2eSharedImage()}
         />
       ) : null}
@@ -81,6 +81,10 @@ export function ReceiptShareHandler({ deps }: { deps?: Partial<SharedReceiptDeps
   );
 }
 
-const styles = StyleSheet.create({
-  hidden: { position: "absolute", top: 0, left: 0, width: 44, height: 44, opacity: 0.02 },
-});
+/**
+ * E2E-only trigger: 1x1 dp on the vertical middle of the right edge, clear of headers, status bar,
+ * tab bar and FABs, so it can never take taps from app UI.
+ */
+export const E2E_SHARE_TRIGGER_STYLE = StyleSheet.create({
+  hidden: { position: "absolute", right: 0, top: "50%", width: 1, height: 1, opacity: 0.02 },
+}).hidden;
