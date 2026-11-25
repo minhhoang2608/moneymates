@@ -1,7 +1,16 @@
 import { haptics } from "@/lib/haptics";
 import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 import Svg, { Path } from "react-native-svg";
 
@@ -27,6 +36,11 @@ export type TargetPickerSheetProps = {
   onClose: () => void;
 };
 
+/** Pixel cap for the panel: a `%` maxHeight resolves against the auto-height sheet wrapper and clips the rows. */
+export function targetSheetMaxHeight(windowHeight: number): number {
+  return Math.round(windowHeight * 0.8);
+}
+
 export function TargetPickerSheet({
   visible,
   groups,
@@ -38,6 +52,7 @@ export function TargetPickerSheet({
   onClose,
 }: TargetPickerSheetProps) {
   const [query, setQuery] = useState("");
+  const { height } = useWindowDimensions();
   const select = (t: Target) => {
     haptics.selection();
     setQuery("");
@@ -96,7 +111,7 @@ export function TargetPickerSheet({
       backdropLabel={vi.target.close}
     >
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={styles.sheet} testID="target-sheet">
+        <View style={[styles.sheet, { maxHeight: targetSheetMaxHeight(height) }]} testID="target-sheet">
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>{vi.target.pickerTitle}</Text>
@@ -119,7 +134,7 @@ export function TargetPickerSheet({
             placeholderTextColor={colors.textMuted}
             autoCorrect={false}
           />
-          <ScrollView keyboardShouldPersistTaps="handled">
+          <ScrollView testID="target-list" style={styles.list} keyboardShouldPersistTaps="handled">
             {personal && (
               <Row
                 testID="target-row-personal"
@@ -192,8 +207,8 @@ function Row({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  list: { flexGrow: 0, flexShrink: 1 },
   sheet: {
-    maxHeight: "80%",
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.sheet,
     borderTopRightRadius: radii.sheet,

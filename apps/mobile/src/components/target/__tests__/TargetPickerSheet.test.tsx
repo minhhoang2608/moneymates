@@ -3,7 +3,9 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { setHapticsEnabled } from "@/lib/haptics";
 import { grp, hoursAgo, NOW } from "@/lib/target/testFixtures";
 
-import { TargetPickerSheet } from "../TargetPickerSheet";
+import { StyleSheet } from "react-native";
+
+import { TargetPickerSheet, targetSheetMaxHeight } from "../TargetPickerSheet";
 
 const groups = [
   grp("dalat", "Đà Lạt 12/2026"),
@@ -81,5 +83,23 @@ describe("TargetPickerSheet haptics", () => {
     await fireEvent.press(screen.getByTestId("target-row-dalat"));
     expect(Haptics.selectionAsync).not.toHaveBeenCalled();
     expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
+  it("caps the panel with a pixel maxHeight and lets the list shrink", async () => {
+    expect(targetSheetMaxHeight(800)).toBe(640);
+    await setup();
+    const sheet = StyleSheet.flatten(screen.getByTestId("target-sheet").props.style);
+    expect(typeof sheet.maxHeight).toBe("number");
+    const list = StyleSheet.flatten(screen.getByTestId("target-list").props.style);
+    expect(list).toMatchObject({ flexGrow: 0, flexShrink: 1 });
+  });
+
+  it("renders every group row inside the list and selects one", async () => {
+    const many = Array.from({ length: 15 }, (_, i) => grp(`g${i}`, `Nhóm ${i}`));
+    const onSelect = jest.fn();
+    await setup({ groups: many, onSelect });
+    expect(screen.getAllByTestId(/^target-row-g/)).toHaveLength(15);
+    fireEvent.press(screen.getByTestId("target-row-g3"));
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ kind: "group", groupId: "g3" }));
   });
 });
