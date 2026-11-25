@@ -8,7 +8,13 @@ export type Chip = { key: string; label: string; active: boolean; onPress: () =>
 
 export function FilterChips({ chips, showClear, onClear }: { chips: Chip[]; showClear: boolean; onClear: () => void }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.scroll}
+      contentContainerStyle={styles.row}
+      testID="history-chips"
+    >
       {chips.map((c) => (
         <PressableScale
           key={c.key}
@@ -35,7 +41,8 @@ export function FilterChips({ chips, showClear, onClear }: { chips: Chip[]; show
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 8, paddingVertical: 10, alignItems: "center" },
+  scroll: { flexGrow: 0, flexShrink: 0, marginTop: 12 },
+  row: { gap: 8, alignItems: "center" },
   chip: {
     height: 36,
     paddingHorizontal: 14,

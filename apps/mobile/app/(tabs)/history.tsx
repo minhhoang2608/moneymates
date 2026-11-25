@@ -1,3 +1,4 @@
+import { StatusBar } from "expo-status-bar";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -26,6 +27,8 @@ import { formatVnd } from "@/lib/money";
 import { motionProps, useReduceMotion } from "@/lib/motion";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
+
+export const historyLayout = { headerGap: 12, listTop: 12, dayGap: 14 } as const;
 
 const ALL = "__all__";
 type Picker = "month" | "category" | "source" | null;
@@ -155,6 +158,7 @@ export default function HistoryScreen() {
 
   return (
     <View style={styles.root} testID="screen-history">
+      <StatusBar style="dark" />
       <Text style={styles.title}>{vi.history.title}</Text>
       <TextInput
         testID="history-search"
@@ -170,15 +174,19 @@ export default function HistoryScreen() {
         showClear={isFiltered(filters)}
         onClear={() => setFilters({ month: null, categoryId: null, moneySource: null, type: null, search: "" })}
       />
-      <ScrollView contentContainerStyle={styles.list} testID="history-list">
+      <ScrollView style={styles.listScroll} contentContainerStyle={styles.list} testID="history-list">
         {!loaded ? <SkeletonList testID="history-skeleton" count={5} /> : null}
         {loaded && groups.length === 0 ? (
           <Text style={styles.empty} testID="history-empty">
             {customized ? vi.history.noMatch : vi.history.empty}
           </Text>
         ) : null}
-        {groups.map((g) => (
-          <View key={g.dayKey} testID={`history-day-${g.dayKey}`}>
+        {groups.map((g, i) => (
+          <View
+            key={g.dayKey}
+            testID={`history-day-${g.dayKey}`}
+            style={i === 0 ? undefined : styles.dayGroupSpaced}
+          >
             <View style={styles.dayHeader}>
               <Text style={styles.dayLabel}>{g.label}</Text>
               <Text style={styles.dayTotal}>
@@ -227,7 +235,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, paddingTop: 56, paddingHorizontal: layout.screenPadding, backgroundColor: colors.background },
   title: { fontFamily: fontFamily.bold, fontSize: fontSize.heading, color: colors.text },
   search: {
-    marginTop: 12,
+    marginTop: historyLayout.headerGap,
     height: 44,
     paddingHorizontal: 14,
     borderRadius: radii.input,
@@ -238,8 +246,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.text,
   },
-  list: { paddingBottom: 96 },
-  dayHeader: { flexDirection: "row", justifyContent: "space-between", paddingTop: 14, paddingBottom: 6 },
+  listScroll: { flex: 1 },
+  list: { paddingTop: historyLayout.listTop, paddingBottom: 96 },
+  dayGroupSpaced: { marginTop: historyLayout.dayGap },
+  dayHeader: { flexDirection: "row", justifyContent: "space-between", paddingBottom: 6 },
   dayLabel: { fontFamily: fontFamily.semibold, fontSize: fontSize.secondary, color: colors.textMuted },
   dayTotal: { fontFamily: fontFamily.regular, fontSize: fontSize.caption, color: colors.textMuted },
   empty: { fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.textMuted, paddingVertical: 24 },
