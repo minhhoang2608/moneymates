@@ -26,3 +26,25 @@ describe("e2e regression maestro flows (#454)", () => {
     );
   });
 });
+
+describe("e2e regression maestro flows (#456)", () => {
+  it.each(["add-fab-tabs", "settings-effects", "notif-auto-paid", "handoff-undo"])(
+    "%s starts with the launch-fresh subflow",
+    (f) => {
+      expect(body(f).startsWith("- runFlow: subflows/launch-fresh.yaml\n")).toBe(true);
+      expect(read(f)).not.toMatch(/launchApp:\s*\n\s*clearState/);
+    },
+  );
+
+  it("notif-auto-paid waits for e2e-notif-enable and uses a 30s relaunch wait", () => {
+    const src = read("notif-auto-paid");
+    expect(src.indexOf('id: "e2e-notif-enable"')).toBeLessThan(src.indexOf('tapOn:\n    id: "e2e-notif-enable"'));
+    expect(src).toMatch(/id: "handoff-qr-deleted"\s*\n\s*timeout: 30000/);
+  });
+
+  it("handoff-undo waits for screen-pay-confirm before pay-category-more", () => {
+    const src = read("handoff-undo");
+    expect(src.indexOf('id: "screen-pay-confirm"')).toBeGreaterThan(src.indexOf('id: "scan-e2e-feed"'));
+    expect(src.indexOf('id: "screen-pay-confirm"')).toBeLessThan(src.indexOf('id: "pay-category-more"'));
+  });
+});
