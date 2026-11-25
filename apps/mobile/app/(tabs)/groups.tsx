@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 
+import { AddFab, FAB_CLEARANCE } from "@/components/AddFab";
 import { PressableScale } from "@/components/PressableScale";
 import { SkeletonList } from "@/components/Skeleton";
 import { Avatar } from "@/components/group/Avatar";
@@ -49,7 +50,7 @@ export default function GroupsScreen() {
           <Text style={styles.createText}>+ {t.create}</Text>
         </PressableScale>
       </View>
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView contentContainerStyle={styles.body} testID="groups-list">
         {!loaded && <SkeletonList testID="groups-skeleton" count={3} />}
         {loaded && rows.length === 0 && (
           <View style={styles.empty}>
@@ -98,6 +99,7 @@ export default function GroupsScreen() {
           );
         })}
       </ScrollView>
+      <AddFab testID="groups-add-button" />
     </View>
   );
 }
@@ -120,7 +122,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   createText: { fontFamily: fontFamily.semibold, fontSize: fontSize.body, color: colors.onPrimary },
-  body: { padding: layout.screenPadding, gap: 16, paddingBottom: layout.tabBarHeight + 24 },
+  body: { padding: layout.screenPadding, gap: 16, paddingBottom: Math.max(layout.tabBarHeight + 24, FAB_CLEARANCE) },
   empty: { alignItems: "center", gap: 16, paddingTop: 48 },
   emptyText: { fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.textMuted },
   card: { backgroundColor: colors.surface, borderRadius: radii.profileCard, padding: 16, gap: 12 },

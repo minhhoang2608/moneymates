@@ -1,0 +1,41 @@
+# The "+" button is on every main tab; manual entry returns to the tab it started from.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-history"
+- tapOn:
+    id: "history-add-button"
+- tapOn:
+    id: "entry-menu-manual"
+- assertNotVisible:
+    id: "history-add-button"
+- tapOn:
+    id: "amount-input"
+- inputText: "30k"
+- hideKeyboard
+- tapOn:
+    id: "category-row"
+- tapOn: "Ăn uống"
+- tapOn:
+    id: "save-button"
+- assertVisible:
+    id: "screen-history"
+- assertVisible: "−30.000đ"
+- tapOn:
+    id: "tab-groups"
+- tapOn:
+    id: "groups-add-button"
+- assertVisible:
+    id: "entry-menu-manual"
+- back
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "profile-add-button"
+- assertVisible:
+    id: "entry-menu-manual"

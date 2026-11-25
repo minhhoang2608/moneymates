@@ -1,5 +1,8 @@
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
+import { StyleSheet } from "react-native";
+
+import { FAB_CLEARANCE } from "@/components/AddFab";
 import { vi } from "@/i18n/vi";
 
 // expo-router/testing-library registers an empty reanimated mock on import: override it afterwards.
@@ -69,6 +72,68 @@ describe("tab bar shell", () => {
       expect(fetchMock).not.toHaveBeenCalled();
     } finally {
       global.fetch = original;
+    }
+  });
+
+  it("#427: shows the add button on every main tab and opens the add menu", async () => {
+    await renderApp();
+    expect(screen.getByTestId("overview-add-button")).toBeTruthy();
+    for (const [tab, id] of [
+      ["tab-history", "history-add-button"],
+      ["tab-groups", "groups-add-button"],
+      ["tab-profile", "profile-add-button"],
+    ] as const) {
+      await fireEvent.press(screen.getByTestId(tab));
+      await fireEvent.press(screen.getByTestId(id));
+      expect(screen.getByTestId("entry-menu")).toBeTruthy();
+    }
+    await fireEvent.press(screen.getByTestId("entry-menu-manual"));
+    expect(screen).toHavePathname("/transaction/new");
+  });
+
+  it("#427: the FAB menu opens Chụp bill (enabled) and Voice", async () => {
+    process.env.EXPO_PUBLIC_E2E = "1";
+    try {
+      await renderApp();
+      await fireEvent.press(screen.getByTestId("tab-history"));
+      await fireEvent.press(screen.getByTestId("history-add-button"));
+      const bill = await screen.findByTestId("entry-menu-bill");
+      expect(bill).not.toBeDisabled();
+      await fireEvent.press(bill);
+      await waitFor(() => expect(screen).toHavePathname("/bill"));
+    } finally {
+      delete process.env.EXPO_PUBLIC_E2E;
+    }
+  });
+
+  it("#427: the FAB menu opens Voice", async () => {
+    await renderApp();
+    await fireEvent.press(screen.getByTestId("tab-groups"));
+    await fireEvent.press(screen.getByTestId("groups-add-button"));
+    await fireEvent.press(await screen.findByTestId("entry-menu-voice"));
+    await waitFor(() => expect(screen).toHavePathname("/voice"));
+  });
+
+  it("#427 AC3: History, Groups and Profile lists clear the button", async () => {
+    await renderApp();
+    for (const [tab, list] of [
+      ["tab-history", "history-list"],
+      ["tab-groups", "groups-list"],
+      ["tab-profile", "profile-scroll"],
+    ] as const) {
+      await fireEvent.press(screen.getByTestId(tab));
+      const style = StyleSheet.flatten(screen.getByTestId(list).props.contentContainerStyle);
+      expect(style.paddingBottom).toBeGreaterThanOrEqual(FAB_CLEARANCE);
+    }
+  });
+
+  it("#427 AC4: no add button on the transaction, voice, bill and scan screens", async () => {
+    for (const url of ["/transaction/new", "/voice", "/bill", "/scan"]) {
+      const view = await renderRouter("./app", { initialUrl: url });
+      for (const id of ["overview", "history", "groups", "profile"]) {
+        expect(screen.queryByTestId(`${id}-add-button`)).toBeNull();
+      }
+      view.unmount();
     }
   });
 });
