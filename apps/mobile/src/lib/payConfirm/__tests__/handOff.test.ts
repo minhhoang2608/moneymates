@@ -87,16 +87,38 @@ describe("handOff", () => {
     expect(deps.shareToPackage).not.toHaveBeenCalled();
   });
 
-  it("autofill app: opens dl.vietqr.io with the confirmed values, no clipboard or image", async () => {
+  const MB_QUERY = "app=mb&ba=0123456789%40tpb&am=70000&tn=Cafe&url=https%3A%2F%2Fwww.vietqr.io";
+
+  it("android autofill app: opens the same link by intent at the bank package, no browser, no clipboard or image", async () => {
     const { calls, deps, handOff } = setup();
     const res = await handOff(mb, { model: vietqr, amount: 70000, note: "Cafe" });
     expect(res).toEqual({ opened: true, mode: "autofill", decision: "autofill-link", qrStorage: "none" });
     expect(res.qrAssetId).toBeUndefined();
+    expect(mb.androidPackage).toBeTruthy();
     expect(calls).toEqual([
-      "open:https://dl.vietqr.io/pay?app=mb&ba=0123456789%40tpb&am=70000&tn=Cafe&url=https%3A%2F%2Fwww.vietqr.io",
+      `intent:intent://dl.vietqr.io/pay?${MB_QUERY}#Intent;scheme=https;package=${mb.androidPackage};end`,
     ]);
+    expect(deps.openUrl).not.toHaveBeenCalled();
     expect(deps.setClipboard).not.toHaveBeenCalled();
     expect(deps.saveQrImage).not.toHaveBeenCalled();
+  });
+
+  it("android autofill app: when the intent is rejected it falls back to the https link", async () => {
+    const { calls, handOff } = setup({
+      openIntent: jest.fn(async () => {
+        throw new Error("ERR_NOT_INSTALLED");
+      }),
+    });
+    const res = await handOff(mb, { model: vietqr, amount: 70000, note: "Cafe" });
+    expect(res).toEqual({ opened: true, mode: "autofill", decision: "autofill-link", qrStorage: "none" });
+    expect(calls).toEqual([`open:https://dl.vietqr.io/pay?${MB_QUERY}`]);
+  });
+
+  it("ios autofill app: opens the https link", async () => {
+    const { calls, deps, handOff } = setup({ platform: "ios" });
+    await handOff(mb, { model: vietqr, amount: 70000, note: "Cafe" });
+    expect(calls).toEqual([`open:https://dl.vietqr.io/pay?${MB_QUERY}`]);
+    expect(deps.openIntent).not.toHaveBeenCalled();
   });
 
   it("autofill app with a non-VietQR code falls back to direct share", async () => {

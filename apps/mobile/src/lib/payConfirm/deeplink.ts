@@ -49,6 +49,18 @@ export function buildAutofillUrl(app: PayApp, input: DeeplinkInput): string | nu
   return `${DEEPLINK_BASE}?${parts.join("&")}`;
 }
 
+/**
+ * The same prefilled link as an Android intent aimed at the app's package, so Android hands it to that app
+ * without a browser hop. Null when the app has no known package or the link cannot be built. The caller falls
+ * back to the https link when the app does not handle it.
+ */
+export function buildAutofillIntentUrl(app: PayApp, input: DeeplinkInput): string | null {
+  if (!app.androidPackage) return null;
+  const https = buildAutofillUrl(app, input);
+  if (!https) return null;
+  return `intent://${https.slice("https://".length)}#Intent;scheme=https;package=${app.androidPackage};end`;
+}
+
 /** Opens the app without any data: directly by scheme, or (no known scheme) through the plain VietQR deeplink. */
 export function buildOpenUrl(app: PayApp): string {
   return app.scheme ? `${app.scheme}://` : `${DEEPLINK_BASE}?app=${encodeURIComponent(app.deeplinkCode)}`;

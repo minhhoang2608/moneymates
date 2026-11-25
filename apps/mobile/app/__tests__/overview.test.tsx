@@ -164,6 +164,20 @@ describe("Tổng quan screen", () => {
     await waitFor(() => expect(screen.getByTestId("amount-input")).toBeTruthy());
   });
 
+  it("the + menu offers Chụp bill, not a dead button, and opens the bill screen", async () => {
+    process.env.EXPO_PUBLIC_E2E = "1";
+    try {
+      await renderOverview();
+      await fireEvent.press(screen.getByTestId("overview-add-button"));
+      const bill = await screen.findByTestId("entry-menu-bill");
+      expect(bill).not.toBeDisabled();
+      await fireEvent.press(bill);
+      await screen.findByTestId("screen-bill");
+    } finally {
+      delete process.env.EXPO_PUBLIC_E2E;
+    }
+  });
+
   it("group expense: the total includes my share and shows the group note", async () => {
     const db = global.__OVERVIEW_TEST_DB__ as unknown as AnyDb;
     const g = await createGroupRepository(db).createGroup({ name: "Đà Lạt", members: ["An", "Bình", "Chi"] });

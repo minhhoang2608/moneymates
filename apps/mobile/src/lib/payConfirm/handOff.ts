@@ -1,6 +1,6 @@
 import { decideQrHandOff, type PhotoPermission, type QrStorage } from "../qrImage/decide";
 import type { PayApp } from "./apps";
-import { buildAutofillUrl, buildOpenCandidates } from "./deeplink";
+import { buildAutofillIntentUrl, buildAutofillUrl, buildOpenCandidates } from "./deeplink";
 import { decideHandOff, type HandOffDecision, type HandOffPlatform, type KnownShareResult } from "./decideHandOff";
 import type { PayConfirmModel } from "./params";
 import { buildPasteText } from "./pasteText";
@@ -81,16 +81,15 @@ export function createHandOff(deps: HandOffDeps) {
     let decision = decideHandOff(app, deps.platform, input.knownResult);
     let fellBack = false;
     if (decision === "autofill-link") {
-      const url =
+      const link =
         model.kind === "vietqr"
-          ? buildAutofillUrl(app, {
-              account: model.account,
-              bin: model.bankBin,
-              amount,
-              message: note,
-              name: model.name,
-            })
+          ? { account: model.account, bin: model.bankBin, amount, message: note, name: model.name }
           : null;
+      const url = link ? buildAutofillUrl(app, link) : null;
+      // Android: aim the same link at the bank app's package so it opens without the browser hop; if the app
+      // does not handle it (or is not installed) the https link below is the fallback.
+      const intentUrl = link && deps.platform === "android" ? buildAutofillIntentUrl(app, link) : null;
+      if (intentUrl && (await open(intentUrl))) return { opened: true, mode: "autofill", decision, qrStorage: "none" };
       if (url) return { opened: await open(url), mode: "autofill", decision, qrStorage: "none" };
       fellBack = true;
       decision = app.androidPackage && deps.platform === "android" ? "direct-share" : "open-only";
