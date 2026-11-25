@@ -35,4 +35,3 @@ appId: com.moneymates.app
       id: "handoff-qr-deleted"
     timeout: 10000
 - assertVisible: "Đã xoá ảnh QR tạm khỏi Ảnh"
-    timeout: 10000
