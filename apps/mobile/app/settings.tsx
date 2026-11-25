@@ -17,6 +17,7 @@ import { suggestDefaultApp } from "@/lib/payConfirm/defaultSuggestion";
 import { SheetPicker } from "@/components/transaction/SheetPicker";
 import { DEFAULT_NON_AUTOFILL_MODE, PREF_KEYS, type NonAutofillMode } from "@/lib/preferences/defaults";
 import { useAppLock } from "@/stores/appLock";
+import { useAutoDetect } from "@/stores/autoDetect";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function SettingsScreen() {
@@ -77,7 +78,7 @@ export default function SettingsScreen() {
       return;
     }
     setAutoDetect(false);
-    void preferences.setAutoDetectTransfers(false);
+    void preferences.setAutoDetectTransfers(false).then(() => useAutoDetect.getState().bump());
   };
 
   useFocusEffect(
@@ -101,7 +102,10 @@ export default function SettingsScreen() {
         if (isAndroid) {
           const saved = await preferences.getAutoDetectTransfers();
           const granted = saved ? await isAccessGranted().catch(() => false) : false;
-          if (saved && !granted) await preferences.setAutoDetectTransfers(false);
+          if (saved && !granted) {
+            await preferences.setAutoDetectTransfers(false);
+            useAutoDetect.getState().bump();
+          }
           if (alive) setAutoDetect(saved && granted);
         }
         if (!alive) return;
