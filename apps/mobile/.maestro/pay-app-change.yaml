@@ -12,6 +12,9 @@ appId: com.moneymates.app
     id: "scan-e2e-feed"
 - assertVisible:
     id: "screen-pay-confirm"
+- scrollUntilVisible:
+    element:
+      id: "pay-app-row-name"
 - assertVisible:
     id: "pay-app-row-name"
     text: "TPBank"
@@ -31,6 +34,9 @@ appId: com.moneymates.app
 - eraseText: 7
 - tapOn:
     id: "app-mb"
+- scrollUntilVisible:
+    element:
+      id: "pay-app-row-name"
 - assertVisible:
     id: "pay-app-row-name"
     text: "MBBank"

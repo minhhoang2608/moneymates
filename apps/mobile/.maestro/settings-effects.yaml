@@ -64,6 +64,9 @@ appId: com.moneymates.app
     id: "screen-pay-confirm"
 - assertVisible:
     id: "pay-confirm-bank"
+- scrollUntilVisible:
+    element:
+      id: "pay-app-row-name"
 - assertVisible:
     id: "pay-app-row-name"
     text: "TPBank"
