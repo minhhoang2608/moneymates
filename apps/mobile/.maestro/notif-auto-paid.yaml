@@ -1,0 +1,38 @@
+# Auto-detect: a matching TPBank debit notification marks the hand-off paid; the temporary QR image is deleted on return.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "e2e-notif-enable"
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- extendedWaitUntil:
+    visible:
+      id: "screen-pay-confirm"
+    timeout: 10000
+- tapOn:
+    id: "pay-category-more"
+- tapOn: "Mua sắm"
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible:
+      id: "handoff-return-banner"
+    timeout: 10000
+- tapOn:
+    id: "e2e-notif-inject-tpbank"
+- assertVisible: "paid:notification"
+- pressKey: home
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "handoff-qr-deleted"
+    timeout: 10000
+- assertVisible: "Đã xoá ảnh QR tạm khỏi Ảnh"

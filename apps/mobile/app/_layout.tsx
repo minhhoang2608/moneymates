@@ -15,8 +15,16 @@ import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
+import { E2eNotificationInjector } from "@/e2e/NotificationInjector";
+import { isE2E } from "@/e2e/isE2E";
+import { useBankNotificationSubscriber } from "@/hooks/useBankNotificationSubscriber";
 import { setCurrentPath } from "@/lib/receipt/currentPath";
 import { stackScreenOptions, useReduceMotion } from "@/lib/motion";
+
+function BankNotificationWiring() {
+  useBankNotificationSubscriber();
+  return isE2E() ? <E2eNotificationInjector /> : null;
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -37,6 +45,7 @@ export default function RootLayout() {
     <QueryProvider>
       <DatabaseProvider>
         <RepositoriesProvider>
+          <BankNotificationWiring />
           <AppLockGate>
             <Stack screenOptions={stackScreenOptions(reduceMotion)}>
               <Stack.Screen name="(tabs)" />

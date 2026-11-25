@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 
 import { isAccessGranted, openAccessSettings } from "../../modules/notification-listener";
 import { useRepositories } from "@/db/RepositoriesProvider";
+import { useAutoDetect } from "@/stores/autoDetect";
 
 /**
  * Opt-in flow for notification access. `start()` opens the Android settings page once; when the app
@@ -24,6 +25,7 @@ export function useNotifAccessOptIn(onDone: (granted: boolean) => void) {
       void (async () => {
         const granted = await isAccessGranted().catch(() => false);
         await preferences.setAutoDetectTransfers(granted);
+        useAutoDetect.getState().bump();
         doneRef.current(granted);
       })();
     });
@@ -46,6 +48,7 @@ export function useNotifAccessOptIn(onDone: (granted: boolean) => void) {
   const later = useCallback(async () => {
     awaiting.current = false;
     await preferences.setAutoDetectTransfers(false);
+    useAutoDetect.getState().bump();
   }, [preferences]);
 
   return { start, later };
