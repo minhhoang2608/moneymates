@@ -30,6 +30,8 @@ export default function NewTransactionScreen() {
   const receipt = p.source === "receipt";
   const amount = /^\d+$/.test(p.amount ?? "") ? Number(p.amount) : null;
   const aiError = p.aiError && p.aiError in vi.apiErrors ? (p.aiError as keyof typeof vi.apiErrors) : null;
+  const prefilled = voice || bill || receipt;
+  const groupId = p.groupId;
   return (
     <TransactionForm
       transactionId={p.transactionId}
@@ -46,6 +48,16 @@ export default function NewTransactionScreen() {
               ...(bill ? { occurredAt: billDateToLocal(p.date, new Date()), photoUri: p.attachmentUri || null } : {}),
               ...(receipt ? { occurredAt: receiptDate(p.date), photoUri: p.attachmentUri || null } : {}),
             }
+          : undefined
+      }
+      onVoice={
+        groupId && !prefilled && !p.transactionId
+          ? () => router.replace({ pathname: "/voice", params: { groupId } })
+          : undefined
+      }
+      onBill={
+        groupId && !prefilled && !p.transactionId
+          ? () => router.replace({ pathname: "/bill", params: { groupId } })
           : undefined
       }
       notice={voice && aiError ? vi.apiErrors[aiError] : undefined}

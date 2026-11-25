@@ -6,3 +6,4 @@ export { resolveVoiceEntry } from "./resolveVoiceEntry";
 export type { AiParseResult, ResolveVoiceOptions, VoiceEntry } from "./resolveVoiceEntry";
 export { initialVoiceState, voiceReducer } from "./voiceState";
 export type { VoiceEvent, VoiceState, VoiceStatus } from "./voiceState";
+export { toVoiceFormParams } from "./formParams";

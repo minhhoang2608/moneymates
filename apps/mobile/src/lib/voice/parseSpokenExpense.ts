@@ -79,14 +79,18 @@ function findPayer(shadow: string[], members: readonly SpokenMember[] | undefine
   const clauseLen = verbAt + 1;
   if (name.length === 1 && SELF_WORDS.has(name[0])) return { payer: self, clauseLen, ambiguous: false };
 
-  const hits = members.filter((m) => {
-    if (m.isMe) return false;
-    const parts = m.name.split(/\s+/).map(normalizeToken).filter(Boolean);
-    for (let s = 0; s + name.length <= parts.length; s++) {
-      if (name.every((t, k) => parts[s + k] === t)) return true;
-    }
-    return false;
-  });
+  const hitsFor = (phrase: string[]) =>
+    members.filter((m) => {
+      if (m.isMe) return false;
+      const parts = m.name.split(/\s+/).map(normalizeToken).filter(Boolean);
+      for (let s = 0; s + phrase.length <= parts.length; s++) {
+        if (phrase.every((t, k) => parts[s + k] === t)) return true;
+      }
+      return false;
+    });
+  // Speech often puts an honorific or a mis-heard word before the name: try the trailing sub-phrases, longest first.
+  let hits = hitsFor(name);
+  for (let from = 1; hits.length === 0 && from < name.length; from++) hits = hitsFor(name.slice(from));
   if (hits.length === 1) {
     return { payer: { memberId: hits[0].id, name: hits[0].name, matched: true }, clauseLen, ambiguous: false };
   }

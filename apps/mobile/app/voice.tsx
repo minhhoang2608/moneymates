@@ -15,7 +15,7 @@ import { vi } from "@/i18n/vi";
 import { haptics } from "@/lib/haptics";
 import { formatVnd } from "@/lib/money";
 import { durations, useReduceMotion } from "@/lib/motion";
-import { initialVoiceState, parseSpokenExpense, resolveVoiceEntry, voiceReducer } from "@/lib/voice";
+import { initialVoiceState, parseSpokenExpense, resolveVoiceEntry, toVoiceFormParams, voiceReducer } from "@/lib/voice";
 import { getSpeechRecognizer, VOICE_LANG } from "@/voice/speech";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
@@ -146,12 +146,7 @@ export default function VoiceScreen() {
       dispatch({ type: "PARSE_FAIL" }); // back to idle; the transcript and buttons stay usable
       return;
     }
-    const params: Record<string, string> = { source: "voice", note: r.aiError && !r.note ? text : r.note };
-    if (r.amount) params.amount = String(r.amount);
-    if (r.categoryId) params.categoryId = r.categoryId;
-    if (r.payerMemberId) params.payerMemberId = r.payerMemberId;
-    if (r.aiError) params.aiError = r.aiError;
-    if (targetGroupId) params.groupId = targetGroupId;
+    const params = toVoiceFormParams(r, text, targetGroupId);
     dispatch({ type: "PARSE_OK" });
     navTimer.current = setTimeout(
       () => router.replace({ pathname: "/transaction/new", params }),

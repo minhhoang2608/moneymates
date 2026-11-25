@@ -408,6 +408,7 @@ export const vi = {
     idle: "Chụp bill hoặc chọn ảnh từ thư viện để AI đọc giúp bạn.",
     unavailable: "Tính năng AI đang tắt. Vui lòng nhập tay.",
   },
+  entryMode: { label: "Cách nhập" },
   entryMenu: {
     title: "Thêm giao dịch",
     manual: "Nhập tay",

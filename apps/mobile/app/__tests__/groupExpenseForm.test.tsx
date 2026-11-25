@@ -62,6 +62,29 @@ const sharesOf = async (groupId: string) => {
 const disabled = () => screen.getByTestId("save-button").props.accessibilityState.disabled;
 
 describe("group expense form", () => {
+  it("entry switch: Nhập tay selected, Voice and Chụp bill present on the new group form", async () => {
+    await setup();
+    expect(screen.getByTestId("entry-mode-manual").props.accessibilityState.selected).toBe(true);
+    expect(screen.getByTestId("entry-mode-voice")).toBeTruthy();
+    expect(screen.getByTestId("entry-mode-bill")).toBeTruthy();
+  });
+
+  it("entry switch: Voice opens /voice for the same group", async () => {
+    await setup();
+    await fireEvent.press(screen.getByTestId("entry-mode-voice"));
+    expect(await screen.findByTestId("screen-voice")).toBeTruthy();
+    expect(screen.getByText(/Đà Lạt/)).toBeTruthy();
+  });
+
+  it("entry switch: hidden on a voice-prefilled group form", async () => {
+    const g = await createGroupRepository(d()).createGroup({ name: "Hà Nội", members: ["An"] });
+    await renderRouter("./app", {
+      initialUrl: `/transaction/new?groupId=${g.id}&source=voice&amount=300000&note=x`,
+    });
+    await screen.findByTestId("payer-picker");
+    expect(screen.queryByTestId("entry-mode-voice")).toBeNull();
+  });
+
   it("AC1: equal split of 1.000.000 among 3", async () => {
     const { g } = await setup();
     await fireEvent.changeText(screen.getByTestId("amount-input"), "1000000");

@@ -21,6 +21,7 @@ import type { Clock, Target } from "@/lib/target";
 
 import { CategoryPicker } from "./CategoryPicker";
 import { DateTimeField } from "./DateTimeField";
+import { EntryModeSwitch } from "./EntryModeSwitch";
 import { GroupSplitSection } from "./GroupSplitSection";
 import { MoneySourcePicker } from "./MoneySourcePicker";
 
@@ -40,6 +41,9 @@ type Props = {
   source?: "manual" | "voice" | "bill" | "receipt";
   /** Banner shown above the fields (e.g. the AI fallback message). */
   notice?: string;
+  /** New group expense only: switch to voice / bill entry. The switch shows when both are set. */
+  onVoice?: () => void;
+  onBill?: () => void;
 };
 
 export type FormInitial = {
@@ -61,6 +65,8 @@ export function TransactionForm({
   initial,
   source = "manual",
   notice,
+  onVoice,
+  onBill,
 }: Props) {
   const { transactions, categories, groups, groupExpenses, moneySources } = useRepositories();
   const targetState = useTargetDefault({ fromGroupId: groupId, clock, enabled: !transactionId });
@@ -275,6 +281,9 @@ export function TransactionForm({
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        {isGroup && source === "manual" && !initial && onVoice && onBill ? (
+          <EntryModeSwitch onVoice={onVoice} onBill={onBill} />
+        ) : null}
         {notice ? (
           <Text testID="voice-ai-error" style={styles.notice}>
             {notice}

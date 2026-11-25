@@ -127,6 +127,26 @@ describe("voice entry screen", () => {
     expect(rows[0]).toMatchObject({ amount: 200000, source: "voice", paid_by_member_id: binh.id });
   });
 
+  it("group: a filler word before the payer still matches and the form is prefilled", async () => {
+    const g = await groupSetup();
+    const binh = g.members.find((m) => m.displayName === "Bình")!;
+    await speakAndUse("Anh Bình trả 300k ăn tối", `/voice?groupId=${g.id}`);
+    expect(field("amount-input")).toBe("300000");
+    expect(field("note-input")).not.toBe("");
+    await fireEvent.press(screen.getByTestId("save-button"));
+    const rows = await createTransactionRepository(d()).list({});
+    expect(rows[0]).toMatchObject({ amount: 300000, source: "voice", paid_by_member_id: binh.id });
+  });
+
+  it("group: AI features off still opens the prefilled group form", async () => {
+    mockApi(false);
+    const g = await groupSetup();
+    await speakAndUse("Bình trả 300k ăn tối", `/voice?groupId=${g.id}`);
+    expect(field("amount-input")).toBe("300000");
+    expect(screen.getByTestId("payer-picker")).toBeTruthy();
+    expect(parseCalls()).toHaveLength(0);
+  });
+
   it("AC2: unknown payer falls back to Tôi", async () => {
     const g = await groupSetup();
     const me = g.members.find((m) => m.isMe)!;
