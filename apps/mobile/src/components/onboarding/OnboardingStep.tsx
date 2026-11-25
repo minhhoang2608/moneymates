@@ -12,10 +12,12 @@ type Props = {
   onSkip: () => void;
   children: ReactNode;
   testID?: string;
+  nextLabel?: string;
+  nextDisabled?: boolean;
 };
 
 /** Shared shell of onboarding steps: "Bước N/4", "Để sau", progress bar, content, "Tiếp tục". */
-export function OnboardingStep({ step, onNext, onSkip, children, testID }: Props) {
+export function OnboardingStep({ step, onNext, onSkip, children, testID, nextLabel, nextDisabled }: Props) {
   const t = vi.onboarding;
   return (
     <SafeAreaView style={styles.screen} testID={testID}>
@@ -35,8 +37,14 @@ export function OnboardingStep({ step, onNext, onSkip, children, testID }: Props
         {children}
       </ScrollView>
       <View style={styles.footer}>
-        <PressableScale testID="onb-next" accessibilityRole="button" style={styles.cta} onPress={onNext}>
-          <Text style={styles.ctaText}>{t.next}</Text>
+        <PressableScale
+          testID="onb-next"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !!nextDisabled }}
+          style={[styles.cta, nextDisabled && styles.ctaDisabled]}
+          onPress={nextDisabled ? () => undefined : onNext}
+        >
+          <Text style={styles.ctaText}>{nextLabel ?? t.next}</Text>
         </PressableScale>
       </View>
     </SafeAreaView>
@@ -80,5 +88,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  ctaDisabled: { opacity: 0.4 },
   ctaText: { fontFamily: fontFamily.semibold, fontSize: 16, color: colors.onPrimary },
 });

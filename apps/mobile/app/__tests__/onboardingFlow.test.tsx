@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
+import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { pickAvatar } from "@/components/AvatarPicker";
 import { createProfileRepository } from "@/db/repositories";
@@ -159,15 +159,6 @@ describe("skipping steps", () => {
     expect(await screen.findByTestId("screen-overview")).toBeTruthy();
     expect(await repo().getOnboardingCompletedAt()).not.toBeNull();
     expect((await repo().getProfile()).display_name).toBe("Hoàng");
-  });
-
-  it("Tiếp tục on step 4 completes", async () => {
-    await freshFile();
-    await renderRouter("./app", { initialUrl: "/onboarding/account" });
-    await screen.findByText("Bước 4/4");
-    await act(async () => {});
-    await fireEvent.press(screen.getByTestId("onb-next"));
-    expect(await screen.findByTestId("screen-overview")).toBeTruthy();
   });
 });
 

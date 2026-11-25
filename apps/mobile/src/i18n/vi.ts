@@ -55,7 +55,17 @@ export const vi = {
       hint: "Hiển thị là “Tôi” trong nhóm. Ảnh đại diện có thể bỏ trống.",
     },
     apps: { title: "Bạn hay dùng app nào?" },
-    account: { title: "Tài khoản nhận tiền" },
+    account: {
+      title: "Tài khoản nhận tiền",
+      subtitle: "Bạn bè chuyển trả cho bạn qua tài khoản này.",
+      bank: "Ngân hàng",
+      bankPlaceholder: "Chọn ngân hàng",
+      accountNo: "Số tài khoản",
+      holder: "Tên chủ tài khoản",
+      holderHint: "Viết in hoa, không dấu như trên app ngân hàng.",
+      info: "Dùng để tạo QR đòi tiền khi chia tiền nhóm. Thêm được nhiều tài khoản sau.",
+      finish: "Hoàn tất",
+    },
     permissions: {
       step: "Bước 3/4",
       skip: "Để sau",
