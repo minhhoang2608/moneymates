@@ -153,8 +153,12 @@ describe("QR-only layout", () => {
     expect(L.height).toBe(CANVAS_W);
     expect(L.box.size).toBeGreaterThanOrEqual(0.9 * CANVAS_W);
     expect(L.box.x + L.box.size).toBeLessThanOrEqual(CANVAS_W);
-    expect(L.quietZone).toBeCloseTo(4 * L.moduleSize);
-    expect(L.qrOrigin.x - L.box.x).toBeCloseTo(L.quietZone);
-    expect(L.qrOrigin.x + n * L.moduleSize + L.quietZone).toBeCloseTo(L.box.x + L.box.size);
+    expect(Number.isInteger(L.qrOrigin.x)).toBe(true);
+    expect(Number.isInteger(L.qrOrigin.y)).toBe(true);
+    expect(Number.isInteger(L.moduleSize)).toBe(true);
+    expect(L.qrOrigin.x).toBeGreaterThanOrEqual(4 * L.moduleSize);
+    expect(CANVAS_W - (L.qrOrigin.x + n * L.moduleSize)).toBeGreaterThanOrEqual(4 * L.moduleSize);
+    expect(L.qrOrigin.y).toBeGreaterThanOrEqual(4 * L.moduleSize);
+    expect(CANVAS_W - (L.qrOrigin.y + n * L.moduleSize)).toBeGreaterThanOrEqual(4 * L.moduleSize);
   });
 });

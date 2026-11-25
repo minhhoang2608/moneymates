@@ -171,7 +171,8 @@ export function computeQrOnlyLayout(moduleCount: number): QrOnlyLayout {
   const cells = moduleCount + QUIET * 2;
   const moduleSize = Math.floor(CANVAS_W / cells);
   const boxSize = moduleSize * cells;
-  const box = { x: (CANVAS_W - boxSize) / 2, y: (CANVAS_W - boxSize) / 2, size: boxSize };
+  const offset = Math.floor((CANVAS_W - boxSize) / 2);
+  const box = { x: offset, y: offset, size: boxSize };
   return {
     width: CANVAS_W,
     height: CANVAS_W,

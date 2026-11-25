@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 
-import { buildQrImageContent } from "@/lib/share/qrTemplate";
+import { buildQrImageContent, computeQrImageLayout } from "@/lib/share/qrTemplate";
 import { generateVietQr } from "@/lib/vietqr";
 
 import { QrImageTemplate } from "../QrImageTemplate";
@@ -43,6 +43,13 @@ describe("QrImageTemplate", () => {
     for (const t of [/QUAN PHO HOA/, /TPBank/, /55\.000/, /PHO HOA BAN 12/, /Ảnh tạm/]) {
       expect(screen.queryByText(t)).toBeNull();
     }
+  });
+  it("keeps the 600×900 canvas with its text lines when not qrOnly", () => {
+    const L = computeQrImageLayout(29, { hasAmount: true, hasMessage: true });
+    expect([L.width, L.height]).toEqual([600, 900]);
+    expect(L.title).not.toBeNull();
+    expect(L.amount).not.toBeNull();
+    expect(L.footer).not.toBeNull();
   });
   it("draws no logo wordmark", async () => {
     await render(<QrImageTemplate {...base} />);
