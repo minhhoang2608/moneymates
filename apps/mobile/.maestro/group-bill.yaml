@@ -47,6 +47,11 @@ appId: com.moneymates.app
     id: "bill-fill-form"
 - assertVisible:
     id: "payer-picker"
+- scrollUntilVisible:
+    element:
+      id: "note-input"
+    direction: DOWN
+    timeout: 10000
 - assertVisible: "Bánh căn Nhà Chung"
 - scrollUntilVisible:
     element:
