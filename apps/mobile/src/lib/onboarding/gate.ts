@@ -18,5 +18,7 @@ export function onboardingRedirect({
   if (loading || completed) return null;
   if (e2e && !override) return null;
   if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) return null;
+  // Opened from onboarding step 3 ("Thông báo ngân hàng"); redirecting would throw the user back to step 1.
+  if (pathname === "/notif-access") return null;
   return "/onboarding";
 }

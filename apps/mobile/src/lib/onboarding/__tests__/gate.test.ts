@@ -10,6 +10,10 @@ describe("onboardingRedirect", () => {
     expect(onboardingRedirect({ ...base, pathname: "/onboarding" })).toBeNull();
     expect(onboardingRedirect({ ...base, pathname: "/onboarding/apps" })).toBeNull();
   });
+  it("lets step 3 open the bank notification screen", () => {
+    expect(onboardingRedirect({ ...base, pathname: "/notif-access" })).toBeNull();
+    expect(onboardingRedirect({ ...base, pathname: "/settings" })).toBe("/onboarding");
+  });
   it("is skipped in E2E mode", () => expect(onboardingRedirect({ ...base, e2e: true })).toBeNull());
   it("E2E override turns it back on", () =>
     expect(onboardingRedirect({ ...base, e2e: true, override: true })).toBe("/onboarding"));
