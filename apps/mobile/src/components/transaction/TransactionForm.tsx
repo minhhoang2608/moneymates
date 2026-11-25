@@ -1,5 +1,5 @@
 import { haptics } from "@/lib/haptics";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
@@ -175,19 +175,16 @@ export function TransactionForm({
     percentInputs,
   });
   const saveDisabled = isGroup && (!draft.ok || !payerId);
-  const categoryName = allCategories.find((c) => c.id === categoryId)?.name;
-
-  // Opened from voice, bill or a receipt with a note but no category: pick one from the note once (keyword rules).
-  // Never overrides a category that was passed in or one the user chose.
-  const suggestedFromNote = useRef(false);
-  useEffect(() => {
-    if (suggestedFromNote.current || transactionId || source === "manual") return;
-    if (categoryId || !note.trim() || allCategories.length === 0) return;
-    suggestedFromNote.current = true;
-    const hit = suggestCategory(null, note);
-    const row = hit ? allCategories.find((c) => c.type === "expense" && c.name === hit.name) : undefined;
-    if (row) setCategoryId(row.id);
-  }, [allCategories, categoryId, note, source, transactionId]);
+  // Opened from voice, bill or a receipt with a note but no category: suggest one from that note (keyword rules).
+  // Derived, not stored: a category passed in or picked by the user always wins.
+  const initialNote = initial?.note ?? "";
+  const suggestedCategoryId = useMemo(() => {
+    if (transactionId || source === "manual" || !initialNote.trim()) return null;
+    const hit = suggestCategory(null, initialNote);
+    return hit ? (allCategories.find((c) => c.type === "expense" && c.name === hit.name)?.id ?? null) : null;
+  }, [allCategories, initialNote, source, transactionId]);
+  const effectiveCategoryId = categoryId ?? suggestedCategoryId;
+  const categoryName = allCategories.find((c) => c.id === effectiveCategoryId)?.name;
 
   const changeTarget = (t: Target) => {
     targetState.setTarget(t);
@@ -206,7 +203,15 @@ export function TransactionForm({
 
   const save = async () => {
     if (saveDisabled) return;
-    const result = validateForm({ type, amountText, categoryId, note, occurredAt, moneySource, photoUri });
+    const result = validateForm({
+      type,
+      amountText,
+      categoryId: effectiveCategoryId,
+      note,
+      occurredAt,
+      moneySource,
+      photoUri,
+    });
     if (!result.ok) {
       haptics.error();
       setErrors(result.errors);
@@ -457,7 +462,7 @@ export function TransactionForm({
       <CategoryPicker
         visible={sheet === "category"}
         categories={list}
-        selectedId={categoryId}
+        selectedId={effectiveCategoryId}
         onSelect={(id) => {
           setCategoryId(id);
           setErrors((e) => ({ ...e, category: undefined }));
