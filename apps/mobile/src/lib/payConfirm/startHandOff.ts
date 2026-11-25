@@ -28,6 +28,7 @@ export type StartHandOffArgs = {
   model: HandOffInput["model"];
   amount: number;
   note: string;
+  nonAutofillMode?: HandOffInput["nonAutofillMode"];
   /** Transaction the hand-off belongs to; no hand-off row is stored without it. */
   txId?: string;
   getQrBase64: () => Promise<string | null>;
@@ -40,11 +41,17 @@ export type StartHandOffArgs = {
  * and remembers a rejected share. Used by the confirm screen and by "Mở lại". Rejects only when the hand-off itself throws.
  */
 export async function startHandOff(deps: StartHandOffDeps, args: StartHandOffArgs): Promise<HandOffResult> {
-  const { app, model, amount, note, txId, getQrBase64, onRow } = args;
+  const { app, model, amount, note, txId, getQrBase64, onRow, nonAutofillMode } = args;
   const handOff = deps.makeHandOff(getQrBase64);
   const started_at = new Date();
   const memory = await deps.handOffMemory.getShareMemory().catch(() => ({}));
-  const result = await handOff(app, { model, amount, note, knownResult: knownResultFor(memory, app.id) });
+  const result = await handOff(app, {
+    model,
+    amount,
+    note,
+    knownResult: knownResultFor(memory, app.id),
+    nonAutofillMode,
+  });
   const { mode, decision, share } = result;
   if (txId) {
     try {

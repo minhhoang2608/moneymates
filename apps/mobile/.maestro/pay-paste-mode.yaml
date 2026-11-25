@@ -1,0 +1,35 @@
+# Setting "Không tạo ảnh QR" (no_image): the how-to says to paste, no QR image is mentioned, and no image is deleted on return.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-profile"
+- tapOn:
+    id: "row-settings"
+- tapOn:
+    id: "settings-non-autofill-row"
+- tapOn:
+    id: "non-autofill-option-no_image"
+- tapOn:
+    id: "settings-back"
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- extendedWaitUntil:
+    visible:
+      id: "screen-pay-confirm"
+    timeout: 10000
+- assertVisible: "Đã sao chép STK, số tiền, nội dung.*"
+- assertNotVisible: ".*Ảnh QR tạm.*"
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible: "Đã lưu 55\\.000đ.*"
+    timeout: 10000
+- assertNotVisible:
+    id: "handoff-qr-deleted"

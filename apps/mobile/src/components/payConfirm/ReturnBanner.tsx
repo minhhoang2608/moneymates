@@ -82,6 +82,7 @@ export function ReturnBanner() {
           model: reopen.model,
           amount: reopen.amount,
           note: reopen.note,
+          nonAutofillMode: reopen.nonAutofillMode,
           txId: pending.txId,
           getQrBase64: () =>
             new Promise<string | null>((resolve) => {

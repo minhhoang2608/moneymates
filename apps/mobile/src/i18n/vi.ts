@@ -79,6 +79,8 @@ export const vi = {
     },
     howToText: (bank: string) =>
       `Trong ${bank}: Quét QR → Ảnh → chọn ảnh đầu tiên. Ảnh QR tạm tự xoá khi bạn quay lại.`,
+    howToPaste: "Đã sao chép STK, số tiền, nội dung. Dán vào màn hình chuyển khoản của app.",
+    pasteText: { account: "STK", amount: "Số tiền", note: "Nội dung" },
     title: "Xác nhận thanh toán",
     back: "Quay lại",
     amount: "Số tiền",

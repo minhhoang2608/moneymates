@@ -1,4 +1,5 @@
 import type { PayApp } from "../payConfirm/apps";
+import type { NonAutofillMode } from "../preferences/defaults";
 
 export type QrPlatform = "android" | "ios";
 export type QrStorage = "none" | "cache" | "album";
@@ -8,14 +9,24 @@ export type PhotoPermission = {
   access: "read-write" | "limited" | "add-only";
 };
 
-export function decideQrStorage(input: {
+export type QrHandOffInput = {
   platform: QrPlatform;
   app: Pick<PayApp, "supportsAutofill">;
   bankAcceptsDirectShare: boolean;
-}): QrStorage {
-  if (input.app.supportsAutofill) return "none";
-  if (input.platform === "android" && input.bankAcceptsDirectShare) return "cache";
-  return "album";
+  /** Defaults to "qr_image". */
+  nonAutofillMode?: NonAutofillMode;
+};
+
+/** Where the QR image goes and how the user gets the transfer into the bank app. */
+export function decideQrHandOff(input: QrHandOffInput): { storage: QrStorage; method: "image" | "paste" } {
+  if (input.app.supportsAutofill) return { storage: "none", method: "image" };
+  if (input.nonAutofillMode === "no_image") return { storage: "none", method: "paste" };
+  if (input.platform === "android" && input.bankAcceptsDirectShare) return { storage: "cache", method: "image" };
+  return { storage: "album", method: "image" };
+}
+
+export function decideQrStorage(input: QrHandOffInput): QrStorage {
+  return decideQrHandOff(input).storage;
 }
 
 export function decideQrDeletion(input: { platform: QrPlatform }): QrDeletionMode {

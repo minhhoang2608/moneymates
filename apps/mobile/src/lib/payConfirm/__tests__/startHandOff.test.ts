@@ -57,4 +57,17 @@ describe("startHandOff", () => {
     expect(s.create).not.toHaveBeenCalled();
     expect(s.setShareResult).toHaveBeenCalledWith("tpb", false);
   });
+  it("paste mode: row method is paste, nothing recorded for the album, mode is passed on", async () => {
+    const s = setup({
+      opened: true,
+      mode: "direct",
+      decision: "open-only",
+      qrStorage: "none",
+      handOffMethod: "paste",
+    });
+    await startHandOff(s.deps, { ...args, nonAutofillMode: "no_image" });
+    expect(s.handOff.mock.calls[0][1]).toMatchObject({ nonAutofillMode: "no_image" });
+    expect(s.create).toHaveBeenCalledWith(expect.objectContaining({ method: "paste" }));
+    expect(s.setQrAsset).not.toHaveBeenCalled();
+  });
 });

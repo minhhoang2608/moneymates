@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import qr from "../../e2e/fixtures/qr.json";
-import { createTransactionRepository } from "@/db/repositories";
+import { createPreferencesRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { vi } from "@/i18n/vi";
@@ -108,6 +108,18 @@ describe("pay-confirm how-to line", () => {
     expect(await createTransactionRepository(testDb()).list()).toHaveLength(1);
     expect(screen.queryByTestId("pay-app-sheet")).toBeNull();
     expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it("no_image mode: shows the paste line and hands off with the mode, no QR wording", async () => {
+    await createPreferencesRepository(testDb()).setNonAutofillMode("no_image");
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await waitFor(() => expect(screen.getByTestId("pay-howto")).toHaveTextContent(vi.payConfirm.howToPaste));
+    const line = screen.getByTestId("pay-howto");
+    expect(line).not.toHaveTextContent("Ảnh QR tạm");
+    expect(line).not.toHaveTextContent("chọn ảnh");
+    await fireEvent.press(screen.getByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    expect(jest.mocked(mockHandOff).mock.calls[0][1]).toMatchObject({ nonAutofillMode: "no_image" });
   });
 
   it("howToText joins the parts", () => {

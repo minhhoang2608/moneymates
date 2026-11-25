@@ -29,7 +29,7 @@ import { shareConfirmedQr } from "@/lib/payConfirm/shareQr";
 import { shareQr } from "@/lib/share/qrImage";
 import * as Clipboard from "expo-clipboard";
 import { formatVnd, parseAmount } from "@/lib/money";
-import { PREF_KEYS } from "@/lib/preferences/defaults";
+import { DEFAULT_NON_AUTOFILL_MODE, PREF_KEYS, type NonAutofillMode } from "@/lib/preferences/defaults";
 import { useToast } from "@/stores/toast";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
@@ -66,6 +66,7 @@ export default function PayConfirmScreen() {
   const [appSheet, setAppSheet] = useState(false);
   const [failed, setFailed] = useState(false);
   const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
+  const [nonAutofillMode, setNonAutofillMode] = useState<NonAutofillMode>(DEFAULT_NON_AUTOFILL_MODE);
   const busy = useRef(false);
   const qrRef = useRef<QrRef | null>(null);
 
@@ -117,7 +118,11 @@ export default function PayConfirmScreen() {
   useFocusEffect(
     useCallback(() => {
       reloadEnabled().catch(() => {});
-    }, [reloadEnabled]),
+      preferences
+        .getNonAutofillMode()
+        .then(setNonAutofillMode)
+        .catch(() => {});
+    }, [reloadEnabled, preferences]),
   );
 
   const recentIds = useMemo(() => recent.map(normalizeAppId), [recent]);
@@ -213,6 +218,7 @@ export default function PayConfirmScreen() {
           model,
           amount,
           note: text,
+          nonAutofillMode,
           txId: usePendingHandOff.getState().pending?.txId,
           getQrBase64,
           onRow: (id) => usePendingHandOff.getState().setHandOffId(id),
@@ -225,6 +231,7 @@ export default function PayConfirmScreen() {
           amount,
           note: text,
           qrInAlbum: result.qrStorage === "album" && !!result.qrAssetId,
+          nonAutofillMode,
         });
       }
       if (!result.opened) usePendingHandOff.getState().reveal();
@@ -356,9 +363,15 @@ export default function PayConfirmScreen() {
         </PressableScale>
         {!selected.supportsAutofill ? (
           <Text testID="pay-howto" style={styles.howTo}>
-            {vi.payConfirm.howTo.prefix(selected.name)}
-            <Text style={styles.howToBold}>{vi.payConfirm.howTo.steps}</Text>
-            {vi.payConfirm.howTo.suffix}
+            {nonAutofillMode === "no_image" ? (
+              vi.payConfirm.howToPaste
+            ) : (
+              <>
+                {vi.payConfirm.howTo.prefix(selected.name)}
+                <Text style={styles.howToBold}>{vi.payConfirm.howTo.steps}</Text>
+                {vi.payConfirm.howTo.suffix}
+              </>
+            )}
           </Text>
         ) : null}
         {Platform.OS === "android" && model.kind === "vietqr" ? (

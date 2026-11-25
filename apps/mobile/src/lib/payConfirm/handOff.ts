@@ -1,8 +1,10 @@
-import { decideQrStorage, type PhotoPermission, type QrStorage } from "../qrImage/decide";
+import { decideQrHandOff, type PhotoPermission, type QrStorage } from "../qrImage/decide";
 import type { PayApp } from "./apps";
 import { buildAutofillUrl, buildOpenCandidates } from "./deeplink";
 import { decideHandOff, type HandOffDecision, type HandOffPlatform, type KnownShareResult } from "./decideHandOff";
 import type { PayConfirmModel } from "./params";
+import { buildPasteText } from "./pasteText";
+import type { NonAutofillMode } from "../preferences/defaults";
 
 export type HandOffDeps = {
   platform: HandOffPlatform;
@@ -19,7 +21,14 @@ export type HandOffDeps = {
 
 export type SavedQr = { assetId: string; access: PhotoPermission["access"] };
 
-export type HandOffInput = { model: PayConfirmModel; amount: number; note: string; knownResult?: KnownShareResult };
+export type HandOffInput = {
+  model: PayConfirmModel;
+  amount: number;
+  note: string;
+  knownResult?: KnownShareResult;
+  /** "no_image": apps without autofill get the transfer as pasteable text and no QR image. */
+  nonAutofillMode?: NonAutofillMode;
+};
 
 async function attempt<T>(step: () => Promise<T>): Promise<T | undefined> {
   try {
@@ -42,6 +51,8 @@ export type HandOffResult = {
   /** Id of the album asset, only when the image was saved to the album. */
   qrAssetId?: string;
   photoAccess?: PhotoPermission["access"];
+  /** How the user gets the transfer into the app: scans the saved image, or pastes the copied text. */
+  handOffMethod?: "image" | "paste";
 };
 
 /** Hands the payment to the chosen app. Never throws: `opened:false` tells the caller it failed. */
@@ -84,13 +95,36 @@ export function createHandOff(deps: HandOffDeps) {
       fellBack = true;
       decision = app.androidPackage && deps.platform === "android" ? "direct-share" : "open-only";
     }
+    const qrDecision = decideQrHandOff({
+      nonAutofillMode: input.nonAutofillMode,
+      platform: deps.platform,
+      app,
+      bankAcceptsDirectShare: input.knownResult === "share_ok",
+    });
+    // Only non-autofill apps use paste mode; an autofill app that fell back keeps the image path.
+    if (qrDecision.method === "paste") {
+      // Paste mode: no image is created or shared, the app is just opened.
+      const text = buildPasteText({
+        account: model.kind === "vietqr" ? model.account : undefined,
+        amount,
+        note,
+      });
+      await attempt(() => deps.setClipboard(text));
+      return {
+        opened: await openApp(app),
+        mode: "direct",
+        decision: "open-only",
+        qrStorage: "none",
+        handOffMethod: "paste",
+      };
+    }
     if (model.kind === "vietqr") await attempt(() => deps.setClipboard(model.account));
     // Autofill fell back to a direct hand-off, which still needs an image (album unless direct-share is known to work).
     const storage: QrStorage = fellBack
       ? decision === "direct-share" && input.knownResult === "share_ok"
         ? "cache"
         : "album"
-      : decideQrStorage({ platform: deps.platform, app, bankAcceptsDirectShare: input.knownResult === "share_ok" });
+      : qrDecision.storage;
     const saved = storage === "album" ? await attempt(deps.saveQrImage) : undefined;
     const qr = { qrStorage: storage, qrAssetId: saved?.assetId, photoAccess: saved?.access };
 
