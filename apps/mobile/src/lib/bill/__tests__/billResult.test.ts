@@ -31,6 +31,16 @@ describe("billResult", () => {
       attachmentUri: "file:///b.jpg",
     });
     expect(toFormParams(null, null, null)).toEqual({ source: "bill" });
+    expect(toFormParams(full, null, "cat1", "g1")).toEqual({
+      source: "bill",
+      groupId: "g1",
+      amount: "345000",
+      note: "Bánh căn Nhà Chung",
+      categoryId: "cat1",
+      date: "2026-11-22",
+    });
+    expect(toFormParams(full, null, "cat1")).not.toHaveProperty("groupId");
+    expect(toFormParams(null, null, "cat1", "g1")).toEqual({ source: "bill", groupId: "g1", categoryId: "cat1" });
     expect(toFormParams({ ...full, date: "garbage" }, null, null)).not.toHaveProperty("date");
   });
   it("maps the bill date to that local day with the current time of day", () => {
