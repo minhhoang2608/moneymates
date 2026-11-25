@@ -1,11 +1,8 @@
 # Settings take effect: a new money source shows in the entry form, and pay-confirm lists the enabled apps.
 appId: com.moneymates.app
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible: "Tổng quan"
-    timeout: 30000
+- runFlow: subflows/launch-fresh.yaml
+- assertVisible: "Tổng quan"
 - tapOn:
     id: "tab-profile"
 - tapOn:

@@ -1,11 +1,12 @@
 # Auto-detect: a matching TPBank debit notification marks the hand-off paid; the temporary QR image is deleted on return.
 appId: com.moneymates.app
 ---
-- launchApp:
-    clearState: true
+- runFlow: subflows/launch-fresh.yaml
+- assertVisible: "Tổng quan"
 - extendedWaitUntil:
-    visible: "Tổng quan"
-    timeout: 30000
+    visible:
+      id: "e2e-notif-enable"
+    timeout: 10000
 - tapOn:
     id: "e2e-notif-enable"
 - tapOn:
@@ -38,5 +39,5 @@ appId: com.moneymates.app
 - extendedWaitUntil:
     visible:
       id: "handoff-qr-deleted"
-    timeout: 10000
+    timeout: 30000
 - assertVisible: "Đã xoá ảnh QR tạm khỏi Ảnh"
