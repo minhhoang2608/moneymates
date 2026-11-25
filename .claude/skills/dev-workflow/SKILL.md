@@ -11,6 +11,7 @@ description: The shared workflow of the three Dev agents (dev-fe, dev-be, dev-fu
 - `.factory/plan.md`: the approved plan (also posted on the issue as a `factory:plan` comment).
 - `.factory/pr-conversation.md`: PR body and review rounds (read the **latest** Tech Lead review).
 - `.factory/ci-failure.log`: the failed CI log, for `ci-failed`.
+- `.factory/linked-run-logs.md`: the failed steps of the CI/E2E runs linked in the ticket. Read it first for a bug filed from a red run. Never report `blocked` because "the log cannot be read": the file is there, or fetch it with `gh run view <id> --log-failed`.
 - `CLAUDE.md`, `docs/`, your agent file for scope, and the skills it names.
 
 ## Planning run (Opus, only for newly assigned tickets)
