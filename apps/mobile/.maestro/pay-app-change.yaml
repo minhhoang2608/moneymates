@@ -28,7 +28,7 @@ appId: com.moneymates.app
     id: "pay-app-search"
 - inputText: "vietcom"
 - assertVisible: "Vietcombank"
-- clearText
+- eraseText: 7
 - tapOn:
     id: "app-mb"
 - assertVisible:
