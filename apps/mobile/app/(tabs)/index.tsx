@@ -231,6 +231,10 @@ export default function OverviewScreen() {
           setMenuOpen(false);
           router.push("/voice");
         }}
+        onBill={() => {
+          setMenuOpen(false);
+          router.push("/bill");
+        }}
       />
     </View>
   );
