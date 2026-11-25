@@ -71,4 +71,20 @@ describe("tab bar shell", () => {
       global.fetch = original;
     }
   });
+
+  it("#427: shows the add button on every main tab and opens the add menu", async () => {
+    await renderApp();
+    expect(screen.getByTestId("overview-add-button")).toBeTruthy();
+    for (const [tab, id] of [
+      ["tab-history", "history-add-button"],
+      ["tab-groups", "groups-add-button"],
+      ["tab-profile", "profile-add-button"],
+    ] as const) {
+      await fireEvent.press(screen.getByTestId(tab));
+      await fireEvent.press(screen.getByTestId(id));
+      expect(screen.getByTestId("entry-menu")).toBeTruthy();
+    }
+    await fireEvent.press(screen.getByTestId("entry-menu-manual"));
+    expect(screen).toHavePathname("/transaction/new");
+  });
 });

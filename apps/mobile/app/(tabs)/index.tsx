@@ -3,10 +3,10 @@ import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 
+import { AddFab, FAB_CLEARANCE } from "@/components/AddFab";
 import { PressableScale } from "@/components/PressableScale";
 import { SkeletonCard } from "@/components/Skeleton";
-import { EntryMenu } from "@/components/EntryMenu";
-import { CalendarIcon, PlusIcon, WarningIcon } from "@/components/icons";
+import { CalendarIcon, WarningIcon } from "@/components/icons";
 import { SheetPicker } from "@/components/transaction/SheetPicker";
 import { TransactionListItem } from "@/components/transaction/TransactionListItem";
 import { useRepositories } from "@/db/RepositoriesProvider";
@@ -25,7 +25,6 @@ export default function OverviewScreen() {
   const fade = fadeInProps(reduceMotion);
   const repos = useRepositories();
   const { profile } = repos;
-  const [menuOpen, setMenuOpen] = useState(false);
   const [data, setData] = useState<OverviewData | null>(null);
   const [name, setName] = useState("");
   const [alertOn, setAlertOn] = useState(true);
@@ -196,15 +195,7 @@ export default function OverviewScreen() {
           </>
         )}
       </ScrollView>
-      <PressableScale
-        testID="overview-add-button"
-        accessibilityRole="button"
-        accessibilityLabel={vi.overview.add}
-        onPress={() => setMenuOpen(true)}
-        style={styles.fab}
-      >
-        <PlusIcon color={colors.primary} size={24} />
-      </PressableScale>
+      <AddFab testID="overview-add-button" />
       <SheetPicker
         visible={pickerOpen}
         title={vi.stats.monthPickerTitle}
@@ -220,29 +211,13 @@ export default function OverviewScreen() {
         }}
         onClose={() => setPickerOpen(false)}
       />
-      <EntryMenu
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onManual={() => {
-          setMenuOpen(false);
-          router.push("/transaction/new");
-        }}
-        onVoice={() => {
-          setMenuOpen(false);
-          router.push("/voice");
-        }}
-        onBill={() => {
-          setMenuOpen(false);
-          router.push("/bill");
-        }}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingTop: 56, backgroundColor: colors.background },
-  scroll: { paddingHorizontal: layout.screenPadding, paddingBottom: 96, gap: 16 },
+  scroll: { paddingHorizontal: layout.screenPadding, paddingBottom: FAB_CLEARANCE, gap: 16 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headerText: { gap: 2 },
   greeting: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.textMuted },
@@ -256,24 +231,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-  },
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 20,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: colors.text,
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
   },
   hero: { backgroundColor: colors.primary, borderRadius: radii.hero, padding: 20, gap: 14 },
   heroText: { gap: 4 },

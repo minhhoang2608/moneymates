@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
 
+import { AddFab, FAB_CLEARANCE } from "@/components/AddFab";
 import { PressableScale } from "@/components/PressableScale";
 import { SkeletonList } from "@/components/Skeleton";
 import { FilterChips, type Chip } from "@/components/history/FilterChips";
@@ -211,6 +212,7 @@ export default function HistoryScreen() {
           </View>
         ))}
       </ScrollView>
+      <AddFab testID="history-add-button" />
       {deleted ? <UndoSnackbar token={deleted} onUndo={() => void undo()} onHide={hideSnackbar} /> : null}
       <SheetPicker
         visible={active !== null}
@@ -243,7 +245,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   listScroll: { flex: 1 },
-  list: { paddingTop: historyLayout.listTop, paddingBottom: 96 },
+  list: { paddingTop: historyLayout.listTop, paddingBottom: FAB_CLEARANCE },
   dayGroupSpaced: { marginTop: historyLayout.dayGap },
   dayHeader: { flexDirection: "row", justifyContent: "space-between", paddingBottom: 6 },
   dayLabel: { fontFamily: fontFamily.semibold, fontSize: fontSize.secondary, color: colors.textMuted },

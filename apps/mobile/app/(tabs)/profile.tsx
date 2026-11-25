@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { AddFab, FAB_CLEARANCE } from "@/components/AddFab";
 import { PressableScale } from "@/components/PressableScale";
 
 import { pickAvatar } from "@/components/AvatarPicker";
@@ -101,100 +102,104 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content} testID="screen-profile">
-      <Text style={styles.title}>{vi.profile.title}</Text>
+    <View style={styles.root} testID="screen-profile">
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} testID="profile-scroll">
+        <Text style={styles.title}>{vi.profile.title}</Text>
 
-      <View style={styles.card}>
-        <PressableScale
-          testID="profile-avatar"
-          accessibilityRole="button"
-          accessibilityLabel={vi.profile.avatarA11y}
-          onPress={changeAvatar}
-          style={styles.avatar}
-        >
-          {avatarUri ? (
-            <Image testID="profile-avatar-image" source={{ uri: avatarUri }} style={styles.avatarImage} />
-          ) : (
-            <Text style={styles.avatarText}>{initials(name)}</Text>
-          )}
-        </PressableScale>
-        <View style={styles.nameBlock}>
-          {editing ? (
-            <TextInput
-              testID="profile-name-input"
-              value={draft}
-              onChangeText={setDraft}
-              placeholder={vi.profile.namePlaceholder}
-              style={styles.input}
-              autoFocus
-            />
-          ) : (
-            <Text testID="profile-name" style={styles.name}>
-              {name}
-            </Text>
-          )}
-          <Text style={styles.subtitle}>{vi.profile.subtitle}</Text>
-        </View>
-        {editing ? (
-          <PressableScale testID="profile-name-save" onPress={save} style={styles.smallButton}>
-            <Text style={styles.smallButtonText}>{vi.profile.save}</Text>
-          </PressableScale>
-        ) : (
+        <View style={styles.card}>
           <PressableScale
-            testID="profile-edit-name"
-            onPress={() => {
-              setDraft(name);
-              setError(false);
-              setEditing(true);
-            }}
-            style={styles.smallButton}
-          >
-            <Text style={styles.smallButtonText}>{vi.profile.edit}</Text>
-          </PressableScale>
-        )}
-      </View>
-      {error ? (
-        <Text testID="profile-name-error" style={styles.error}>
-          {vi.profile.nameRequired}
-        </Text>
-      ) : null}
-
-      {defaultAccount ? (
-        <View style={styles.accountCard} testID="profile-default-account">
-          <View style={styles.accountHeader}>
-            <Text style={styles.accountLabel}>{vi.profile.defaultAccount}</Text>
-            <Text style={styles.badge}>{vi.profile.defaultBadge}</Text>
-          </View>
-          <Text style={styles.accountNo}>{defaultAccount.account_no}</Text>
-          <Text style={styles.accountMeta}>
-            {defaultAccount.account_name} · {defaultAccount.bank_name}
-          </Text>
-        </View>
-      ) : null}
-
-      <View style={styles.list}>
-        {rows.map((row, i) => (
-          <PressableScale
-            key={row.id}
-            testID={row.id}
+            testID="profile-avatar"
             accessibilityRole="button"
-            onPress={() => (row.href ? router.push(row.href) : void rerunOnboarding())}
-            style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
+            accessibilityLabel={vi.profile.avatarA11y}
+            onPress={changeAvatar}
+            style={styles.avatar}
           >
-            {row.icon}
-            <Text style={styles.rowLabel}>{row.label}</Text>
-            {row.count !== undefined ? <Text style={styles.rowCount}>{row.count}</Text> : null}
-            <Text style={styles.chevron}>›</Text>
+            {avatarUri ? (
+              <Image testID="profile-avatar-image" source={{ uri: avatarUri }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initials(name)}</Text>
+            )}
           </PressableScale>
-        ))}
-      </View>
-    </ScrollView>
+          <View style={styles.nameBlock}>
+            {editing ? (
+              <TextInput
+                testID="profile-name-input"
+                value={draft}
+                onChangeText={setDraft}
+                placeholder={vi.profile.namePlaceholder}
+                style={styles.input}
+                autoFocus
+              />
+            ) : (
+              <Text testID="profile-name" style={styles.name}>
+                {name}
+              </Text>
+            )}
+            <Text style={styles.subtitle}>{vi.profile.subtitle}</Text>
+          </View>
+          {editing ? (
+            <PressableScale testID="profile-name-save" onPress={save} style={styles.smallButton}>
+              <Text style={styles.smallButtonText}>{vi.profile.save}</Text>
+            </PressableScale>
+          ) : (
+            <PressableScale
+              testID="profile-edit-name"
+              onPress={() => {
+                setDraft(name);
+                setError(false);
+                setEditing(true);
+              }}
+              style={styles.smallButton}
+            >
+              <Text style={styles.smallButtonText}>{vi.profile.edit}</Text>
+            </PressableScale>
+          )}
+        </View>
+        {error ? (
+          <Text testID="profile-name-error" style={styles.error}>
+            {vi.profile.nameRequired}
+          </Text>
+        ) : null}
+
+        {defaultAccount ? (
+          <View style={styles.accountCard} testID="profile-default-account">
+            <View style={styles.accountHeader}>
+              <Text style={styles.accountLabel}>{vi.profile.defaultAccount}</Text>
+              <Text style={styles.badge}>{vi.profile.defaultBadge}</Text>
+            </View>
+            <Text style={styles.accountNo}>{defaultAccount.account_no}</Text>
+            <Text style={styles.accountMeta}>
+              {defaultAccount.account_name} · {defaultAccount.bank_name}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.list}>
+          {rows.map((row, i) => (
+            <PressableScale
+              key={row.id}
+              testID={row.id}
+              accessibilityRole="button"
+              onPress={() => (row.href ? router.push(row.href) : void rerunOnboarding())}
+              style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
+            >
+              {row.icon}
+              <Text style={styles.rowLabel}>{row.label}</Text>
+              {row.count !== undefined ? <Text style={styles.rowCount}>{row.count}</Text> : null}
+              <Text style={styles.chevron}>›</Text>
+            </PressableScale>
+          ))}
+        </View>
+      </ScrollView>
+      <AddFab testID="profile-add-button" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  content: { padding: layout.screenPadding, gap: 16, paddingBottom: layout.tabBarHeight + 24 },
+  scroll: { flex: 1 },
+  content: { padding: layout.screenPadding, gap: 16, paddingBottom: Math.max(layout.tabBarHeight + 24, FAB_CLEARANCE) },
   title: { fontFamily: fontFamily.bold, fontSize: fontSize.heading, color: colors.text },
   card: {
     backgroundColor: colors.surface,
