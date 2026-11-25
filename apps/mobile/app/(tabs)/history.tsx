@@ -182,11 +182,7 @@ export default function HistoryScreen() {
           </Text>
         ) : null}
         {groups.map((g, i) => (
-          <View
-            key={g.dayKey}
-            testID={`history-day-${g.dayKey}`}
-            style={i === 0 ? undefined : styles.dayGroupSpaced}
-          >
+          <View key={g.dayKey} testID={`history-day-${g.dayKey}`} style={i === 0 ? undefined : styles.dayGroupSpaced}>
             <View style={styles.dayHeader}>
               <Text style={styles.dayLabel}>{g.label}</Text>
               <Text style={styles.dayTotal}>
