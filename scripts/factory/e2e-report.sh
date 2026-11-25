@@ -29,6 +29,7 @@ if [[ -n "$failed" ]]; then
   what="Failing flows (screenshots of each failure are in the \`e2e-results\` artifact of the run):
 
 $failed"
+  # shellcheck disable=SC2016 # the backticks are literal Markdown
   key="$(grep -o '`[^`]*`' <<<"$failed" | sort | tr -d '\n')"
 else
   what="Maestro did not produce a result file, so it stopped before running the flows (for example an invalid command in a flow file, or the emulator did not boot). Read the failing step in the job log."
