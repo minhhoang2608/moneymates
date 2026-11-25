@@ -9,6 +9,7 @@ import { createPreferencesRepository, createTransactionRepository } from "@/db/r
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { vi } from "@/i18n/vi";
+import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { setHapticsEnabled } from "@/lib/haptics";
 import { hasValidCrc, parseVietQr } from "@/lib/vietqr";
 import { scanResultToRoute } from "@/lib/vietqr/scanRoute";
@@ -120,6 +121,36 @@ describe("pay-confirm how-to line", () => {
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
     expect(jest.mocked(mockHandOff).mock.calls[0][1]).toMatchObject({ nonAutofillMode: "no_image" });
+  });
+
+  it("no_image mode: paste hand-off stores no reopen data (no 'Mở lại' row)", async () => {
+    await createPreferencesRepository(testDb()).setNonAutofillMode("no_image");
+    mockHandOff.mockImplementation(async () => ({
+      opened: true,
+      mode: "direct",
+      decision: "open-only",
+      qrStorage: "none",
+      handOffMethod: "paste",
+    }));
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(usePendingHandOff.getState().pending?.txId).toBeTruthy());
+    expect(usePendingHandOff.getState().pending?.reopen).toBeUndefined();
+  });
+
+  it("default image mode: direct hand-off keeps the reopen data (regression)", async () => {
+    mockHandOff.mockImplementation(async () => ({
+      opened: true,
+      mode: "direct",
+      decision: "open-only",
+      qrStorage: "album",
+      qrAssetId: "a1",
+    }));
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await fireEvent.press(await screen.findByTestId("pay-submit"));
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(usePendingHandOff.getState().pending?.reopen?.app.id).toBe("tpb"));
   });
 
   it("howToText joins the parts", () => {
