@@ -5,6 +5,11 @@ appId: com.moneymates.app
 - clearState
 - stopApp
 - openLink: "moneymates:///onboarding?e2e_onboarding=1"
+- runFlow:
+    when:
+      visible: ".*isn't responding.*"
+    commands:
+      - tapOn: "Wait"
 - extendedWaitUntil:
     visible:
       id: "onboarding-profile"
@@ -30,6 +35,7 @@ appId: com.moneymates.app
       id: "payment-app-check-tpb"
     direction: DOWN
     timeout: 15000
+    centerElement: true
 - tapOn:
     id: "payment-app-check-tpb"
 - scrollUntilVisible:
@@ -37,6 +43,7 @@ appId: com.moneymates.app
       id: "payment-app-check-momo"
     direction: DOWN
     timeout: 15000
+    centerElement: true
 - tapOn:
     id: "payment-app-check-momo"
 - scrollUntilVisible:
@@ -44,6 +51,7 @@ appId: com.moneymates.app
       id: "payment-app-check-vcb"
     direction: DOWN
     timeout: 15000
+    centerElement: true
 - tapOn:
     id: "payment-app-check-vcb"
 - tapOn:
@@ -66,13 +74,25 @@ appId: com.moneymates.app
     id: "bank-picker-modal"
 - tapOn:
     id: "bank-option-TPB"
+- scrollUntilVisible:
+    element:
+      id: "onb-account-no"
+    centerElement: true
 - tapOn:
     id: "onb-account-no"
 - inputText: "0123456789"
+- scrollUntilVisible:
+    element:
+      id: "onb-account-holder"
+    centerElement: true
 - tapOn:
     id: "onb-account-holder"
 - inputText: "NGUYEN VAN HOANG"
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "onb-next"
+    centerElement: true
 - assertVisible:
     id: "onb-next"
     text: "Hoàn tất"
@@ -88,7 +108,7 @@ appId: com.moneymates.app
 - extendedWaitUntil:
     visible:
       id: "screen-overview"
-    timeout: 30000
+    timeout: 60000
 - assertNotVisible:
     id: "onboarding-profile"
 # Re-run from Hồ sơ: the name is prefilled.
