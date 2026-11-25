@@ -52,6 +52,13 @@ appId: com.moneymates.app
     id: "money-source-row"
 - assertVisible: "Visa"
 - tapOn: "Visa"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "money-source-row"
+- scrollUntilVisible:
+    element:
+      text: "Visa ›"
 - assertVisible: "Visa ›"
 # The manual form is a stack route without the tab bar; close it to get back to the tabs.
 - tapOn:

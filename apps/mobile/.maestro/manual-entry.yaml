@@ -22,4 +22,7 @@ appId: com.moneymates.app
     id: "save-button"
 - assertVisible:
     id: "screen-overview"
+- scrollUntilVisible:
+    element:
+      text: "−50.000đ"
 - assertVisible: "−50.000đ"
