@@ -125,6 +125,7 @@ jobs:
             - `.factory/plan.md` – the approved implementation plan (for `assigned`)
             - `.factory/pr-conversation.md` – PR description and review comments (read the latest Tech Lead review)
             - `.factory/ci-failure.log` – failed CI log (for `ci-failed`)
+            - `.factory/linked-run-logs.md` – failed steps of the CI/E2E runs linked in the ticket (read it before saying a log is unavailable)
 
             What to do for each reason:
             - `assigned`: follow the plan. Use branch `feat/${{ inputs.issue }}-<slug>` (`fix/...` for type:bug);

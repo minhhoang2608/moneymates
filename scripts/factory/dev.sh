@@ -165,7 +165,19 @@ apply() {
 context() {
   : "${ISSUE:?}"
   mkdir -p .factory
-  local pr run_id branch
+  local pr run_id branch text id
+  # Failed CI/E2E runs linked in the ticket (a bug filed from a red run): fetch their logs so the Dev reads the
+  # real error instead of reporting "cannot read the log". The newest three runs, the end of each log.
+  text="$(gh issue view "$ISSUE" --json body,comments --jq '.body, (.comments[].body)')"
+  : >.factory/linked-run-logs.md
+  for id in $(grep -oE "actions/runs/[0-9]+" <<<"$text" | grep -oE '[0-9]+$' | awk '!seen[$0]++' | tail -n 3); do
+    {
+      echo "## Failed steps of run $id"
+      echo '```'
+      gh run view "$id" --log-failed 2>/dev/null | grep -v 'ColorBuffer\|invalid color buffer' | tail -n 150 || true
+      echo '```'
+    } >>.factory/linked-run-logs.md
+  done
   pr="$(pr_for_issue "$ISSUE")"
   set_output pr "$pr"
   [[ -z "$pr" ]] && return 0
