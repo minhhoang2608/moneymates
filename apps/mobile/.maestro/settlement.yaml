@@ -1,8 +1,7 @@
 # Settlement QR: add account -> group with An and Bình -> 900.000 expense -> Tổng kết -> QR popup -> Đã trả.
 appId: com.moneymates.app
 ---
-- launchApp:
-    clearState: true
+- runFlow: subflows/launch-fresh.yaml
 - tapOn:
     id: "tab-profile"
 - tapOn:
