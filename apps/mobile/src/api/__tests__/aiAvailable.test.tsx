@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { e2eFeatures } from "@/e2e/fixtures";
 
-import { useAiAvailable, useFeatures } from "../features";
+import { useAiAvailable, useFeatures, useRefreshFeatures } from "../features";
 
 const original = global.fetch;
 
@@ -31,6 +31,38 @@ afterEach(() => {
   global.fetch = original;
   delete process.env.EXPO_PUBLIC_E2E;
   jest.useRealTimers();
+});
+
+describe("useAiAvailable recovery", () => {
+  it("a failed check is retried by useRefreshFeatures and becomes available", async () => {
+    let up = false;
+    const fetchFn = mockFetch(async () => {
+      if (!up) throw new Error("offline");
+      return { ok: true, json: async () => ({ ai_enabled: true, ai_parse_text: true, ai_parse_bill: true }) };
+    });
+    const { result } = await renderHook(() => ({ ai: useAiAvailable("parse_bill"), refresh: useRefreshFeatures() }), {
+      wrapper: wrapper(),
+    });
+    await waitFor(() => expect(result.current.ai.reason).toBe("offline"));
+    up = true;
+    await act(async () => {
+      result.current.refresh();
+    });
+    await waitFor(() => expect(result.current.ai.available).toBe(true));
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("a fresh successful result is not refetched", async () => {
+    const fetchFn = mockFetch(ok({ ai_enabled: true, ai_parse_text: true, ai_parse_bill: true }));
+    const { result } = await renderHook(() => ({ ai: useAiAvailable("parse_bill"), refresh: useRefreshFeatures() }), {
+      wrapper: wrapper(),
+    });
+    await waitFor(() => expect(result.current.ai.available).toBe(true));
+    await act(async () => {
+      result.current.refresh();
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("useAiAvailable", () => {
@@ -68,7 +100,7 @@ describe("useAiAvailable", () => {
     mockFetch(() => new Promise(() => {}));
     const { result } = await renderHook(() => useAiAvailable(), { wrapper: wrapper() });
     await act(async () => {
-      await jest.advanceTimersByTimeAsync(6000);
+      await jest.advanceTimersByTimeAsync(11000);
     });
     expect(result.current).toEqual({ available: false, reason: "offline" });
   });
