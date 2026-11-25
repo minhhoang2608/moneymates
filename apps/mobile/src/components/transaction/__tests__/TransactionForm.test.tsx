@@ -300,3 +300,46 @@ describe("TransactionForm haptics", () => {
     expect(Haptics.impactAsync).not.toHaveBeenCalled();
   });
 });
+
+describe("TransactionForm category from the note", () => {
+  const categoryRow = () => screen.getByTestId("category-row");
+
+  it("voice with 'đi grab hết' and no category selects Di chuyển", async () => {
+    const { mount } = form({
+      source: "voice",
+      initial: { amountVnd: 30000, note: "đi grab hết", categoryId: null, payerMemberId: null },
+    });
+    await mount();
+    await waitFor(() => expect(categoryRow()).toHaveTextContent(/Di chuyển/));
+  });
+
+  it("keeps a category that was passed in", async () => {
+    const { mount } = form({
+      source: "voice",
+      initial: { amountVnd: 30000, note: "đi grab hết", categoryId: catId("Giải trí"), payerMemberId: null },
+    });
+    await mount();
+    await waitFor(() => expect(categoryRow()).toHaveTextContent(/Giải trí/));
+  });
+
+  it("leaves the category empty when the note has no keyword", async () => {
+    const { mount } = form({
+      source: "voice",
+      initial: { amountVnd: 30000, note: "xyz abc", categoryId: null, payerMemberId: null },
+    });
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(categoryRow()).toHaveTextContent(/Chọn danh mục/);
+  });
+
+  it("does not guess for manual entry", async () => {
+    const { mount } = form({ initial: { amountVnd: null, note: "đi grab", categoryId: null, payerMemberId: null } });
+    await mount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(categoryRow()).toHaveTextContent(/Chọn danh mục/);
+  });
+});

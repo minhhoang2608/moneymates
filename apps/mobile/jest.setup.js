@@ -131,3 +131,6 @@ jest.mock("expo-text-extractor", () => ({
 
 // The first-launch onboarding gate redirects fresh databases; route tests opt in with jest.unmock.
 jest.mock("@/components/onboarding/OnboardingGate", () => ({ OnboardingGate: () => null }));
+
+// Screens read the safe-area insets; tests render them without a SafeAreaProvider.
+jest.mock("react-native-safe-area-context", () => require("react-native-safe-area-context/jest/mock").default);

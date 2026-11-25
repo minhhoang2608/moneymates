@@ -1,11 +1,13 @@
 import { haptics } from "@/lib/haptics";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { CategoryRow, GroupMember } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
+import { suggestCategory } from "@/lib/category";
 import { evaluateSplitDraft, type DraftMode } from "@/lib/group/splitDraft";
 import { GroupError } from "@/lib/group/types";
 import { formatVnd, parseAmount } from "@/lib/money";
@@ -67,6 +69,7 @@ export function TransactionForm({
   const isGroup = !!targetGroupId && !transactionId;
   const [type, setType] = useState<FormType>("expense");
   const [amountText, setAmountText] = useState(initial?.amountVnd ? String(initial.amountVnd) : "");
+  const insets = useSafeAreaInsets();
   const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [note, setNote] = useState(initial?.note ?? "");
   const [occurredAt, setOccurredAt] = useState(() => initial?.occurredAt ?? new Date());
@@ -172,7 +175,16 @@ export function TransactionForm({
     percentInputs,
   });
   const saveDisabled = isGroup && (!draft.ok || !payerId);
-  const categoryName = allCategories.find((c) => c.id === categoryId)?.name;
+  // Opened from voice, bill or a receipt with a note but no category: suggest one from that note (keyword rules).
+  // Derived, not stored: a category passed in or picked by the user always wins.
+  const initialNote = initial?.note ?? "";
+  const suggestedCategoryId = useMemo(() => {
+    if (transactionId || source === "manual" || !initialNote.trim()) return null;
+    const hit = suggestCategory(null, initialNote);
+    return hit ? (allCategories.find((c) => c.type === "expense" && c.name === hit.name)?.id ?? null) : null;
+  }, [allCategories, initialNote, source, transactionId]);
+  const effectiveCategoryId = categoryId ?? suggestedCategoryId;
+  const categoryName = allCategories.find((c) => c.id === effectiveCategoryId)?.name;
 
   const changeTarget = (t: Target) => {
     targetState.setTarget(t);
@@ -191,7 +203,15 @@ export function TransactionForm({
 
   const save = async () => {
     if (saveDisabled) return;
-    const result = validateForm({ type, amountText, categoryId, note, occurredAt, moneySource, photoUri });
+    const result = validateForm({
+      type,
+      amountText,
+      categoryId: effectiveCategoryId,
+      note,
+      occurredAt,
+      moneySource,
+      photoUri,
+    });
     if (!result.ok) {
       haptics.error();
       setErrors(result.errors);
@@ -241,7 +261,7 @@ export function TransactionForm({
 
   return (
     <View style={styles.root} testID="transaction-form">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="close-button"
           accessibilityRole="button"
@@ -442,7 +462,7 @@ export function TransactionForm({
       <CategoryPicker
         visible={sheet === "category"}
         categories={list}
-        selectedId={categoryId}
+        selectedId={effectiveCategoryId}
         onSelect={(id) => {
           setCategoryId(id);
           setErrors((e) => ({ ...e, category: undefined }));
