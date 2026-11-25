@@ -3,11 +3,8 @@
 # makes no API calls (covered by app/__tests__/smoke.test.tsx). No airplane-mode toggle is needed.
 appId: com.moneymates.app
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible: "Tổng quan"
-    timeout: 30000
+- runFlow: subflows/launch-fresh.yaml
+- assertVisible: "Tổng quan"
 - assertVisible:
     id: "screen-overview"
 - assertNotVisible:

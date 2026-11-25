@@ -1,0 +1,19 @@
+# Fresh launch helper: clears state, dismisses a system "isn't responding" dialog and waits for Tổng quan.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- runFlow:
+    when:
+      visible: ".*isn't responding.*"
+    commands:
+      - tapOn: "Wait"
+- extendedWaitUntil:
+    visible:
+      id: "screen-overview"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: ".*isn't responding.*"
+    commands:
+      - tapOn: "Wait"
