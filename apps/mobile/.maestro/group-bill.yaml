@@ -1,8 +1,7 @@
 # Group bill entry (E2E mode, fake image source + fixture AI): group -> Thêm chi tiêu -> Chụp bill -> prefilled group form -> save.
 appId: com.moneymates.app
 ---
-- launchApp:
-    clearState: true
+- runFlow: subflows/launch-fresh.yaml
 - tapOn:
     id: "tab-groups"
 - tapOn:
@@ -57,6 +56,8 @@ appId: com.moneymates.app
 - scrollUntilVisible:
     element:
       id: "split-mode-amount"
+    direction: UP
+    timeout: 10000
 - tapOn:
     id: "split-mode-amount"
 - tapOn:

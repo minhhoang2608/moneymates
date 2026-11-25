@@ -2,11 +2,8 @@
 # (b) hand off a payment, share the receipt -> toast with the recipient -> Hoàn tác.
 appId: com.moneymates.app
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible: "Tổng quan"
-    timeout: 30000
+- runFlow: subflows/launch-fresh.yaml
+- assertVisible: "Tổng quan"
 - tapOn:
     id: "e2e-share-receipt"
 - extendedWaitUntil:
@@ -41,6 +38,10 @@ appId: com.moneymates.app
 - pressKey: home
 - launchApp:
     stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: "e2e-share-receipt"
+    timeout: 30000
 - tapOn:
     id: "e2e-share-receipt"
 - extendedWaitUntil:
