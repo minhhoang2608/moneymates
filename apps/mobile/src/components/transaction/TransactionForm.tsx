@@ -1,11 +1,13 @@
 import { haptics } from "@/lib/haptics";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { CategoryRow, GroupMember } from "@/db/repositories";
 import { vi } from "@/i18n/vi";
+import { suggestCategory } from "@/lib/category";
 import { evaluateSplitDraft, type DraftMode } from "@/lib/group/splitDraft";
 import { GroupError } from "@/lib/group/types";
 import { formatVnd, parseAmount } from "@/lib/money";
@@ -67,6 +69,7 @@ export function TransactionForm({
   const isGroup = !!targetGroupId && !transactionId;
   const [type, setType] = useState<FormType>("expense");
   const [amountText, setAmountText] = useState(initial?.amountVnd ? String(initial.amountVnd) : "");
+  const insets = useSafeAreaInsets();
   const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [note, setNote] = useState(initial?.note ?? "");
   const [occurredAt, setOccurredAt] = useState(() => initial?.occurredAt ?? new Date());
@@ -174,6 +177,18 @@ export function TransactionForm({
   const saveDisabled = isGroup && (!draft.ok || !payerId);
   const categoryName = allCategories.find((c) => c.id === categoryId)?.name;
 
+  // Opened from voice, bill or a receipt with a note but no category: pick one from the note once (keyword rules).
+  // Never overrides a category that was passed in or one the user chose.
+  const suggestedFromNote = useRef(false);
+  useEffect(() => {
+    if (suggestedFromNote.current || transactionId || source === "manual") return;
+    if (categoryId || !note.trim() || allCategories.length === 0) return;
+    suggestedFromNote.current = true;
+    const hit = suggestCategory(null, note);
+    const row = hit ? allCategories.find((c) => c.type === "expense" && c.name === hit.name) : undefined;
+    if (row) setCategoryId(row.id);
+  }, [allCategories, categoryId, note, source, transactionId]);
+
   const changeTarget = (t: Target) => {
     targetState.setTarget(t);
     if (t.kind === "group") {
@@ -241,7 +256,7 @@ export function TransactionForm({
 
   return (
     <View style={styles.root} testID="transaction-form">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="close-button"
           accessibilityRole="button"
