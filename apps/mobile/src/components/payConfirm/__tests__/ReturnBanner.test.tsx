@@ -5,7 +5,14 @@ import path from "node:path";
 import { AppState } from "react-native";
 
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
-import { createCategoryRepository, createHandOffRepository, createTransactionRepository } from "@/db/repositories";
+import {
+  createCategoryRepository,
+  createGroupExpenseRepository,
+  createHandOffRepository,
+  createTransactionRepository,
+} from "@/db/repositories";
+import { monthKeyOf } from "@/lib/stats";
+import { loadCategoryBreakdown } from "@/lib/stats/loadStats";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
@@ -114,6 +121,24 @@ describe("ReturnBanner", () => {
     await waitFor(() => expect(screen.queryByTestId("handoff-return-banner")).toBeNull());
     expect(await repo.list()).toHaveLength(0);
     expect(usePendingHandOff.getState().deletedVersion).toBe(1);
+  });
+
+  it("Hoàn tác drops the amount from the month total", async () => {
+    const { repo, tx, db } = await setup();
+    const repos = {
+      transactions: repo,
+      categories: createCategoryRepository(db),
+      groupExpenses: createGroupExpenseRepository(db),
+    };
+    const month = monthKeyOf(tx.occurred_at);
+    expect((await loadCategoryBreakdown(repos, month, "expense")).total).toBe(55000);
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
+      usePendingHandOff.getState().reveal();
+    });
+    await act(async () => fireEvent.press(screen.getByTestId("handoff-undo")));
+    await waitFor(() => expect(screen.queryByTestId("handoff-return-banner")).toBeNull());
+    expect((await loadCategoryBreakdown(repos, month, "expense")).total).toBe(0);
   });
 
   it("auto-hides after HIDE_AFTER_MS and the transaction stays", async () => {
