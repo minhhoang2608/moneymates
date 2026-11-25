@@ -2,17 +2,32 @@ import { renderRouter, screen, waitFor } from "expo-router/testing-library";
 import { Text } from "react-native";
 
 import { db } from "@/db/client";
-import { createPreferencesRepository } from "@/db/repositories";
+import {
+  createCategoryRepository,
+  createHandOffRepository,
+  createPreferencesRepository,
+  createTransactionRepository,
+} from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { setAppLockAuth } from "@/lib/appLock/auth";
 import { useAppLock } from "@/stores/appLock";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
+import { resetLeftoverSweepForTests } from "@/lib/qrImage";
 import { DEFAULT_FEATURES, useFeatures } from "@/api/features";
 
 jest.mock("@/db/client", () => {
   const { openTestDb } = jest.requireActual("@/db/testing/testDb");
   return { db: openTestDb().db };
 });
+
+const mockMedia = {
+  deleteAssets: jest.fn(async (_ids: string[]) => true),
+  getPermission: jest.fn(async () => ({ platform: "android", access: "read-write" })),
+};
+jest.mock("@/lib/qrImage/mediaLibrary", () => ({
+  ...jest.requireActual("@/lib/qrImage/mediaLibrary"),
+  getQrMediaLibrary: () => mockMedia,
+}));
 
 jest.mock("@expo-google-fonts/inter", () => ({
   useFonts: () => [true, null],
@@ -83,5 +98,40 @@ describe("root layout", () => {
       usePendingHandOff.getState().clear();
       await createPreferencesRepository(db as unknown as AnyDb).setAppLockEnabled(false);
     }
+  });
+
+  it("sweeps a 25 h old QR image once at start without blocking the UI, even if media fails", async () => {
+    global.fetch = jest.fn(async () => {
+      throw new Error("offline");
+    }) as unknown as typeof fetch;
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    const adb = db as unknown as AnyDb;
+    const cat = (await createCategoryRepository(adb).listByKind("expense"))[0];
+    const tx = await createTransactionRepository(adb).create({
+      type: "expense",
+      amount: 1000,
+      category_id: cat.id,
+      note: "x",
+      occurred_at: new Date().toISOString(),
+      source: "qr",
+    });
+    const handOffs = createHandOffRepository(adb);
+    const h = await handOffs.create({
+      transaction_id: tx.id,
+      app_id: "tpb",
+      method: "gallery",
+      started_at: new Date(Date.now() - 25 * 3600_000),
+    });
+    await handOffs.setQrAsset(h.id, "asset-25h");
+    resetLeftoverSweepForTests();
+    mockMedia.deleteAssets.mockClear();
+    mockMedia.deleteAssets.mockRejectedValueOnce(new Error("denied"));
+
+    await renderRouter("./app", { initialUrl: "/" });
+
+    expect(screen.getByTestId("screen-overview")).toBeTruthy();
+    await waitFor(() => expect(mockMedia.deleteAssets).toHaveBeenCalledTimes(1));
+    expect(mockMedia.deleteAssets).toHaveBeenCalledWith(["asset-25h"]);
+    expect(screen.getByTestId("screen-overview")).toBeTruthy();
   });
 });
