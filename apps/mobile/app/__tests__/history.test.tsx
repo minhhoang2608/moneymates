@@ -2,6 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet } from "react-native";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { createGroupExpenseRepository, createGroupRepository, createTransactionRepository } from "@/db/repositories";
@@ -9,6 +11,10 @@ import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { catId } from "@/testing/repoTestUtils";
 
+jest.mock("expo-status-bar", () => ({
+  ...jest.requireActual("expo-status-bar"),
+  StatusBar: jest.fn(() => null),
+}));
 jest.mock("@expo-google-fonts/inter", () => ({ useFonts: () => [true, null] }));
 jest.mock("@/db/DatabaseProvider", () => ({
   DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -179,5 +185,25 @@ describe("Lịch sử screen", () => {
     expect((await screen.findByTestId(`history-group-label-${t.id}`)).props.children).toContain("Nhóm Đà Lạt");
     expect(screen.getByText("−1.000.000đ")).toBeTruthy();
     expect(screen.queryByTestId(`history-group-label-${p.id}`)).toBeNull();
+  });
+
+  it("AC1/AC3: spacing matches the design (no extra gaps)", async () => {
+    await add(55_000, "2026-11-22T03:00:00Z", { note: "cà phê" });
+    await add(30_000, "2026-11-21T03:00:00Z", { note: "xăng" });
+    await renderHistory();
+    await screen.findByText("−55.000đ");
+    const flat = (id: string, prop = "style") => StyleSheet.flatten(screen.getByTestId(id).props[prop]);
+    expect(flat("history-search").marginTop).toBe(12);
+    expect(flat("history-chips").marginTop).toBe(12);
+    expect(flat("history-chips").flexGrow).toBe(0);
+    expect(flat("history-list").flex).toBe(1);
+    expect(flat("history-list", "contentContainerStyle").paddingTop).toBe(12);
+    expect(flat("history-day-2026-11-22")?.marginTop).toBeUndefined();
+    expect(flat("history-day-2026-11-21").marginTop).toBe(14);
+  });
+
+  it("AC2/AC3: status bar content is dark", async () => {
+    await renderHistory();
+    expect(StatusBar).toHaveBeenCalledWith(expect.objectContaining({ style: "dark" }), undefined);
   });
 });
