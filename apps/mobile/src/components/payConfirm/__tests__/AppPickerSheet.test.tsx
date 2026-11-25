@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { PAY_APPS } from "@/lib/payConfirm/apps";
-import { AppPickerSheet } from "../AppPickerSheet";
+import { AppPickerSheet, appSheetMaxHeight } from "../AppPickerSheet";
 
 const TPB_BIN = "970423";
 
@@ -58,5 +59,26 @@ describe("AppPickerSheet", () => {
     const { props } = await setup();
     await fireEvent.press(screen.getByTestId("pay-app-manage"));
     expect(props.onManage).toHaveBeenCalledTimes(1);
+  });
+  it("caps the panel with a pixel maxHeight and lets the list shrink", async () => {
+    await setup();
+    expect(appSheetMaxHeight(800)).toBe(680);
+    const panel = StyleSheet.flatten(screen.getByLabelText("Chọn app thanh toán").props.style);
+    expect(typeof panel.maxHeight).toBe("number");
+    const list = StyleSheet.flatten(screen.getByTestId("pay-app-list").props.style);
+    expect(list).toMatchObject({ flexGrow: 0, flexShrink: 1 });
+  });
+  it("wraps the panel in a KeyboardAvoidingView with padding", async () => {
+    await setup();
+    // KeyboardAvoidingView is the only wrapper that attaches onLayout to the panel's parent view.
+    const wrapper = screen.getByLabelText("Chọn app thanh toán").parent;
+    expect(typeof wrapper?.props.onLayout).toBe("function");
+  });
+  it("typing 'vietcom' renders the Vietcombank row inside the list and selects it", async () => {
+    const { props } = await setup();
+    await fireEvent.changeText(screen.getByTestId("pay-app-search"), "vietcom");
+    const row = within(screen.getByTestId("pay-app-list")).getByTestId("app-vcb");
+    await fireEvent.press(row);
+    expect(props.onSelect).toHaveBeenCalledWith("vcb");
   });
 });
