@@ -27,7 +27,11 @@ appId: com.moneymates.app
     timeout: 10000
 - tapOn:
     id: "e2e-notif-inject-tpbank"
-- assertVisible: "paid:notification"
+- extendedWaitUntil:
+    visible:
+      id: "e2e-notif-status"
+      text: "paid:notification"
+    timeout: 10000
 - pressKey: home
 - launchApp:
     stopApp: false

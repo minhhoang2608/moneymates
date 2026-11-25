@@ -26,7 +26,7 @@ import { stackScreenOptions, useReduceMotion } from "@/lib/motion";
 
 function BankNotificationWiring() {
   useBankNotificationSubscriber();
-  return isE2E() ? <E2eNotificationInjector /> : null;
+  return null;
 }
 
 function QrLeftoverSweep() {
@@ -80,6 +80,7 @@ export default function RootLayout() {
             <ReturnBanner />
             <Toast />
             <ReceiptShareHandler />
+            {isE2E() ? <E2eNotificationInjector /> : null}
           </AppLockGate>
         </RepositoriesProvider>
       </DatabaseProvider>

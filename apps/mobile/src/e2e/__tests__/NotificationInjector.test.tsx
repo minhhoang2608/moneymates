@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
@@ -10,6 +11,9 @@ import { E2eNotificationInjector } from "../NotificationInjector";
 import { e2eQr } from "../fixtures";
 import { setE2eAccessGranted } from "../notificationListener";
 
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }),
+}));
 jest.mock("../isE2E", () => ({ isE2E: () => true }));
 
 function Wiring() {
@@ -20,6 +24,20 @@ function Wiring() {
 const flush = () => act(async () => void (await new Promise((r) => setTimeout(r, 30))));
 
 describe("E2eNotificationInjector", () => {
+  it("is drawn above app content at the top, not at the bottom", async () => {
+    const db = openTestDb().db as unknown as AnyDb;
+    await render(
+      <RepositoriesProvider db={db}>
+        <E2eNotificationInjector />
+      </RepositoriesProvider>,
+    );
+    const style = StyleSheet.flatten(screen.getByTestId("e2e-notif-overlay").props.style);
+    expect(style.top).toBeGreaterThanOrEqual(4);
+    expect(style.bottom).toBeUndefined();
+    expect(style.zIndex).toBeGreaterThan(0);
+    expect(style.elevation).toBeGreaterThan(0);
+  });
+
   afterEach(() => setE2eAccessGranted(false));
   it("enable, inject and see paid:notification", async () => {
     const db = openTestDb().db as unknown as AnyDb;
