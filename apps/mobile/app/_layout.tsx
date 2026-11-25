@@ -11,6 +11,7 @@ import { useEffect } from "react";
 
 import { Toast } from "@/components/Toast";
 import { AppLockGate } from "@/components/appLock/AppLockGate";
+import { ReceiptShareHandler } from "@/components/receipt/ReceiptShareHandler";
 import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
@@ -57,6 +58,7 @@ export default function RootLayout() {
             </Stack>
             <ReturnBanner />
             <Toast />
+            <ReceiptShareHandler />
           </AppLockGate>
         </RepositoriesProvider>
       </DatabaseProvider>

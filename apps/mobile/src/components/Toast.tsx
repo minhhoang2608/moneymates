@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import Animated from "react-native-reanimated";
 import { StyleSheet, Text, View } from "react-native";
 
+import { PressableScale } from "@/components/PressableScale";
+
 import { isE2E } from "@/e2e/isE2E";
 import { toastMotionProps, useReduceMotion } from "@/lib/motion";
 import { useToast } from "@/stores/toast";
@@ -18,6 +20,7 @@ export function toastDuration(): number {
 /** A small in-app toast driven by the toast store. Mount once in the root layout. */
 export function Toast() {
   const text = useToast((s) => s.text);
+  const action = useToast((s) => s.action);
   const motion = toastMotionProps(useReduceMotion());
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export function Toast() {
 
   if (!text) return null;
   return (
-    <View style={styles.wrap} pointerEvents="none">
+    <View style={styles.wrap} pointerEvents={action ? "box-none" : "none"}>
       <Animated.View
         {...motion}
         style={styles.bar}
@@ -38,6 +41,19 @@ export function Toast() {
         accessibilityLiveRegion="polite"
       >
         <Text style={styles.text}>{text}</Text>
+        {action ? (
+          <PressableScale
+            testID="app-toast-action"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => {
+              useToast.getState().hide();
+              action.onPress();
+            }}
+          >
+            <Text style={styles.action}>{action.label}</Text>
+          </PressableScale>
+        ) : null}
       </Animated.View>
     </View>
   );
@@ -45,6 +61,15 @@ export function Toast() {
 
 const styles = StyleSheet.create({
   wrap: { position: "absolute", left: 16, right: 16, bottom: 96 },
-  bar: { backgroundColor: colors.text, borderRadius: radii.button, paddingHorizontal: 16, paddingVertical: 12 },
-  text: { fontFamily: fontFamily.medium, fontSize: fontSize.secondary, color: colors.onPrimary },
+  bar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.text,
+    borderRadius: radii.button,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  text: { flex: 1, fontFamily: fontFamily.medium, fontSize: fontSize.secondary, color: colors.onPrimary },
+  action: { fontFamily: fontFamily.semibold, fontSize: fontSize.secondary, color: colors.accent },
 });

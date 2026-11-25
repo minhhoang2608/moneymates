@@ -13,6 +13,7 @@ export type {
   TransactionRow,
   TransactionSource,
   TransactionType,
+  TransactionWithReceiptFlag,
 } from "./transactionRepository";
 export { createGroupRepository } from "./groupRepository";
 export type {
