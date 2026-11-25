@@ -1,0 +1,1 @@
+ALTER TABLE `profile` ADD `onboarding_completed_at` text;
