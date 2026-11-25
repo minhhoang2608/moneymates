@@ -285,3 +285,38 @@ describe("receipt migration", () => {
     expect(sqlite.prepare("select count(*) n from transactions").get()).toEqual({ n: 5 });
   });
 });
+
+describe("onboarding migration", () => {
+  it("adds a nullable onboarding_completed_at and keeps the existing profile row", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-mig-"));
+    fs.cpSync(folder, dir, { recursive: true });
+    const jp = path.join(dir, "meta", "_journal.json");
+    const j = JSON.parse(fs.readFileSync(jp, "utf8"));
+    j.entries = j.entries.filter((e: { idx: number }) => e.idx <= 10);
+    fs.writeFileSync(jp, JSON.stringify(j));
+
+    const sqlite = new Database(":memory:");
+    migrate(drizzle(sqlite), { migrationsFolder: dir });
+    const now = "2026-01-01T00:00:00.000Z";
+    sqlite
+      .prepare(
+        "insert into profile (id, created_at, updated_at, display_name, avatar_uri) values ('p1', ?, ?, 'Hoàng', 'file:///a.jpg')",
+      )
+      .run(now, now);
+
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+    migrate(drizzle(sqlite), { migrationsFolder: folder });
+
+    const col = (sqlite.pragma("table_info(profile)") as { name: string; notnull: number }[]).find(
+      (c) => c.name === "onboarding_completed_at",
+    );
+    expect(col?.notnull).toBe(0);
+    const rows = sqlite.prepare("select * from profile").all() as Record<string, unknown>[];
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      display_name: "Hoàng",
+      avatar_uri: "file:///a.jpg",
+      onboarding_completed_at: null,
+    });
+  });
+});

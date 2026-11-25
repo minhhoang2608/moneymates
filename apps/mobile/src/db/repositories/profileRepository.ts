@@ -35,6 +35,9 @@ export function createProfileRepository(db: AnyDb) {
     getProfile: ensure,
     setDisplayName: (name: string) => write({ display_name: name.trim() }),
     setAvatar: (uri: string | null) => write({ avatar_uri: uri }),
+    getOnboardingCompletedAt: async (): Promise<string | null> => (await ensure()).onboarding_completed_at,
+    markOnboardingCompleted: () => write({ onboarding_completed_at: nowUtc() }),
+    resetOnboarding: () => write({ onboarding_completed_at: null }),
   };
 }
 

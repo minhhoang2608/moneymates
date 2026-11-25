@@ -32,6 +32,7 @@ export const profile = sqliteTable("profile", {
   ...baseColumns(),
   display_name: text("display_name").notNull().default(""),
   avatar_uri: text("avatar_uri"),
+  onboarding_completed_at: text("onboarding_completed_at"),
 });
 
 /** Bank accounts used to receive money (VietQR). At most one live default. */
