@@ -91,6 +91,17 @@ async function groupSetup() {
 }
 
 describe("voice entry screen", () => {
+  it("draws the design SVG mic (32 px), not an emoji", async () => {
+    await renderRouter("./app", { initialUrl: "/voice" });
+    await screen.findByTestId("voice-mic");
+    expect(screen.queryByText("🎤")).toBeNull();
+    // The design mic: capsule at 9,3 (6x11, rx 3) and the curved stand, drawn by MicIcon at 32 px.
+    const tree = JSON.stringify(screen.toJSON());
+    expect(tree).toContain("M5 11a7 7 0 0 0 14 0M12 18v3");
+    expect(tree).toContain('"rx":"3"');
+    expect(tree).toContain('"width":32,"height":32');
+  });
+
   it("AC1: simple sentence prefills the form offline, no network call", async () => {
     await speakAndUse("ăn phở 50 nghìn");
     expect(recognizer.start).toHaveBeenCalledWith("vi-VN", expect.any(Object));
