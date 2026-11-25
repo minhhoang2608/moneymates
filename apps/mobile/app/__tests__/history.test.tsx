@@ -207,3 +207,20 @@ describe("Lịch sử screen", () => {
     expect(StatusBar).toHaveBeenCalledWith(expect.objectContaining({ style: "dark" }), undefined);
   });
 });
+
+describe("Lịch sử picker sheets", () => {
+  it("AC3: the month filter opens as a docked sheet and picking applies it", async () => {
+    await add(40_000, "2026-11-10T03:00:00Z", { note: "november" });
+    await add(90_000, "2026-10-12T03:00:00Z", { note: "october" });
+    await renderHistory();
+    await screen.findByText("november");
+    await fireEvent.press(screen.getByTestId("history-chip-month"));
+    const layer = await screen.findByTestId("sheet-picker-layer");
+    expect(layer).toBeTruthy();
+    expect(screen.getByTestId("sheet-picker-panel")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("history-pick-month-2026-10"));
+    await screen.findByText("october");
+    expect(screen.queryByText("november")).toBeNull();
+    await waitFor(() => expect(screen.queryByTestId("sheet-picker-layer")).toBeNull());
+  });
+});
