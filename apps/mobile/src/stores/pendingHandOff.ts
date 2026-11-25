@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import type { PayApp } from "@/lib/payConfirm/apps";
+import type { NonAutofillMode } from "@/lib/preferences/defaults";
 import type { PayConfirmModel } from "@/lib/payConfirm/params";
 
 /** What "Mở lại <bank>" needs to hand the same payment off again. */
@@ -11,6 +12,8 @@ export type Reopen = {
   note: string;
   /** A QR image was saved to the album for this hand-off. */
   qrInAlbum: boolean;
+  /** Mode used for the first hand-off, so "Mở lại" repeats it. */
+  nonAutofillMode?: NonAutofillMode;
 };
 
 export type Pending = {

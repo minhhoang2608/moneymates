@@ -1,4 +1,4 @@
-import { autoDeleteAvailable, decideQrDeletion, decideQrStorage } from "../decide";
+import { autoDeleteAvailable, decideQrDeletion, decideQrHandOff, decideQrStorage } from "../decide";
 import { vi } from "../../../i18n/vi";
 
 const mb = { supportsAutofill: true };
@@ -49,5 +49,32 @@ describe("vi.qrImage", () => {
     expect(vi.qrImage.addOnlyPermission).toBe(
       "Chưa cho phép xoá ảnh. Vào Cài đặt > Ảnh, chọn quyền đọc và ghi để MoneyMates tự xoá ảnh QR tạm.",
     );
+  });
+});
+
+describe("decideQrHandOff", () => {
+  it.each(["qr_image", "no_image"] as const)("autofill app: no image, image method (%s)", (nonAutofillMode) => {
+    expect(decideQrHandOff({ platform: "ios", app: mb, bankAcceptsDirectShare: false, nonAutofillMode })).toEqual({
+      storage: "none",
+      method: "image",
+    });
+  });
+
+  it.each(["ios", "android"] as const)("no_image: no storage, paste (%s)", (platform) => {
+    expect(
+      decideQrHandOff({ platform, app: tpbank, bankAcceptsDirectShare: true, nonAutofillMode: "no_image" }),
+    ).toEqual({ storage: "none", method: "paste" });
+  });
+
+  it("qr_image and the default keep the album / cache rule", () => {
+    const base = { platform: "android", app: tpbank } as const;
+    expect(decideQrHandOff({ ...base, bankAcceptsDirectShare: true, nonAutofillMode: "qr_image" })).toEqual({
+      storage: "cache",
+      method: "image",
+    });
+    expect(decideQrHandOff({ ...base, bankAcceptsDirectShare: false })).toEqual({
+      storage: "album",
+      method: "image",
+    });
   });
 });
