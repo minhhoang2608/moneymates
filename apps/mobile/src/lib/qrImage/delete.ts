@@ -46,7 +46,6 @@ export function createQrImageDeleter(deps: QrDeleteDeps) {
 
   async function deletePendingOnReturn(): Promise<QrDeleteResult> {
     let permission: PhotoPermission;
-    console.log("PEND");
     try {
       permission = await deps.media.getPermission();
     } catch {

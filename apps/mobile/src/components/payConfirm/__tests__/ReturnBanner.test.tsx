@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { AppState } from "react-native";
+import * as MediaLibrary from "expo-media-library/legacy";
 
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
 import {
@@ -15,8 +16,6 @@ import { monthKeyOf } from "@/lib/stats";
 import { loadCategoryBreakdown } from "@/lib/stats/loadStats";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
-import * as MediaLibrary from "expo-media-library/legacy";
-
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 
 import { HIDE_AFTER_MS, ReturnBanner } from "../ReturnBanner";

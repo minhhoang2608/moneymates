@@ -15,11 +15,24 @@ appId: com.moneymates.app
       id: "screen-pay-confirm"
     timeout: 10000
 - tapOn:
+    id: "pay-category-more"
+- tapOn: "Mua sắm"
+- tapOn:
     id: "pay-submit"
 - extendedWaitUntil:
     visible:
       id: "handoff-return-banner"
     timeout: 10000
+- pressKey: home
+- launchApp:
+    stopApp: false
 - extendedWaitUntil:
-    visible: "Đã xoá ảnh QR tạm khỏi Ảnh"
+    visible:
+      id: "handoff-return-banner"
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "handoff-qr-deleted"
+    timeout: 10000
+- assertVisible: "Đã xoá ảnh QR tạm khỏi Ảnh"
     timeout: 10000
