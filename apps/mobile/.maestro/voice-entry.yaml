@@ -1,4 +1,4 @@
-# Voice entry flow (E2E mode, fixture recognizer): long-press QR -> Voice -> hold mic -> use result -> save.
+# Voice entry flow (E2E mode, fixture recognizer): Tổng quan Voice button -> hold mic -> use result -> save.
 # The fixture sentence is "ăn phở 50 nghìn" (e2e/fixtures/voice.json); no microphone and no network.
 appId: com.moneymates.app
 ---
@@ -7,10 +7,8 @@ appId: com.moneymates.app
 - extendedWaitUntil:
     visible: "Tổng quan"
     timeout: 30000
-- longPressOn:
-    id: "tab-qr"
 - tapOn:
-    id: "entry-menu-voice"
+    id: "overview-entry-voice"
 - tapOn:
     id: "voice-mic"
 - assertVisible: "“ăn phở 50 nghìn”"

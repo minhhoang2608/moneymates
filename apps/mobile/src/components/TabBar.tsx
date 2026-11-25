@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/build/layouts/Tabs";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
@@ -8,7 +8,6 @@ import { vi } from "@/i18n/vi";
 import { ensurePermission } from "@/lib/permissions";
 import { colors, fontFamily, fontSize, layout } from "@/theme";
 
-import { EntryMenu } from "./EntryMenu";
 import { HomeIcon, ListIcon, QrIcon, UserIcon, UsersIcon } from "./icons";
 
 type TabDef = {
@@ -30,7 +29,6 @@ const RIGHT: TabDef[] = [
 export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   const router = useRouter();
   const opening = useRef(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const activeRoute = state.routes[state.index]?.name;
 
   const renderTab = (t: TabDef) => {
@@ -74,28 +72,11 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
             opening.current = false;
           }
         }}
-        onLongPress={() => setMenuOpen(true)}
         style={styles.qr}
       >
         <QrIcon color={colors.onPrimary} size={26} />
       </PressableScale>
       {RIGHT.map(renderTab)}
-      <EntryMenu
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onManual={() => {
-          setMenuOpen(false);
-          router.push("/transaction/new");
-        }}
-        onVoice={() => {
-          setMenuOpen(false);
-          router.push("/voice");
-        }}
-        onBill={() => {
-          setMenuOpen(false);
-          router.push("/bill");
-        }}
-      />
     </View>
   );
 }

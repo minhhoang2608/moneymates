@@ -63,9 +63,9 @@ describe("manual entry flow (mirrors .maestro/manual-entry.yaml)", () => {
     }
   });
 
-  it("long-pressing the QR tab opens the entry menu", async () => {
+  it("long-pressing the QR tab does not open the entry menu", async () => {
     await renderRouter("./app", { initialUrl: "/" });
     await fireEvent(screen.getByTestId("tab-qr"), "longPress");
-    expect(await screen.findByTestId("entry-menu-manual")).toBeTruthy();
+    expect(screen.queryByTestId("entry-menu-manual")).toBeNull();
   });
 });
