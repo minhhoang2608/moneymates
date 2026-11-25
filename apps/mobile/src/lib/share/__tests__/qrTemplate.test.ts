@@ -8,6 +8,7 @@ import {
   CANVAS_H,
   CANVAS_W,
   computeQrImageLayout,
+  computeQrOnlyLayout,
   groupAccount,
   qrMatrix,
   stripShopPrefix,
@@ -141,5 +142,23 @@ describe("temporary footer (popup QR)", () => {
     expect(b.footer).toBeNull();
     expect(a.footer).not.toBeNull();
     expect({ ...b, footer: null }).toEqual({ ...a, footer: null });
+  });
+});
+
+describe("QR-only layout", () => {
+  const real = qrMatrix(buildQrImageContent(PHO).payload).size;
+  it.each([21, 29, 41, 57, real])("is a white square that fits the code for %i modules", (n) => {
+    const L = computeQrOnlyLayout(n);
+    expect(L.width).toBe(CANVAS_W);
+    expect(L.height).toBe(CANVAS_W);
+    expect(L.box.size).toBeGreaterThanOrEqual(0.9 * CANVAS_W);
+    expect(L.box.x + L.box.size).toBeLessThanOrEqual(CANVAS_W);
+    expect(Number.isInteger(L.qrOrigin.x)).toBe(true);
+    expect(Number.isInteger(L.qrOrigin.y)).toBe(true);
+    expect(Number.isInteger(L.moduleSize)).toBe(true);
+    expect(L.qrOrigin.x).toBeGreaterThanOrEqual(4 * L.moduleSize);
+    expect(CANVAS_W - (L.qrOrigin.x + n * L.moduleSize)).toBeGreaterThanOrEqual(4 * L.moduleSize);
+    expect(L.qrOrigin.y).toBeGreaterThanOrEqual(4 * L.moduleSize);
+    expect(CANVAS_W - (L.qrOrigin.y + n * L.moduleSize)).toBeGreaterThanOrEqual(4 * L.moduleSize);
   });
 });

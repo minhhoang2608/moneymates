@@ -15,13 +15,14 @@ type Props = {
   getRef: (r: QrRef | null) => void;
 };
 
-/** Off-screen QR image that bank apps decode from the gallery: large, white background, 4-module quiet zone. */
+/** Off-screen QR image that bank apps decode from the gallery: only the code, large, white background, 4-module quiet zone. */
 export function HandOffQr({ model, amount, note, getRef }: Props) {
   const qrPayload = useMemo(() => buildConfirmedQrPayload(model, amount, note), [model, amount, note]);
   return (
     <View style={styles.hidden} pointerEvents="none" accessibilityElementsHidden>
       {model.kind === "vietqr" ? (
         <QrImageTemplate
+          qrOnly
           name={model.name}
           bankBin={model.bankBin}
           bankName={model.bankName}

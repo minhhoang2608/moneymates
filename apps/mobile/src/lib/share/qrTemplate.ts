@@ -156,3 +156,29 @@ export function computeQrImageLayout(
     footer,
   };
 }
+
+export type QrOnlyLayout = {
+  width: number;
+  height: number;
+  moduleSize: number;
+  box: { x: number; y: number; size: number };
+  qrOrigin: { x: number; y: number };
+  quietZone: number;
+};
+
+/** The bare QR on a white square (no text): the largest code that fits CANVAS_W, 4-module quiet zone kept. */
+export function computeQrOnlyLayout(moduleCount: number): QrOnlyLayout {
+  const cells = moduleCount + QUIET * 2;
+  const moduleSize = Math.floor(CANVAS_W / cells);
+  const boxSize = moduleSize * cells;
+  const offset = Math.floor((CANVAS_W - boxSize) / 2);
+  const box = { x: offset, y: offset, size: boxSize };
+  return {
+    width: CANVAS_W,
+    height: CANVAS_W,
+    moduleSize,
+    box,
+    qrOrigin: { x: box.x + QUIET * moduleSize, y: box.y + QUIET * moduleSize },
+    quietZone: QUIET * moduleSize,
+  };
+}
