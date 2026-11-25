@@ -221,6 +221,24 @@ describe("handOff", () => {
       expect(res.handOffMethod).toBeUndefined();
     });
 
+    it("no_image + autofill app with a non-VietQR code: fallback keeps the image path, no paste", async () => {
+      const { calls, deps, handOff } = setup();
+      const res = await handOff(mb, { model: other, amount: 1, note: "", nonAutofillMode: "no_image" });
+      expect(deps.saveQrImage).toHaveBeenCalled();
+      expect(deps.setClipboard).not.toHaveBeenCalled();
+      expect(calls).toEqual(["image", "share:com.mbmobile"]);
+      expect(res).toMatchObject({ mode: "direct", decision: "direct-share", qrStorage: "album", qrAssetId: "a1" });
+      expect(res.handOffMethod).toBeUndefined();
+    });
+
+    it("no_image + autofill app with a VietQR code: autofill link, clipboard untouched, not paste", async () => {
+      const { deps, handOff } = setup();
+      const res = await handOff(mb, { model: vietqr, amount: 70000, note: "Cafe", nonAutofillMode: "no_image" });
+      expect(res).toEqual({ opened: true, mode: "autofill", decision: "autofill-link", qrStorage: "none" });
+      expect(deps.setClipboard).not.toHaveBeenCalled();
+      expect(deps.saveQrImage).not.toHaveBeenCalled();
+    });
+
     it("no_image with a non-VietQR code drops the STK line", async () => {
       const { deps, handOff } = setup({ platform: "ios" });
       await handOff(tpb, { model: other, amount: 1000, note: "", nonAutofillMode: "no_image" });

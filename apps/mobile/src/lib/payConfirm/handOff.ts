@@ -95,7 +95,14 @@ export function createHandOff(deps: HandOffDeps) {
       fellBack = true;
       decision = app.androidPackage && deps.platform === "android" ? "direct-share" : "open-only";
     }
-    if (input.nonAutofillMode === "no_image") {
+    const qrDecision = decideQrHandOff({
+      nonAutofillMode: input.nonAutofillMode,
+      platform: deps.platform,
+      app,
+      bankAcceptsDirectShare: input.knownResult === "share_ok",
+    });
+    // Only non-autofill apps use paste mode; an autofill app that fell back keeps the image path.
+    if (qrDecision.method === "paste") {
       // Paste mode: no image is created or shared, the app is just opened.
       const text = buildPasteText({
         account: model.kind === "vietqr" ? model.account : undefined,
@@ -117,12 +124,7 @@ export function createHandOff(deps: HandOffDeps) {
       ? decision === "direct-share" && input.knownResult === "share_ok"
         ? "cache"
         : "album"
-      : decideQrHandOff({
-          nonAutofillMode: input.nonAutofillMode,
-          platform: deps.platform,
-          app,
-          bankAcceptsDirectShare: input.knownResult === "share_ok",
-        }).storage;
+      : qrDecision.storage;
     const saved = storage === "album" ? await attempt(deps.saveQrImage) : undefined;
     const qr = { qrStorage: storage, qrAssetId: saved?.assetId, photoAccess: saved?.access };
 
