@@ -1,4 +1,4 @@
-import { renderRouter, screen } from "expo-router/testing-library";
+import { fireEvent, renderRouter, screen } from "expo-router/testing-library";
 
 import { setPermissionAdapter } from "@/lib/permissions";
 
@@ -23,4 +23,15 @@ it("renders the permissions step route", async () => {
   });
   await renderRouter("./app", { initialUrl: "/onboarding/permissions" });
   expect(await screen.findByText("Cho phép những gì cần")).toBeTruthy();
+});
+
+it("next and skip lead to step 4", async () => {
+  setPermissionAdapter({
+    get: async () => ({ status: "undetermined" }),
+    request: async () => ({ status: "granted" }),
+    openSettings: async () => undefined,
+  });
+  await renderRouter("./app", { initialUrl: "/onboarding/permissions" });
+  fireEvent.press(await screen.findByTestId("perm-next"));
+  expect(await screen.findByText("Bước 4/4")).toBeTruthy();
 });
