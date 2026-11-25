@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { MicIcon } from "@/components/icons";
 import { PressableScale } from "@/components/PressableScale";
 import { VoiceRings } from "@/components/VoiceRings";
 
@@ -246,7 +247,7 @@ export default function VoiceScreen() {
             onPressOut={end}
             style={[styles.mic, listening && styles.micActive]}
           >
-            <Text style={styles.micGlyph}>🎤</Text>
+            <MicIcon color={colors.onPrimary} size={32} />
           </PressableScale>
         </View>
         <Text style={styles.hold}>{vi.voice.hold}</Text>
@@ -359,7 +360,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   doneCheck: { fontSize: 56, color: colors.primary },
-  micGlyph: { fontSize: 30 },
   hold: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.textMuted },
   buttons: { width: "100%", flexDirection: "row", gap: 10 },
   btn: { flex: 1, height: 52, borderRadius: radii.button, alignItems: "center", justifyContent: "center" },
