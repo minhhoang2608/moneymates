@@ -1,0 +1,93 @@
+# Onboarding: 4 steps from a fresh install, relaunch stays on Tổng quan, then re-run from Hồ sơ.
+# E2E builds skip onboarding by default; the launch URL override turns it on (read from the initial URL).
+appId: com.moneymates.app
+---
+- clearState
+- stopApp
+- openLink: "moneymates:///onboarding?e2e_onboarding=1"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-profile"
+    timeout: 30000
+- assertVisible: "Bước 1/4"
+- assertVisible: "Chào bạn! Bạn tên gì?"
+- assertVisible: "Để sau"
+# Step 1: Hồ sơ
+- tapOn:
+    id: "onb-name-input"
+- inputText: "Hoàng"
+- hideKeyboard
+- tapOn:
+    id: "onb-next"
+# Step 2: payment apps
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-apps"
+    timeout: 10000
+- assertVisible: "Bước 2/4"
+- tapOn:
+    id: "payment-app-check-tpb"
+- tapOn:
+    id: "payment-app-check-momo"
+- tapOn:
+    id: "payment-app-check-vcb"
+- tapOn:
+    id: "onb-next"
+# Step 3: permissions
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-permissions"
+    timeout: 10000
+- tapOn:
+    id: "perm-skip"
+# Step 4: receiving account
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-account"
+    timeout: 10000
+- tapOn:
+    id: "onb-account-bank"
+- assertVisible:
+    id: "bank-picker-modal"
+- tapOn:
+    id: "bank-option-TPB"
+- tapOn:
+    id: "onb-account-no"
+- inputText: "0123456789"
+- tapOn:
+    id: "onb-account-holder"
+- inputText: "NGUYEN VAN HOANG"
+- hideKeyboard
+- assertVisible:
+    id: "onb-next"
+    text: "Hoàn tất"
+- tapOn:
+    id: "onb-next"
+- extendedWaitUntil:
+    visible:
+      id: "screen-overview"
+    timeout: 15000
+# Relaunch: the completed status keeps onboarding away (gate path, not the /onboarding route).
+- stopApp
+- openLink: "moneymates:///?e2e_onboarding=1"
+- extendedWaitUntil:
+    visible:
+      id: "screen-overview"
+    timeout: 30000
+- assertNotVisible:
+    id: "onboarding-profile"
+# Re-run from Hồ sơ: the name is prefilled.
+- tapOn:
+    id: "tab-profile"
+- scrollUntilVisible:
+    element:
+      id: "row-onboarding"
+- tapOn:
+    id: "row-onboarding"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-profile"
+    timeout: 10000
+- assertVisible:
+    id: "onb-name-input"
+    text: "Hoàng"

@@ -10,6 +10,9 @@ appId: com.moneymates.app
     timeout: 30000
 - assertVisible:
     id: "screen-overview"
+- assertNotVisible:
+    id: "onboarding-profile"
+- assertNotVisible: "Bước 1/4"
 - assertVisible: "Lịch sử"
 - assertVisible: "Nhóm"
 - assertVisible: "Hồ sơ"
