@@ -63,6 +63,7 @@ jest.mock("expo-media-library/legacy", () => ({
   createAlbumAsync: jest.fn(async () => ({})),
   addAssetsToAlbumAsync: jest.fn(async () => true),
   saveToLibraryAsync: jest.fn(async () => undefined),
+  deleteAssetsAsync: jest.fn(async () => true),
 }));
 jest.mock("expo-speech-recognition", () => ({
   ExpoSpeechRecognitionModule: {

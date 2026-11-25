@@ -112,10 +112,10 @@ export const vi = {
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
     undo: "Hoàn tác",
-    qrDeleted: "Đã xoá ảnh QR tạm khỏi Ảnh",
     reopen: (bank: string) => `Mở lại ${bank}`,
   },
   qrImage: {
+    deletedOnReturn: "Đã xoá ảnh QR tạm khỏi Ảnh",
     addOnlyPermission:
       "Chưa cho phép xoá ảnh. Vào Cài đặt > Ảnh, chọn quyền đọc và ghi để MoneyMates tự xoá ảnh QR tạm.",
   },

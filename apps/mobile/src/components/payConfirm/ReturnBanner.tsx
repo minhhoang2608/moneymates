@@ -12,6 +12,7 @@ import { formatVnd } from "@/lib/money";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
 import { startHandOff } from "@/lib/payConfirm/startHandOff";
 import { useToast } from "@/stores/toast";
+import { useQrCleanupOnReturn } from "@/lib/qrImage/useQrCleanupOnReturn";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
@@ -23,6 +24,7 @@ export function ReturnBanner() {
   const pending = usePendingHandOff((s) => s.pending);
   const visible = usePendingHandOff((s) => s.visible);
   const qrRef = useRef<QrRef | null>(null);
+  useQrCleanupOnReturn();
 
   useEffect(() => {
     let sawBackground = false;
@@ -106,6 +108,13 @@ export function ReturnBanner() {
           <Text style={styles.action}>{vi.handOff.undo}</Text>
         </PressableScale>
       </View>
+      {pending.qrDeleted ? (
+        <View style={[styles.row, styles.second]}>
+          <Text style={styles.muted} testID="handoff-qr-deleted">
+            {vi.qrImage.deletedOnReturn}
+          </Text>
+        </View>
+      ) : null}
       {reopen ? (
         <View style={[styles.row, styles.second]}>
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" accessibilityElementsHidden>
@@ -117,13 +126,7 @@ export function ReturnBanner() {
               strokeLinejoin="round"
             />
           </Svg>
-          {reopen.qrInAlbum ? (
-            <Text style={styles.muted} testID="handoff-qr-deleted">
-              {vi.handOff.qrDeleted}
-            </Text>
-          ) : (
-            <View style={styles.grow} />
-          )}
+          <View style={styles.grow} />
           <PressableScale
             testID="handoff-reopen"
             accessibilityRole="button"
