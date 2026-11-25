@@ -34,4 +34,9 @@ describe("pay app row maestro flows", () => {
     expect(tsx).toContain("pay-app-row-name");
     expect(tsx).toContain("pay-app-change");
   });
+
+  it("pay-paste-mode asserts handoff-reopen is not visible after the saved line", () => {
+    const src = read("pay-paste-mode");
+    expect(src.indexOf('assertNotVisible:\n    id: "handoff-reopen"')).toBeGreaterThan(src.indexOf("Đã lưu 55"));
+  });
 });

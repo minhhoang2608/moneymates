@@ -224,7 +224,8 @@ export default function PayConfirmScreen() {
           onRow: (id) => usePendingHandOff.getState().setHandOffId(id),
         },
       );
-      if (result.mode === "direct") {
+      // "Mở lại <bank>" only exists when there is a QR image (docs §1 step 5); paste mode has none.
+      if (result.mode === "direct" && result.handOffMethod !== "paste") {
         usePendingHandOff.getState().setReopen({
           app: selected,
           model,

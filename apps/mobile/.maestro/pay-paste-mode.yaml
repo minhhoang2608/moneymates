@@ -33,3 +33,5 @@ appId: com.moneymates.app
     timeout: 10000
 - assertNotVisible:
     id: "handoff-qr-deleted"
+- assertNotVisible:
+    id: "handoff-reopen"
