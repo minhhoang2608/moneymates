@@ -30,6 +30,12 @@ appId: com.moneymates.app
 - assertVisible:
     id: "overview-expense"
     text: "50.000đ"
+- scrollUntilVisible:
+    element:
+      id: "overview-open-.*"
+    direction: DOWN
+    timeout: 10000
+    centerElement: true
 - tapOn:
     id: "overview-open-.*"
 - assertVisible:
