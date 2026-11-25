@@ -1,14 +1,17 @@
 # E2E: Android emulator on the Linux runner + Maestro flows against a release build with mock data.
 # Separate from the Tester on purpose: a cold Android build takes 20+ minutes, and in one workflow it blocked
 # every ticket verification behind it. It is expensive (the repo is on the 2,000 minute Free plan), so it only
-# runs on demand: when the Tester or BA reports it needs E2E evidence (kick_e2e), or by hand. A run is never
+# runs on demand: when the Tester or BA reports it needs E2E evidence (kick_e2e, which skips it when dev has not
+# changed since the last run or a batch is still being merged), nightly, or by hand. A run is never
 # cancelled by newer merges (that starved it before); extra requests collapse into one pending run. When it
-# finishes it starts the Tester again, which reads the result.
+# finishes it starts the Tester again, which reads the result. When it fails it files a bug (e2e-report.sh).
 name: E2E
 run-name: E2E on dev
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 18 * * *" # 01:00 in Vietnam
 
 permissions: {}
 
@@ -25,12 +28,23 @@ jobs:
     permissions:
       contents: read
       actions: write
+      issues: write
     steps:
       - uses: actions/checkout@v7
         with:
           ref: dev
       - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          if [[ "$GITHUB_EVENT_NAME" == schedule ]]; then
+            last="$(gh run list --workflow e2e.yml --status completed --limit 1 --repo "$GITHUB_REPOSITORY" --json headSha --jq '.[0].headSha // ""')"
+            if [[ "$last" == "$(git rev-parse HEAD)" ]]; then
+              echo "run=false" >>"$GITHUB_OUTPUT"
+              echo "dev has not changed since the last E2E run – nightly run skipped." >>"$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          fi
           if [[ -f apps/mobile/package.json && -d apps/mobile/.maestro ]]; then
             echo "run=true" >>"$GITHUB_OUTPUT"
           else
@@ -87,6 +101,13 @@ jobs:
           name: e2e-results
           path: maestro-results/
           if-no-files-found: ignore
+      - name: File a bug when the flows failed
+        if: failure() && steps.check.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: bash scripts/factory/e2e-report.sh maestro-results/report.xml
       - name: Verify again with the new result
         if: always() && vars.FACTORY_ENABLED == 'true'
         env:
