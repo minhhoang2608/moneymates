@@ -47,7 +47,7 @@ describe("history", () => {
     const list = deferred<unknown[]>();
     const softDelete = jest.fn(async () => {});
     mockRepos.current = {
-      transactions: { list: () => list.promise, softDelete },
+      transactions: { listWithReceiptFlag: () => list.promise, softDelete },
       categories: { listByKind: async () => [{ id: "c1", name: "Ăn uống" }] },
       groups: { listGroups: async () => [] },
     };

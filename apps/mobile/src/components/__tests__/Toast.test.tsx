@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
 import { isE2E } from "@/e2e/isE2E";
 import { useToast } from "@/stores/toast";
@@ -58,5 +58,26 @@ describe("Toast", () => {
     const bar = screen.getByTestId("app-toast");
     expect(bar.props.entering).toBeDefined();
     expect(bar.props.exiting).toBeDefined();
+  });
+});
+
+describe("Toast action", () => {
+  afterEach(async () => {
+    await act(async () => useToast.getState().hide());
+  });
+
+  it("renders the action, runs it and hides the toast", async () => {
+    const onPress = jest.fn();
+    await render(<Toast />);
+    await act(async () => useToast.getState().show("Xin chào", { label: "Hoàn tác", onPress }));
+    await act(async () => fireEvent.press(screen.getByTestId("app-toast-action")));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("app-toast")).toBeNull();
+  });
+
+  it("has no action button for a plain toast", async () => {
+    await render(<Toast />);
+    await act(async () => useToast.getState().show("Xin chào"));
+    expect(screen.queryByTestId("app-toast-action")).toBeNull();
   });
 });

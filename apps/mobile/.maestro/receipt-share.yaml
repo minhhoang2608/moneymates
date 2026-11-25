@@ -1,0 +1,54 @@
+# Shared bank receipt (E2E mode, fake share + fake OCR): (a) no pending payment -> sheet -> Ghi giao dịch -> "có biên lai" in Lịch sử;
+# (b) hand off a payment, share the receipt -> toast with the recipient -> Hoàn tác.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "e2e-share-receipt"
+- extendedWaitUntil:
+    visible: "Biên lai chuyển khoản"
+    timeout: 10000
+- assertVisible: "55.000đ"
+- assertVisible: "Không khớp giao dịch nào đang chờ.*"
+- tapOn:
+    id: "receipt-save"
+- assertNotVisible: "Biên lai chuyển khoản"
+- tapOn:
+    id: "tab-history"
+- extendedWaitUntil:
+    visible:
+      id: "screen-history"
+    timeout: 10000
+- assertVisible: "có biên lai"
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- extendedWaitUntil:
+    visible:
+      id: "screen-pay-confirm"
+    timeout: 10000
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible:
+      id: "handoff-return-banner"
+    timeout: 10000
+- pressKey: home
+- launchApp:
+    stopApp: false
+- tapOn:
+    id: "e2e-share-receipt"
+- extendedWaitUntil:
+    visible:
+      id: "app-toast-action"
+    timeout: 10000
+- assertVisible: "Đã đính kèm biên lai · .* đã trả"
+- tapOn:
+    id: "app-toast-action"
+- assertNotVisible:
+    id: "app-toast"
