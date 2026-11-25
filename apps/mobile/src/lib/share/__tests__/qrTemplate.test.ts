@@ -8,6 +8,7 @@ import {
   CANVAS_H,
   CANVAS_W,
   computeQrImageLayout,
+  computeQrOnlyLayout,
   groupAccount,
   qrMatrix,
   stripShopPrefix,
@@ -141,5 +142,19 @@ describe("temporary footer (popup QR)", () => {
     expect(b.footer).toBeNull();
     expect(a.footer).not.toBeNull();
     expect({ ...b, footer: null }).toEqual({ ...a, footer: null });
+  });
+});
+
+describe("QR-only layout", () => {
+  const real = qrMatrix(buildQrImageContent(PHO).payload).size;
+  it.each([21, 29, 41, 57, real])("is a white square that fits the code for %i modules", (n) => {
+    const L = computeQrOnlyLayout(n);
+    expect(L.width).toBe(CANVAS_W);
+    expect(L.height).toBe(CANVAS_W);
+    expect(L.box.size).toBeGreaterThanOrEqual(0.9 * CANVAS_W);
+    expect(L.box.x + L.box.size).toBeLessThanOrEqual(CANVAS_W);
+    expect(L.quietZone).toBeCloseTo(4 * L.moduleSize);
+    expect(L.qrOrigin.x - L.box.x).toBeCloseTo(L.quietZone);
+    expect(L.qrOrigin.x + n * L.moduleSize + L.quietZone).toBeCloseTo(L.box.x + L.box.size);
   });
 });

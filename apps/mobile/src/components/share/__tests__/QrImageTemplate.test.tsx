@@ -38,6 +38,12 @@ describe("QrImageTemplate", () => {
       expect(screen.getByText(t)).toBeTruthy();
     }
   });
+  it("renders no text at all when qrOnly", async () => {
+    await render(<QrImageTemplate {...base} message="PHO HOA BAN 12" qrOnly />);
+    for (const t of [/QUAN PHO HOA/, /TPBank/, /55\.000/, /PHO HOA BAN 12/, /Ảnh tạm/]) {
+      expect(screen.queryByText(t)).toBeNull();
+    }
+  });
   it("draws no logo wordmark", async () => {
     await render(<QrImageTemplate {...base} />);
     expect(screen.queryByText("Money")).toBeNull();
