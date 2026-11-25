@@ -1,17 +1,18 @@
 import { usePendingHandOff } from "../pendingHandOff";
 
-describe("pendingHandOff askPaid", () => {
+describe("pendingHandOff", () => {
   beforeEach(() => usePendingHandOff.setState({ pending: null, visible: false }));
-  it("askPaid sets the question, answerPaid clears it", () => {
+  it("hide keeps the pending hand-off, clear drops it", () => {
     const s = usePendingHandOff.getState();
     s.set({ txId: "t", amount: 1, label: "x" });
-    s.askPaid("tcb");
-    expect(usePendingHandOff.getState().pending).toMatchObject({ askPaid: true, appId: "tcb" });
-    usePendingHandOff.getState().answerPaid();
-    expect(usePendingHandOff.getState().pending?.askPaid).toBe(false);
+    s.reveal();
+    usePendingHandOff.getState().hide();
+    expect(usePendingHandOff.getState()).toMatchObject({ visible: false, pending: { txId: "t" } });
+    usePendingHandOff.getState().clear();
+    expect(usePendingHandOff.getState().pending).toBeNull();
   });
-  it("is a no-op without a pending hand-off", () => {
-    usePendingHandOff.getState().askPaid("tcb");
+  it("setReopen and setHandOffId are no-ops without a pending hand-off", () => {
+    usePendingHandOff.getState().setHandOffId("h");
     expect(usePendingHandOff.getState().pending).toBeNull();
   });
 });

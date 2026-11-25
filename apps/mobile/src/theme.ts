@@ -19,6 +19,8 @@ export const colors = {
   warningBorder: "#F5D9A8",
   warningText: "#7A4300",
   onPrimary: "#FFFFFF",
+  onDarkMuted: "#D1D5DB",
+  onDarkDivider: "#323845",
   receipt: "#FBFAF6",
   receiptInk: "#2B2F36",
   receiptLine: "#D5D9DF",

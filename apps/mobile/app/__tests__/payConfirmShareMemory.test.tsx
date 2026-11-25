@@ -73,7 +73,6 @@ describe("pay-confirm share memory", () => {
     await pickApp("tcb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(usePendingHandOff.getState().pending?.handOffId).toBeTruthy());
-    expect(usePendingHandOff.getState().pending?.askPaid).toBeUndefined();
     const repo = createHandOffRepository(testDb());
     const id = usePendingHandOff.getState().pending?.handOffId as string;
     const row = await repo.get(id);
@@ -90,7 +89,6 @@ describe("pay-confirm share memory", () => {
     await pickApp("mb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
     await waitFor(() => expect(mockHandOff).toHaveBeenCalled());
-    expect(usePendingHandOff.getState().pending?.askPaid).toBeUndefined();
   });
 
   it("passes the remembered result to the hand-off", async () => {

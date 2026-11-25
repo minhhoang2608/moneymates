@@ -1,11 +1,12 @@
 import { haptics } from "@/lib/haptics";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import QRCode from "react-native-qrcode-svg";
 import { Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/PressableScale";
 
 import { AppPickerSheet } from "@/components/payConfirm/AppPickerSheet";
+import { HandOffQr, type QrRef } from "@/components/payConfirm/HandOffQr";
+import { startHandOff } from "@/lib/payConfirm/startHandOff";
 import { PayAppRow } from "@/components/payConfirm/PayAppRow";
 import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { preselectApp, type LastUsedByBank } from "@/lib/payConfirm/preselect";
@@ -20,20 +21,15 @@ import { vi } from "@/i18n/vi";
 import { aiText, pickInitialCategory } from "@/lib/payConfirm/category";
 import { useBankApps } from "@/api/bankApps";
 import { buildPayApps, normalizeAppId } from "@/lib/payConfirm/apps";
-import { QrImageTemplate } from "@/components/share/QrImageTemplate";
 import { buildQrExpense, buildQrGroupExpense, canSubmit } from "@/lib/payConfirm/form";
 import { buildClipboardText } from "@/lib/payConfirm/deeplink";
 import { makeHandOff } from "@/lib/payConfirm/handOffDeps";
-import { methodFromResult } from "@/lib/payConfirm/paidRule";
 import { parsePayConfirmParams } from "@/lib/payConfirm/params";
-import { buildConfirmedQrPayload } from "@/lib/payConfirm/qrPayload";
 import { shareConfirmedQr } from "@/lib/payConfirm/shareQr";
 import { shareQr } from "@/lib/share/qrImage";
 import * as Clipboard from "expo-clipboard";
 import { formatVnd, parseAmount } from "@/lib/money";
 import { PREF_KEYS } from "@/lib/preferences/defaults";
-import { knownResultFor } from "@/lib/payConfirm/shareMemory";
-import { recordQrImage } from "@/lib/qrImage/record";
 import { useToast } from "@/stores/toast";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
@@ -71,7 +67,7 @@ export default function PayConfirmScreen() {
   const [failed, setFailed] = useState(false);
   const [keywordHit, setKeywordHit] = useState<boolean | null>(null);
   const busy = useRef(false);
-  const qrRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
+  const qrRef = useRef<QrRef | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -139,7 +135,6 @@ export default function PayConfirmScreen() {
   }, [cats, categoryId]);
 
   const confirmedAmount = parsed.ok ? parsed.vnd : undefined;
-  const qrPayload = buildConfirmedQrPayload(model, confirmedAmount, note);
 
   const getQrBase64 = () =>
     new Promise<string | null>((resolve) => {
@@ -201,44 +196,38 @@ export default function PayConfirmScreen() {
 
   const runHandOff = async (amount: number, text: string) => {
     try {
-      const handOff = makeHandOff(getQrBase64);
-      const started_at = new Date();
-      const memory = await handOffMemory.getShareMemory().catch(() => ({}));
-      const handOffResult = await handOff(selected, {
-        model,
-        amount,
-        note: text,
-        knownResult: knownResultFor(memory, selected.id),
-      });
-      const { opened, mode, decision, share } = handOffResult;
-      const pendingTx = usePendingHandOff.getState().pending?.txId;
-      if (pendingTx) {
-        try {
-          const row = await handOffs.create({
-            transaction_id: pendingTx,
-            app_id: selected.id,
-            method: methodFromResult({ mode, decision, share }),
-            started_at,
-          });
-          usePendingHandOff.getState().setHandOffId(row.id);
-          await recordQrImage(
-            {
-              platform: Platform.OS === "android" ? "android" : "ios",
-              handOffs,
-              preferences,
-              showToast: useToast.getState().show,
-              addOnlyMessage: vi.qrImage.addOnlyPermission,
-            },
-            row.id,
-            handOffResult,
-          ).catch((e) => console.warn("could not record QR image", e));
-        } catch (e) {
-          console.warn("could not record hand-off", e);
-        }
+      const result = await startHandOff(
+        {
+          makeHandOff,
+          handOffs,
+          handOffMemory,
+          record: {
+            platform: Platform.OS === "android" ? "android" : "ios",
+            preferences,
+            showToast: useToast.getState().show,
+            addOnlyMessage: vi.qrImage.addOnlyPermission,
+          },
+        },
+        {
+          app: selected,
+          model,
+          amount,
+          note: text,
+          txId: usePendingHandOff.getState().pending?.txId,
+          getQrBase64,
+          onRow: (id) => usePendingHandOff.getState().setHandOffId(id),
+        },
+      );
+      if (result.mode === "direct") {
+        usePendingHandOff.getState().setReopen({
+          app: selected,
+          model,
+          amount,
+          note: text,
+          qrInAlbum: result.qrStorage === "album" && !!result.qrAssetId,
+        });
       }
-      if (share === "share_failed") await handOffMemory.setShareResult(selected.id, false).catch(() => {});
-      if (mode === "direct") usePendingHandOff.getState().showQrHint();
-      if (!opened) usePendingHandOff.getState().reveal();
+      if (!result.opened) usePendingHandOff.getState().reveal();
     } catch {
       usePendingHandOff.getState().reveal();
     } finally {
@@ -380,31 +369,7 @@ export default function PayConfirmScreen() {
         <Text style={styles.footNote}>{vi.payConfirm.saveNote}</Text>
       </View>
 
-      <View style={styles.hiddenQr} pointerEvents="none" accessibilityElementsHidden>
-        {/* Bank apps decode the saved PNG from the gallery: large, white background, 4-module quiet zone. */}
-        {model.kind === "vietqr" ? (
-          <QrImageTemplate
-            name={model.name}
-            bankBin={model.bankBin}
-            bankName={model.bankName}
-            account={model.account}
-            amount={confirmedAmount}
-            message={note}
-            fallbackPayload={model.payload}
-            getRef={(r) => (qrRef.current = r)}
-          />
-        ) : (
-          <QRCode
-            value={qrPayload || " "}
-            size={640}
-            quietZone={64}
-            ecl="M"
-            color="black"
-            backgroundColor="white"
-            getRef={(r) => (qrRef.current = r)}
-          />
-        )}
-      </View>
+      <HandOffQr model={model} amount={confirmedAmount} note={note} getRef={(r) => (qrRef.current = r)} />
 
       {appSheet ? (
         <AppPickerSheet
@@ -487,7 +452,6 @@ const styles = StyleSheet.create({
   chipOn: { borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.primarySoft },
   chipText: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.text },
   chipTextOn: { fontFamily: fontFamily.semibold, color: colors.primaryDark },
-  hiddenQr: { position: "absolute", left: -1000, top: -1000, opacity: 0 },
   error: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.expense },
   footer: {
     backgroundColor: colors.surface,
