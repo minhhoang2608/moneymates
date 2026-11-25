@@ -116,6 +116,7 @@ export const vi = {
     reopen: (bank: string) => `Mở lại ${bank}`,
   },
   qrImage: {
+    deletedOnReturn: "Đã xoá ảnh QR tạm khỏi Ảnh",
     addOnlyPermission:
       "Chưa cho phép xoá ảnh. Vào Cài đặt > Ảnh, chọn quyền đọc và ghi để MoneyMates tự xoá ảnh QR tạm.",
   },

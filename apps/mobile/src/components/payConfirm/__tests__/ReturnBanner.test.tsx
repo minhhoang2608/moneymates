@@ -15,16 +15,20 @@ import { monthKeyOf } from "@/lib/stats";
 import { loadCategoryBreakdown } from "@/lib/stats/loadStats";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
+import * as MediaLibrary from "expo-media-library/legacy";
+
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 
 import { HIDE_AFTER_MS, ReturnBanner } from "../ReturnBanner";
 
 jest.mock("@/db/client", () => ({ db: {} }));
 
-let handler: (s: string) => void = () => {};
+let handlers: ((s: string) => void)[] = [];
+const handler = (s: string) => handlers.forEach((h) => h(s));
 beforeEach(() => {
+  handlers = [];
   jest.spyOn(AppState, "addEventListener").mockImplementation(((_t: string, h: (s: string) => void) => {
-    handler = h;
+    handlers.push(h);
     return { remove: jest.fn() };
   }) as never);
   usePendingHandOff.setState({ pending: null, visible: false, deletedVersion: 0 });
@@ -182,5 +186,24 @@ describe("ReturnBanner", () => {
     await act(async () => handler("active"));
     await waitFor(async () => expect((await repo.get(ho.id))?.paid_signal).toBe("time"));
     expect((await repo.get(ho.id))?.returned_at).not.toBeNull();
+  });
+  it.each([
+    [true, true],
+    [false, false],
+  ])("QR image delete resolves %s: deleted line visible = %s", async (ok, shown) => {
+    (MediaLibrary.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
+    (MediaLibrary.deleteAssetsAsync as jest.Mock).mockResolvedValue(ok);
+    const { tx, db } = await setup();
+    const repo = createHandOffRepository(db);
+    const ho = await repo.create({ transaction_id: tx.id, app_id: "tpb", method: "gallery", started_at: new Date() });
+    await repo.setQrAsset(ho.id, "asset-1");
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24", handOffId: ho.id });
+    });
+    await act(async () => handler("background"));
+    await act(async () => handler("active"));
+    await waitFor(() => expect(MediaLibrary.deleteAssetsAsync).toHaveBeenCalled());
+    if (shown) expect(await screen.findByText("Đã xoá ảnh QR tạm khỏi Ảnh")).toBeTruthy();
+    else expect(screen.queryByTestId("handoff-qr-deleted")).toBeNull();
   });
 });

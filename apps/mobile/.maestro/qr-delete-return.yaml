@@ -1,0 +1,25 @@
+# Album bank (TPBank fixture): after returning from the bank app the temporary QR image is deleted and the banner says so.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- tapOn:
+    id: "tab-qr"
+- tapOn:
+    id: "scan-e2e-feed"
+- extendedWaitUntil:
+    visible:
+      id: "screen-pay-confirm"
+    timeout: 10000
+- tapOn:
+    id: "pay-submit"
+- extendedWaitUntil:
+    visible:
+      id: "handoff-return-banner"
+    timeout: 10000
+- extendedWaitUntil:
+    visible: "Đã xoá ảnh QR tạm khỏi Ảnh"
+    timeout: 10000

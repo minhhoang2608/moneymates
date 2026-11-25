@@ -19,6 +19,7 @@ export type Pending = {
   label: string;
   handOffId?: string;
   reopen?: Reopen;
+  qrDeleted?: boolean;
 };
 
 type State = {
@@ -33,6 +34,7 @@ type State = {
   hide: () => void;
   clear: () => void;
   markDeleted: () => void;
+  markQrImagesDeleted: () => void;
 };
 
 export const usePendingHandOff = create<State>((set) => ({
@@ -46,4 +48,5 @@ export const usePendingHandOff = create<State>((set) => ({
   hide: () => set({ visible: false }),
   clear: () => set({ pending: null, visible: false }),
   markDeleted: () => set((s) => ({ pending: null, visible: false, deletedVersion: s.deletedVersion + 1 })),
+  markQrImagesDeleted: () => set((s) => (s.pending ? { pending: { ...s.pending, qrDeleted: true } } : s)),
 }));
