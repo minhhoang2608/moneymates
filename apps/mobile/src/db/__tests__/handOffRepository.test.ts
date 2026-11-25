@@ -161,3 +161,28 @@ describe("handOffRepository", () => {
     expect(await repo.detachReceipt(h.id)).toBeNull();
   });
 });
+
+describe("receipt helpers", () => {
+  it("clearPaidSignal only clears a matching signal", async () => {
+    const { repo, make } = await setup();
+    const a = await make();
+    await repo.markPaid(a.id, "time");
+    await repo.clearPaidSignal(a.id, "receipt");
+    expect((await repo.get(a.id))?.paid_signal).toBe("time");
+    await repo.clearPaidSignal(a.id, "time");
+    expect((await repo.get(a.id))?.paid_signal).toBeNull();
+  });
+
+  it("listReceiptCandidates excludes receipt-paid, deleted and old rows", async () => {
+    const { db, repo, make } = await setup();
+    const keep = await make();
+    const paid = await make();
+    await repo.markPaid(paid.id, "receipt");
+    const gone = await make();
+    await db.update(handOffs).set({ deleted_at: start.toISOString() }).where(eq(handOffs.id, gone.id));
+    const rows = await repo.listReceiptCandidates(at(-1000));
+    expect(rows.map((r) => r.handOff.id)).toEqual([keep.id]);
+    expect(rows[0].amount).toBe(1000);
+    expect(await repo.listReceiptCandidates(at(1000))).toEqual([]);
+  });
+});

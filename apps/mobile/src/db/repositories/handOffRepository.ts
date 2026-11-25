@@ -1,13 +1,15 @@
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, eq, gte, isNotNull, isNull, ne, or } from "drizzle-orm";
 
 import { evaluateReturn } from "../../lib/payConfirm/paidRule";
 import { nowUtc } from "../columns";
 import { newId } from "../ids";
-import { handOffs, type HandOffMethod, type HandOffRow, type PaidSignal } from "../schema";
+import { handOffs, transactions, type HandOffMethod, type HandOffRow, type PaidSignal } from "../schema";
 import type { AnyDb } from "../seed";
 import { createHandOffMemoryRepository } from "./handOffMemoryRepository";
 
 export type NewHandOff = { transaction_id: string; app_id: string; method: HandOffMethod; started_at: Date };
+
+export type ReceiptCandidate = { handOff: HandOffRow; amount: number; qr_data: string | null };
 
 export function createHandOffRepository(db: AnyDb) {
   const memory = createHandOffMemoryRepository(db);
@@ -56,6 +58,31 @@ export function createHandOffRepository(db: AnyDb) {
       if (!(await get(id))) return null;
       await db.update(handOffs).set({ receipt_uri: null, updated_at: nowUtc() }).where(eq(handOffs.id, id));
       return get(id);
+    },
+
+    /** Sets `paid_signal` back to null, only when it still equals `signal`. */
+    async clearPaidSignal(id: string, signal: PaidSignal): Promise<void> {
+      await db
+        .update(handOffs)
+        .set({ paid_signal: null, updated_at: nowUtc() })
+        .where(and(eq(handOffs.id, id), eq(handOffs.paid_signal, signal)));
+    },
+
+    /** Live hand-offs started at or after `since` that no receipt has confirmed yet, with their transaction data. */
+    async listReceiptCandidates(since: Date): Promise<ReceiptCandidate[]> {
+      const rows = await db
+        .select({ handOff: handOffs, amount: transactions.amount, qr_data: transactions.qr_data })
+        .from(handOffs)
+        .innerJoin(transactions, eq(handOffs.transaction_id, transactions.id))
+        .where(
+          and(
+            isNull(handOffs.deleted_at),
+            isNull(transactions.deleted_at),
+            gte(handOffs.started_at, since.toISOString()),
+            or(isNull(handOffs.paid_signal), ne(handOffs.paid_signal, "receipt")),
+          ),
+        );
+      return rows;
     },
 
     /** Stamps the time the QR image was deleted. The first deletion time wins. */
