@@ -32,6 +32,8 @@ appId: com.moneymates.app
 - inputText: "vietcom"
 - hideKeyboard
 - assertVisible: "Vietcombank"
+- assertVisible:
+    id: "app-vcb"
 - tapOn:
     id: "pay-app-search"
 - eraseText: 7
