@@ -112,7 +112,6 @@ export const vi = {
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
     undo: "Hoàn tác",
-    qrDeleted: "Đã xoá ảnh QR tạm khỏi Ảnh",
     reopen: (bank: string) => `Mở lại ${bank}`,
   },
   qrImage: {

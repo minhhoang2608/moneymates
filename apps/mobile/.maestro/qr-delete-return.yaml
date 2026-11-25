@@ -23,13 +23,11 @@ appId: com.moneymates.app
     visible:
       id: "handoff-return-banner"
     timeout: 10000
+- assertNotVisible:
+    id: "handoff-qr-deleted"
 - pressKey: home
 - launchApp:
     stopApp: false
-- extendedWaitUntil:
-    visible:
-      id: "handoff-return-banner"
-    timeout: 10000
 - extendedWaitUntil:
     visible:
       id: "handoff-qr-deleted"

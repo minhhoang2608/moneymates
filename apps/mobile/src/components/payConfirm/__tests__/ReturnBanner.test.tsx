@@ -4,7 +4,6 @@ import os from "node:os";
 import path from "node:path";
 import { AppState } from "react-native";
 import * as MediaLibrary from "expo-media-library/legacy";
-
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
 import {
   createCategoryRepository,
@@ -86,7 +85,7 @@ describe("ReturnBanner", () => {
     expect(screen.queryByTestId("handoff-qr-deleted")).toBeNull();
   });
 
-  it("TPBank with album image shows the deleted line and Mở lại TPBank, which starts a new hand-off", async () => {
+  it("TPBank with album image shows Mở lại TPBank, which starts a new hand-off", async () => {
     const { tx } = await setup();
     mockStart.mockResolvedValue({ opened: true });
     await act(async () => {
@@ -94,7 +93,7 @@ describe("ReturnBanner", () => {
       usePendingHandOff.getState().setReopen(reopenOf(true));
       usePendingHandOff.getState().reveal();
     });
-    expect(screen.getByText("Đã xoá ảnh QR tạm khỏi Ảnh")).toBeTruthy();
+    expect(screen.queryByTestId("handoff-qr-deleted")).toBeNull();
     expect(screen.getByText("Mở lại TPBank")).toBeTruthy();
     await act(async () => fireEvent.press(screen.getByTestId("handoff-reopen")));
     expect(mockStart).toHaveBeenCalledTimes(1);
@@ -186,6 +185,7 @@ describe("ReturnBanner", () => {
     await waitFor(async () => expect((await repo.get(ho.id))?.paid_signal).toBe("time"));
     expect((await repo.get(ho.id))?.returned_at).not.toBeNull();
   });
+
   it.each([
     [true, true],
     [false, false],
@@ -198,7 +198,10 @@ describe("ReturnBanner", () => {
     await repo.setQrAsset(ho.id, "asset-1");
     await act(async () => {
       usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24", handOffId: ho.id });
+      usePendingHandOff.getState().setReopen(reopenOf(true));
+      usePendingHandOff.getState().reveal();
     });
+    expect(screen.queryByTestId("handoff-qr-deleted")).toBeNull();
     await act(async () => handler("background"));
     await act(async () => handler("active"));
     await waitFor(() => expect(MediaLibrary.deleteAssetsAsync).toHaveBeenCalled());

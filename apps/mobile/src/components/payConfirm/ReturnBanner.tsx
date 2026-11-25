@@ -108,7 +108,7 @@ export function ReturnBanner() {
           <Text style={styles.action}>{vi.handOff.undo}</Text>
         </PressableScale>
       </View>
-      {pending.qrDeleted && !reopen?.qrInAlbum ? (
+      {pending.qrDeleted ? (
         <View style={[styles.row, styles.second]}>
           <Text style={styles.muted} testID="handoff-qr-deleted">
             {vi.qrImage.deletedOnReturn}
@@ -126,13 +126,7 @@ export function ReturnBanner() {
               strokeLinejoin="round"
             />
           </Svg>
-          {reopen.qrInAlbum ? (
-            <Text style={styles.muted} testID="handoff-qr-deleted">
-              {vi.handOff.qrDeleted}
-            </Text>
-          ) : (
-            <View style={styles.grow} />
-          )}
+          <View style={styles.grow} />
           <PressableScale
             testID="handoff-reopen"
             accessibilityRole="button"
