@@ -44,6 +44,18 @@ export const vi = {
     openSettings: "Mở Cài đặt",
   },
   onboarding: {
+    step: (n: number) => `Bước ${n}/4`,
+    skip: "Để sau",
+    next: "Tiếp tục",
+    profile: {
+      title: "Chào bạn! Bạn tên gì?",
+      subtitle: "Tên và ảnh để nhận ra bạn trong các nhóm chi tiêu.",
+      avatarA11y: "Chọn ảnh đại diện",
+      nameLabel: "Tên hiển thị",
+      hint: "Hiển thị là “Tôi” trong nhóm. Ảnh đại diện có thể bỏ trống.",
+    },
+    apps: { title: "Bạn hay dùng app nào?" },
+    account: { title: "Tài khoản nhận tiền" },
     permissions: {
       step: "Bước 3/4",
       skip: "Để sau",
@@ -155,7 +167,12 @@ export const vi = {
     defaultAccount: "Tài khoản nhận tiền mặc định",
     defaultBadge: "Mặc định",
     avatarA11y: "Đổi ảnh đại diện",
-    rows: { bankAccounts: "Tài khoản nhận tiền", categories: "Danh mục", settings: "Cài đặt" },
+    rows: {
+      bankAccounts: "Tài khoản nhận tiền",
+      categories: "Danh mục",
+      settings: "Cài đặt",
+      onboarding: "Hướng dẫn lần đầu",
+    },
   },
   notifAccess: {
     title: "Tự nhận biết chuyển khoản xong",

@@ -4,9 +4,10 @@ import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-nati
 import { PressableScale } from "@/components/PressableScale";
 
 import { pickAvatar } from "@/components/AvatarPicker";
-import { BankIcon, GridIcon, SettingsIcon } from "@/components/icons";
+import { BankIcon, CheckIcon, GridIcon, SettingsIcon } from "@/components/icons";
 import { useRepositories } from "@/db/RepositoriesProvider";
 import type { BankAccountRow } from "@/db/repositories";
+import { useResetOnboarding } from "@/hooks/useOnboardingStatus";
 import { vi } from "@/i18n/vi";
 import { initials, validateDisplayName } from "@/lib/profile/displayName";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
@@ -16,6 +17,7 @@ type Href = "/bank-accounts" | "/categories" | "/settings";
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, bankAccounts, categories } = useRepositories();
+  const { mutateAsync: resetOnboarding } = useResetOnboarding();
   const [name, setName] = useState("");
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -65,7 +67,12 @@ export default function ProfileScreen() {
 
   const defaultAccount = accounts.find((a) => a.is_default);
 
-  const rows: { id: string; href: Href; label: string; icon: React.ReactNode; count?: number }[] = [
+  const rerunOnboarding = useCallback(async () => {
+    await resetOnboarding();
+    router.push("/onboarding");
+  }, [resetOnboarding, router]);
+
+  const rows: { id: string; href?: Href; label: string; icon: React.ReactNode; count?: number }[] = [
     {
       id: "row-bank-accounts",
       href: "/bank-accounts",
@@ -85,6 +92,11 @@ export default function ProfileScreen() {
       href: "/settings",
       label: vi.profile.rows.settings,
       icon: <SettingsIcon color={colors.primary} size={22} />,
+    },
+    {
+      id: "row-onboarding",
+      label: vi.profile.rows.onboarding,
+      icon: <CheckIcon color={colors.primary} size={22} />,
     },
   ];
 
@@ -166,7 +178,7 @@ export default function ProfileScreen() {
             key={row.id}
             testID={row.id}
             accessibilityRole="button"
-            onPress={() => router.push(row.href)}
+            onPress={() => (row.href ? router.push(row.href) : void rerunOnboarding())}
             style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
           >
             {row.icon}

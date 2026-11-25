@@ -128,3 +128,6 @@ jest.mock("expo-text-extractor", () => ({
   isSupported: true,
   extractTextFromImage: jest.fn(async () => []),
 }));
+
+// The first-launch onboarding gate redirects fresh databases; route tests opt in with jest.unmock.
+jest.mock("@/components/onboarding/OnboardingGate", () => ({ OnboardingGate: () => null }));

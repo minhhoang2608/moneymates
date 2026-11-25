@@ -11,6 +11,7 @@ import { useEffect } from "react";
 
 import { Toast } from "@/components/Toast";
 import { AppLockGate } from "@/components/appLock/AppLockGate";
+import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { ReceiptShareHandler } from "@/components/receipt/ReceiptShareHandler";
 import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
 import { QueryProvider } from "@/api/QueryProvider";
@@ -54,6 +55,7 @@ export default function RootLayout() {
         <RepositoriesProvider>
           <BankNotificationWiring />
           <QrLeftoverSweep />
+          <OnboardingGate />
           <AppLockGate>
             <Stack screenOptions={stackScreenOptions(reduceMotion)}>
               <Stack.Screen name="(tabs)" />
@@ -62,7 +64,10 @@ export default function RootLayout() {
               <Stack.Screen name="bank-accounts" />
               <Stack.Screen name="categories" />
               <Stack.Screen name="settings" />
-              <Stack.Screen name="onboarding/permissions" />
+              <Stack.Screen name="onboarding/index" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="onboarding/apps" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="onboarding/permissions" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="onboarding/account" options={{ gestureEnabled: false }} />
               <Stack.Screen name="payment-apps" />
               <Stack.Screen name="notif-access" />
               <Stack.Screen name="stats" />

@@ -4,15 +4,15 @@ import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { PAY_APPS } from "@/lib/payConfirm/apps";
 import { PermissionsStep } from "@/components/onboarding/PermissionsStep";
 
-/** Step 3/4 of onboarding. The flow (#302) will replace the back navigation with the real next/skip. */
+/** Step 3/4 of onboarding. */
 export default function OnboardingPermissionsScreen() {
   const router = useRouter();
   const { enabled } = useEnabledPayApps();
   const names = enabled.map((id) => PAY_APPS.find((a) => a.id === id)?.name).filter((n): n is string => !!n);
   return (
     <PermissionsStep
-      onNext={() => router.back()}
-      onSkip={() => router.back()}
+      onNext={() => router.push("/onboarding/account")}
+      onSkip={() => router.push("/onboarding/account")}
       bankNotifAppNames={names}
       onOpenBankNotif={() => router.push("/notif-access")}
     />
