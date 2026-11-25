@@ -15,6 +15,7 @@ jest.mock("expo-router", () => ({
   },
 }));
 jest.mock("@/components/EntryMenu", () => ({ EntryMenu: () => null }));
+jest.mock("@/components/EntryButtons", () => ({ EntryButtons: () => null }));
 jest.mock("@/db/RepositoriesProvider", () => ({ useRepositories: () => mockRepos.current }));
 
 function deferred<T>() {
