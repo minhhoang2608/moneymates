@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
-import { SheetPicker } from "../SheetPicker";
+import { SheetPicker, sheetMaxHeight } from "../SheetPicker";
 import { setHapticsEnabled } from "@/lib/haptics";
 
 const Haptics = jest.requireMock("expo-haptics");
@@ -34,5 +35,20 @@ describe("SheetPicker haptics", () => {
     await fireEvent.press(screen.getByTestId("opt-a"));
     expect(Haptics.selectionAsync).not.toHaveBeenCalled();
     expect(onSelect).toHaveBeenCalledWith("a");
+  });
+});
+
+describe("SheetPicker docking", () => {
+  it("sheetMaxHeight is 60% of the window in pixels", () => {
+    expect(sheetMaxHeight(800)).toBe(480);
+  });
+
+  it("panel uses a numeric maxHeight, list does not grow, layer docks to the bottom", async () => {
+    await renderPicker(() => {});
+    const panel = StyleSheet.flatten(screen.getByTestId("sheet-picker-panel").props.style);
+    expect(typeof panel.maxHeight).toBe("number");
+    expect(panel.maxHeight).toBe(sheetMaxHeight(Dimensions.get("window").height));
+    const layer = StyleSheet.flatten(screen.getByTestId("sheet-picker-layer").props.style);
+    expect(layer).toMatchObject({ flex: 1, justifyContent: "flex-end" });
   });
 });

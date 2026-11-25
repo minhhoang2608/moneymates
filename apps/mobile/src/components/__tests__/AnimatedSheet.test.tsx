@@ -26,7 +26,24 @@ beforeEach(() => {
   jest.restoreAllMocks();
 });
 
+function navBarTranslucent(): unknown {
+  let node: ReturnType<typeof screen.getByTestId> | null = screen.getByTestId("s-layer");
+  while (node && !("navigationBarTranslucent" in node.props)) node = node.parent;
+  return node?.props.navigationBarTranslucent;
+}
+
 describe("AnimatedSheet", () => {
+  it("covers the nav bar for sheets but not for fullscreen", async () => {
+    const { rerender } = await render(sheet(true));
+    expect(navBarTranslucent()).toBe(true);
+    await rerender(
+      <AnimatedSheet visible onClose={() => {}} variant="fullscreen" testID="s">
+        <Text>body</Text>
+      </AnimatedSheet>,
+    );
+    expect(navBarTranslucent()).toBe(false);
+  });
+
   it("AC1: fades the backdrop in and animates out before unmounting", async () => {
     const spy = jest.spyOn(Reanimated, "withTiming");
     const { rerender } = await render(sheet(true));

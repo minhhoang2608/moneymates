@@ -72,6 +72,7 @@ export function AnimatedSheet({
       animationType="none"
       onRequestClose={onClose}
       statusBarTranslucent={!fullscreen}
+      navigationBarTranslucent={!fullscreen}
     >
       {fullscreen ? null : (
         <Animated.View
@@ -88,6 +89,7 @@ export function AnimatedSheet({
         </Animated.View>
       )}
       <View
+        testID={testID ? `${testID}-layer` : undefined}
         style={[styles.layer, fullscreen ? null : popup ? styles.popup : styles.sheet]}
         pointerEvents={closing ? "none" : "box-none"}
       >
