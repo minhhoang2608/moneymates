@@ -19,12 +19,18 @@ import { RepositoriesProvider } from "@/db/RepositoriesProvider";
 import { E2eNotificationInjector } from "@/e2e/NotificationInjector";
 import { isE2E } from "@/e2e/isE2E";
 import { useBankNotificationSubscriber } from "@/hooks/useBankNotificationSubscriber";
+import { useQrLeftoverSweep } from "@/lib/qrImage/useQrLeftoverSweep";
 import { setCurrentPath } from "@/lib/receipt/currentPath";
 import { stackScreenOptions, useReduceMotion } from "@/lib/motion";
 
 function BankNotificationWiring() {
   useBankNotificationSubscriber();
   return isE2E() ? <E2eNotificationInjector /> : null;
+}
+
+function QrLeftoverSweep() {
+  useQrLeftoverSweep();
+  return null;
 }
 
 export default function RootLayout() {
@@ -47,6 +53,7 @@ export default function RootLayout() {
       <DatabaseProvider>
         <RepositoriesProvider>
           <BankNotificationWiring />
+          <QrLeftoverSweep />
           <AppLockGate>
             <Stack screenOptions={stackScreenOptions(reduceMotion)}>
               <Stack.Screen name="(tabs)" />
