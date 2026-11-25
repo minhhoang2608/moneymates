@@ -1,12 +1,8 @@
-import { canOpenURL } from "expo-linking";
 import { useCallback, useEffect, useState } from "react";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
-import { e2eCanOpen } from "@/e2e/installedApps";
-import { isE2E } from "@/e2e/isE2E";
-import { PAY_APPS } from "@/lib/payConfirm/apps";
 import { resolveEnabled } from "@/lib/payConfirm/enabledApps";
-import { detectInstalledApps } from "@/lib/payConfirm/installedApps";
+import { getInstalledPayApps } from "@/lib/payConfirm/getInstalledPayApps";
 
 /** Enabled pay-app ids in order. First use detects installed apps and persists the default so every screen agrees. */
 export function useEnabledPayApps() {
@@ -20,7 +16,7 @@ export function useEnabledPayApps() {
     let installed: string[] = [];
     if (hasChosen) saved = await paymentAppPrefs.getEnabledApps();
     else {
-      installed = await detectInstalledApps(PAY_APPS, isE2E() ? e2eCanOpen : canOpenURL).catch(() => []);
+      installed = await getInstalledPayApps();
     }
     const ids = resolveEnabled({ hasChosen, saved, installed });
     if (!hasChosen) await paymentAppPrefs.setEnabledOrder(ids);

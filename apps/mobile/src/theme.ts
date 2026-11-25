@@ -30,6 +30,7 @@ export const colors = {
   bankTpbBg: "#F3E8FF",
   bankTpbFg: "#6B2FB3",
   switchOff: "#D5D9DF",
+  selectedRow: "#F2FAF7",
 } as const;
 
 /** Background/foreground pairs for the initials tile of an app row (docs/design PaymentApps). */
