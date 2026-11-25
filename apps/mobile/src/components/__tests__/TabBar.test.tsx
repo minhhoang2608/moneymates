@@ -50,20 +50,20 @@ describe("TabBar entry menu: Chụp bill", () => {
     expect(mockPush).toHaveBeenCalledWith("/bill");
   });
 
-  it("is disabled and does not navigate when ai_parse_bill is off", async () => {
+  it("explains it is off and does not navigate when ai_parse_bill is off", async () => {
     setFeatures(false);
     await renderBar();
     await new Promise((r) => setTimeout(r, 20));
-    expect(screen.getByTestId("entry-menu-bill")).toBeDisabled();
+    expect(screen.getByTestId("entry-menu-bill-hint")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("entry-menu-bill"));
     expect(mockPush).not.toHaveBeenCalledWith("/bill");
   });
 
-  it("is disabled and does not navigate when /me/features fails", async () => {
+  it("explains the failure and does not navigate when /me/features fails", async () => {
     setFeatures("fail");
     await renderBar();
     await new Promise((r) => setTimeout(r, 20));
-    expect(screen.getByTestId("entry-menu-bill")).toBeDisabled();
+    expect(screen.getByTestId("entry-menu-bill-hint")).toBeTruthy();
     await fireEvent.press(screen.getByTestId("entry-menu-bill"));
     expect(mockPush).not.toHaveBeenCalledWith("/bill");
   });

@@ -413,6 +413,9 @@ export const vi = {
     manual: "Nhập tay",
     voice: "Voice",
     bill: "Chụp bill",
+    billChecking: "Đang kiểm tra máy chủ…",
+    billDisabled: "Tính năng AI đang tắt trên máy chủ.",
+    billRetry: (reason: string, code: string) => `${reason} (${code}) Chạm để thử lại.`,
     cancel: "Hủy",
   },
   overview: {
