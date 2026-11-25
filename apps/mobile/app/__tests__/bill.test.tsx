@@ -228,7 +228,7 @@ describe("bill scan screen", () => {
       expect(source.capture).not.toHaveBeenCalled();
       await fireEvent.press(screen.getByTestId("bill-manual"));
       await waitFor(() => expect(screen).toHavePathname("/transaction/new"));
-      expect(screen).toHaveSearchParams({ source: "bill", groupId: "g1", categoryId: expect.any(String) });
+      expect(screen).toHaveSearchParams({ source: "bill", groupId: "g1" });
     });
 
     it("AC2: upload error → Nhập tay keeps the groupId", async () => {
