@@ -54,7 +54,16 @@ export const vi = {
       nameLabel: "Tên hiển thị",
       hint: "Hiển thị là “Tôi” trong nhóm. Ảnh đại diện có thể bỏ trống.",
     },
-    apps: { title: "Bạn hay dùng app nào?" },
+    apps: {
+      title: "Bạn hay dùng app nào?",
+      subtitle: "Chỉ app bạn chọn mới hiện khi thanh toán. Đổi lại được trong Cài đặt.",
+      searchPlaceholder: "Tìm trong 50+ ngân hàng / ví",
+      searchLabel: "Tìm ngân hàng",
+      autofillGroup: "Tự điền sẵn · nhanh nhất, không cần ảnh QR",
+      scanGroup: "Quét ảnh QR",
+      showAll: "Xem tất cả ngân hàng / ví ›",
+      next: (n: number) => `Tiếp tục · ${n} app`,
+    },
     account: {
       title: "Tài khoản nhận tiền",
       subtitle: "Bạn bè chuyển trả cho bạn qua tài khoản này.",
