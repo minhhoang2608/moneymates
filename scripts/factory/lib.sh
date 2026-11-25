@@ -239,14 +239,32 @@ merge_commit_of_issue() {
 }
 
 # Start an E2E run unless one is already queued or running (it re-triggers the Tester when it finishes).
+#
+# It skips the run when it could not tell anything new:
+#  - the last completed run was on the current dev head (the Tester asked again, but nothing changed), or
+#  - a batch is still being merged (a Dev ticket is in progress, in review or sent back).
+# Dispatching e2e.yml by hand always runs.
 kick_e2e() {
-  local active
+  local active head last busy
   active="$(gh run list --workflow e2e.yml --limit 20 --json status --jq '[.[] | select(.status != "completed")] | length')"
-  if [[ "$active" == 0 ]]; then
-    dispatch e2e.yml || log "could not dispatch e2e.yml"
-  else
+  if [[ "$active" != 0 ]]; then
     log "E2E already queued or running"
+    return 0
   fi
+  head="$(gh api "repos/$GH_REPO/commits/dev" --jq .sha)"
+  last="$(gh run list --workflow e2e.yml --status completed --limit 1 --json headSha --jq '.[0].headSha // ""')"
+  if [[ -n "$last" && "$last" == "$head" ]]; then
+    log "E2E skipped: the last run was already on dev ${head:0:7}"
+    return 0
+  fi
+  busy="$(gh issue list --state open --limit 100 --json number,labels --jq '[.[]
+    | select([.labels[].name] | index("needs-human") | not)
+    | select([.labels[].name] | any(. == "status:in-progress" or . == "status:review" or . == "status:changes-requested"))] | length')"
+  if [[ "$busy" != 0 ]]; then
+    log "E2E deferred: $busy ticket(s) still being worked on"
+    return 0
+  fi
+  dispatch e2e.yml || log "could not dispatch e2e.yml"
 }
 
 # Read a field from the agent result file.
