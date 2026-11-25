@@ -90,7 +90,10 @@ jobs:
 
             Finally write `.factory/result.json`:
             `{"outcome":"planned"}`, or `{"outcome":"blocked","reason":"<why a human is needed>"}` when the ticket
-            is ambiguous, contradicts docs/, is too big, or needs secrets or workflow changes.
+            is ambiguous, contradicts docs/, is too big, or needs secrets or workflow changes. When the ticket is
+            fine but tickets it depends on are not merged into dev yet, write
+            `{"outcome":"waiting","blockers":[<issue numbers>],"reason":"<what is missing>"}` instead: no human is
+            needed, the factory assigns it again once those tickets are on dev.
 
       - name: Apply plan
         id: plan_apply
@@ -136,7 +139,7 @@ jobs:
             or `.github/workflows/`. Never push to dev/main, and never merge.
 
             Finally write `.factory/result.json`:
-            `{"outcome":"pr_opened"|"pushed"|"no_changes"|"blocked","pr":<number or null>,"summary":"<one line>","reason":"<only when blocked>"}`
+            `{"outcome":"pr_opened"|"pushed"|"no_changes"|"waiting"|"blocked","pr":<number or null>,"summary":"<one line>","reason":"<only when blocked or waiting>","blockers":[<issue numbers, only when waiting>]}`
 
       - name: Apply result
         if: steps.impl.outcome == 'success'

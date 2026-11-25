@@ -169,6 +169,28 @@ dep_satisfied() {
   [[ "$info" == CLOSED* || "$info" == *status:testing* || "$info" == *status:done* ]]
 }
 
+# Dependencies a Dev reported as missing: the last "<!-- factory:waiting 316 321 -->" marker on the ticket.
+waiting_blockers() {
+  gh api --paginate "repos/$GH_REPO/issues/$1/comments?per_page=100" \
+    --jq '[.[].body | capture("<!-- factory:waiting (?<b>[0-9 ]+) -->")? | .b] | last // empty' |
+    tr ' ' '\n' | grep -E '^[0-9]+$' | sort -u || true
+}
+
+# Park a ticket whose dependencies are not on dev yet: back to status:ready, Dev freed, no needs-human.
+# Assign picks it up again once every blocker is satisfied (assign.sh reads the marker).
+park_waiting() {
+  local issue="$1" blockers="$2" reason="$3" role
+  role="$(role_of_issue "$issue")"
+  set_status "$issue" status:ready
+  [[ -n "$role" ]] && gh issue edit "$issue" --remove-label "agent:$role" >/dev/null
+  comment "$issue" "<!-- factory:waiting $blockers -->
+:hourglass_flowing_sand: **Waiting for dependencies** (#${blockers// /, #}). $reason
+
+No human is needed: the ticket returns to \`status:ready\` and is assigned again once those tickets are merged into dev. ([run]($RUN_URL))"
+  notice "#$issue is waiting for: $blockers"
+  kick_assign
+}
+
 # Sub-tickets recorded on a parent feature by triage (<!-- factory:children 12 13 -->).
 children_of() {
   gh api --paginate "repos/$GH_REPO/issues/$1/comments?per_page=100" \

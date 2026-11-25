@@ -61,12 +61,15 @@ Run lint, typecheck and tests for every app you touched (commands are in your ag
 
 ## Label transitions (applied by scripts from your result)
 
-| Before                                             | Your outcome            | After                                            |
-| -------------------------------------------------- | ----------------------- | ------------------------------------------------ |
-| `status:in-progress`                               | `pr_opened` / `pushed`  | `status:review` (CI runs, then Tech Lead review) |
-| `status:changes-requested` / `status:needs-rebase` | `pushed` / `no_changes` | `status:review`                                  |
-| any                                                | `blocked`               | `needs-human`                                    |
+| Before                                             | Your outcome                | After                                                                  |
+| -------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------- |
+| `status:in-progress`                               | `pr_opened` / `pushed`      | `status:review` (CI runs, then Tech Lead review)                       |
+| `status:changes-requested` / `status:needs-rebase` | `pushed` / `no_changes`     | `status:review`                                                        |
+| any                                                | `waiting` (with `blockers`) | `status:ready`, Dev freed, assigned again when the blockers are on dev |
+| any                                                | `blocked`                   | `needs-human`                                                          |
 
 ## Result
 
-`.factory/result.json`: `{"outcome":"pr_opened|pushed|no_changes|blocked","pr":N,"summary":"one line","reason":"when blocked"}`
+`.factory/result.json`: `{"outcome":"pr_opened|pushed|no_changes|waiting|blocked","pr":N,"summary":"one line","reason":"when blocked or waiting","blockers":[N]}`
+
+Report `waiting` (not `blocked`) when the ticket is fine but tickets it depends on are not merged into dev yet: list their issue numbers in `blockers`. No human is needed; the factory assigns the ticket again once they are on dev. Use `blocked` only when a human decision is needed.
