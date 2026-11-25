@@ -50,7 +50,7 @@ describe("EntryMenu", () => {
     setAi("offline");
     const onBill = jest.fn();
     await renderMenu({ onVoice: jest.fn(), onBill });
-    await waitFor(() => expect(screen.getByTestId("entry-menu-bill-hint")).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId("entry-menu-bill-hint")).toHaveTextContent(/network/));
     expect(screen.getByTestId("entry-menu-voice")).not.toBeDisabled();
     expect(screen.getByText("Chỉ dùng quy tắc offline")).toBeTruthy();
     expect(screen.getByTestId("entry-menu-bill")).not.toBeDisabled();
@@ -94,7 +94,7 @@ describe("Chụp bill gate", () => {
     setAi(true);
     const onBill = jest.fn();
     await renderMenu({ onBill });
-    await waitFor(() => expect(screen.getByTestId("entry-menu-bill")).not.toBeDisabled());
+    await waitFor(() => expect(screen.queryByTestId("entry-menu-bill-hint")).toBeNull());
     await fireEvent.press(screen.getByTestId("entry-menu-bill"));
     expect(onBill).toHaveBeenCalledTimes(1);
   });
