@@ -111,11 +111,9 @@ export const vi = {
   },
   handOff: {
     saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
-    delete: "Xóa",
-    askPaid: "Đã thanh toán xong chưa?",
-    paidYes: "Đã trả",
-    paidNo: "Chưa",
-    qrHint: "Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.",
+    undo: "Hoàn tác",
+    qrDeleted: "Đã xoá ảnh QR tạm khỏi Ảnh",
+    reopen: (bank: string) => `Mở lại ${bank}`,
   },
   qrImage: {
     addOnlyPermission:

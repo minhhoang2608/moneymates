@@ -25,7 +25,8 @@ appId: com.moneymates.app
     timeout: 10000
 - assertVisible: "Đã lưu 55\\.000đ.*"
 - assertVisible:
-    id: "handoff-qr-hint"
+    id: "handoff-undo"
+- assertNotVisible: "Đã thanh toán xong chưa?"
 - tapOn:
     id: "tab-history"
 - assertVisible:

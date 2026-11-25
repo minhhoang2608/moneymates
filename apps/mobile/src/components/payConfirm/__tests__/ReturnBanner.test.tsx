@@ -5,17 +5,12 @@ import path from "node:path";
 import { AppState } from "react-native";
 
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
-import {
-  createCategoryRepository,
-  createHandOffMemoryRepository,
-  createHandOffRepository,
-  createTransactionRepository,
-} from "@/db/repositories";
+import { createCategoryRepository, createHandOffRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 
-import { ReturnBanner } from "../ReturnBanner";
+import { HIDE_AFTER_MS, ReturnBanner } from "../ReturnBanner";
 
 jest.mock("@/db/client", () => ({ db: {} }));
 
@@ -49,32 +44,92 @@ async function setup() {
   return { repo, tx, db };
 }
 
+const mockStart = jest.fn();
+jest.mock("@/lib/payConfirm/startHandOff", () => ({ startHandOff: (...a: unknown[]) => mockStart(...a) }));
+jest.mock("@/components/payConfirm/HandOffQr", () => ({ HandOffQr: () => null }));
+
+const tpb = { id: "tpb", name: "TPBank" } as never;
+const reopenOf = (qrInAlbum: boolean) => ({
+  app: tpb,
+  model: { kind: "other", payload: "x" } as never,
+  amount: 55000,
+  note: "PHO HOA BAN 12",
+  qrInAlbum,
+});
+const ret = async () => {
+  await act(async () => handler("background"));
+  await act(async () => handler("active"));
+};
+
 describe("ReturnBanner", () => {
-  it("is hidden until the app returns from background, then Xóa soft-deletes", async () => {
-    const { repo, tx } = await setup();
-    await act(async () => usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" }));
-    await act(async () => usePendingHandOff.getState().showQrHint());
+  beforeEach(() => mockStart.mockReset());
+
+  it("return shows saved line and Hoàn tác, no question", async () => {
+    const { tx } = await setup();
+    await act(async () => usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO HOA BAN 12" }));
     expect(screen.queryByTestId("handoff-return-banner")).toBeNull();
-    await act(async () => handler("background"));
-    await act(async () => handler("active"));
-    expect(await screen.findByText("Đã lưu 55.000đ · PHO 24")).toBeTruthy();
-    expect(screen.getByTestId("handoff-qr-hint").props.children).toBe(
-      "Đã lưu mã QR vào Ảnh. Trong app ngân hàng, chọn Quét QR → chọn ảnh để tự điền.",
-    );
+    await ret();
+    expect(await screen.findByText("Đã lưu 55.000đ · PHO HOA BAN 12")).toBeTruthy();
+    expect(screen.getByTestId("handoff-undo")).toBeTruthy();
+    expect(screen.queryByText("Đã thanh toán xong chưa?")).toBeNull();
+    expect(screen.queryByTestId("handoff-reopen")).toBeNull();
+    expect(screen.queryByTestId("handoff-qr-deleted")).toBeNull();
+  });
+
+  it("TPBank with album image shows the deleted line and Mở lại TPBank, which starts a new hand-off", async () => {
+    const { tx } = await setup();
+    mockStart.mockResolvedValue({ opened: true });
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO HOA BAN 12" });
+      usePendingHandOff.getState().setReopen(reopenOf(true));
+      usePendingHandOff.getState().reveal();
+    });
+    expect(screen.getByText("Đã xoá ảnh QR tạm khỏi Ảnh")).toBeTruthy();
+    expect(screen.getByText("Mở lại TPBank")).toBeTruthy();
+    await act(async () => fireEvent.press(screen.getByTestId("handoff-reopen")));
+    expect(mockStart).toHaveBeenCalledTimes(1);
+    expect(mockStart.mock.calls[0][1]).toMatchObject({ app: tpb, amount: 55000, txId: tx.id });
+    expect(usePendingHandOff.getState()).toMatchObject({ visible: false, pending: { txId: tx.id } });
+  });
+
+  it("without an album image only Mở lại is offered", async () => {
+    const { tx } = await setup();
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "x" });
+      usePendingHandOff.getState().setReopen(reopenOf(false));
+      usePendingHandOff.getState().reveal();
+    });
+    expect(screen.queryByTestId("handoff-qr-deleted")).toBeNull();
+    expect(screen.getByTestId("handoff-reopen")).toBeTruthy();
+  });
+
+  it("Hoàn tác soft-deletes the transaction", async () => {
+    const { repo, tx } = await setup();
+    await act(async () => {
+      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
+      usePendingHandOff.getState().reveal();
+    });
     expect(await repo.list()).toHaveLength(1);
-    await act(async () => fireEvent.press(screen.getByTestId("handoff-delete")));
+    await act(async () => fireEvent.press(screen.getByTestId("handoff-undo")));
     await waitFor(() => expect(screen.queryByTestId("handoff-return-banner")).toBeNull());
     expect(await repo.list()).toHaveLength(0);
     expect(usePendingHandOff.getState().deletedVersion).toBe(1);
   });
 
-  it("autofill hand-off: no QR hint in the banner", async () => {
-    const { tx } = await setup();
-    await act(async () => {
-      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
-      usePendingHandOff.getState().reveal();
-    });
-    expect(screen.queryByTestId("handoff-qr-hint")).toBeNull();
+  it("auto-hides after HIDE_AFTER_MS and the transaction stays", async () => {
+    jest.useFakeTimers();
+    try {
+      const { repo, tx } = await setup();
+      await act(async () => {
+        usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
+        usePendingHandOff.getState().reveal();
+      });
+      await act(async () => jest.advanceTimersByTime(HIDE_AFTER_MS + 100));
+      expect(screen.queryByTestId("handoff-return-banner")).toBeNull();
+      expect(await repo.list()).toHaveLength(1);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("shows right away when revealed (open failed)", async () => {
@@ -84,42 +139,6 @@ describe("ReturnBanner", () => {
       usePendingHandOff.getState().reveal();
     });
     expect(screen.getByTestId("handoff-return-banner")).toBeTruthy();
-  });
-
-  it.each([
-    ["handoff-paid-yes", "share_ok"],
-    ["handoff-paid-no", "share_failed"],
-  ])("asks 'Đã thanh toán xong chưa?' once; %s stores %s", async (button, expected) => {
-    const { tx, db } = await setup();
-    await act(async () => {
-      usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
-      usePendingHandOff.getState().askPaid("tcb");
-      usePendingHandOff.getState().reveal();
-    });
-    expect(screen.getByText("Đã thanh toán xong chưa?")).toBeTruthy();
-    await act(async () => fireEvent.press(screen.getByTestId(button)));
-    expect(screen.queryByTestId("handoff-ask-paid")).toBeNull();
-    expect(await createHandOffMemoryRepository(db).getShareMemory()).toEqual({ tcb: expected });
-    // Coming back again does not ask again.
-    await act(async () => handler("background"));
-    await act(async () => handler("active"));
-    expect(screen.queryByTestId("handoff-ask-paid")).toBeNull();
-  });
-
-  it("keeps the question open past the auto-hide delay", async () => {
-    jest.useFakeTimers();
-    try {
-      const { tx } = await setup();
-      await act(async () => {
-        usePendingHandOff.getState().set({ txId: tx.id, amount: 55000, label: "PHO 24" });
-        usePendingHandOff.getState().askPaid("tcb");
-        usePendingHandOff.getState().reveal();
-      });
-      await act(async () => jest.advanceTimersByTime(20000));
-      expect(screen.getByTestId("handoff-ask-paid")).toBeTruthy();
-    } finally {
-      jest.useRealTimers();
-    }
   });
 
   it("records the return on the pending hand-off when the app comes back", async () => {
