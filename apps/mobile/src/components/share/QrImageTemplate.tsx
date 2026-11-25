@@ -15,10 +15,21 @@ const FOOTER_GREY = "#5B6472";
 const INK = "#111827";
 const GREEN = "#0E7C66";
 
+type SvgRef = { toDataURL: (cb: (data: string) => void) => void };
+
+/** Wraps an Svg ref so toDataURL renders at exactly width x height pixels (react-native-svg's `options`). */
+export function exportAtSize(r: SvgRef | null, width: number, height: number): SvgRef | null {
+  if (!r) return null;
+  return {
+    toDataURL: (cb) =>
+      (r.toDataURL as (cb: (d: string) => void, o: { width: number; height: number }) => void)(cb, { width, height }),
+  };
+}
+
 type Props = QrImageInput & {
   /** Only the QR on a white square, no name, bank, amount, note or footer (what MoMo reads best from the gallery). */
   qrOnly?: boolean;
-  getRef?: (r: { toDataURL: (cb: (data: string) => void) => void } | null) => void;
+  getRef?: (r: SvgRef | null) => void;
 };
 
 /** The 600×900 transfer image handed to bank apps (design: mockup 27). Rendered off-screen, exported as PNG. */
@@ -57,8 +68,12 @@ export function QrImageTemplate({ getRef, qrOnly = false, ...input }: Props) {
     }
   }
 
+  // QR-only: export at the layout's own pixel size, so a module is exactly QR_ONLY_MODULE_PX px whatever the screen density.
+  const exportRef = (r: SvgRef | null) => {
+    if (getRef) getRef(qrOnly ? exportAtSize(r, L.width, L.height) : r);
+  };
   const svgProps = {
-    ref: getRef as never,
+    ref: exportRef as never,
     testID: "qr-image-template",
     width: L.width,
     height: L.height,
