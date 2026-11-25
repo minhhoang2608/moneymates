@@ -50,6 +50,10 @@ appId: com.moneymates.app
 - assertVisible: "Cá nhân ›"
 - tapOn:
     id: "target-line"
+- scrollUntilVisible:
+    element:
+      text: "Đà Lạt"
+- waitForAnimationToEnd
 - tapOn: "Đà Lạt"
 - assertVisible:
     id: "payer-picker"
