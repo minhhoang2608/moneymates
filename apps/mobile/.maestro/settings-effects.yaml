@@ -48,10 +48,20 @@ appId: com.moneymates.app
     id: "overview-add-button"
 - tapOn:
     id: "entry-menu-manual"
+- scrollUntilVisible:
+    element:
+      id: "money-source-row"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "money-source-row"
 - assertVisible: "Visa"
 - tapOn: "Visa"
+- scrollUntilVisible:
+    element:
+      text: "Visa ›"
+    direction: DOWN
+    timeout: 10000
 - assertVisible: "Visa ›"
 # The manual form is a stack route without the tab bar; close it to get back to the tabs.
 - tapOn:
