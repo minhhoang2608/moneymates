@@ -38,6 +38,12 @@ describe("SheetPicker haptics", () => {
   });
 });
 
+function modalOf(testID: string) {
+  let node = screen.getByTestId(testID).parent;
+  while (node && !("onRequestClose" in node.props)) node = node.parent;
+  return node!;
+}
+
 describe("SheetPicker docking", () => {
   it("sheetMaxHeight is 60% of the window in pixels", () => {
     expect(sheetMaxHeight(800)).toBe(480);
@@ -50,5 +56,25 @@ describe("SheetPicker docking", () => {
     expect(panel.maxHeight).toBe(sheetMaxHeight(Dimensions.get("window").height));
     const layer = StyleSheet.flatten(screen.getByTestId("sheet-picker-layer").props.style);
     expect(layer).toMatchObject({ flex: 1, justifyContent: "flex-end" });
+  });
+});
+
+describe("SheetPicker docking", () => {
+  it("AC1: list does not grow, and the panel sits inside the bottom-aligned layer", async () => {
+    await renderPicker(() => {});
+    expect(StyleSheet.flatten(screen.getByTestId("sheet-picker-list").props.style).flexGrow).toBe(0);
+    const panel = StyleSheet.flatten(screen.getByTestId("sheet-picker-panel").props.style);
+    expect(typeof panel.maxHeight).toBe("number");
+    const layer = screen.getByTestId("sheet-picker-layer");
+    expect(StyleSheet.flatten(layer.props.style).justifyContent).toBe("flex-end");
+    expect(layer).toContainElement(screen.getByTestId("sheet-picker-panel"));
+  });
+
+  it("AC1: the modal is transparent and translucent under both bars", async () => {
+    await renderPicker(() => {});
+    const modal = modalOf("sheet-picker-layer");
+    expect(modal.props.transparent).toBe(true);
+    expect(modal.props.statusBarTranslucent).toBe(true);
+    expect(modal.props.navigationBarTranslucent).toBe(true);
   });
 });

@@ -40,7 +40,7 @@ export function SheetPicker({
     >
       <View testID="sheet-picker-panel" style={[styles.sheet, { maxHeight: sheetMaxHeight(height) }]}>
         <Text style={styles.title}>{title}</Text>
-        <ScrollView style={styles.list}>
+        <ScrollView testID="sheet-picker-list" style={styles.list}>
           {options.map((o) => (
             <PressableScale
               key={o.key}

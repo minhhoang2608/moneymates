@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { StyleSheet } from "react-native";
-import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
+import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import {
   createGroupExpenseRepository,
@@ -286,5 +286,45 @@ describe("Tổng quan screen", () => {
     expect(flat(screen.getByTestId("overview-recent"))).toMatchObject({ paddingVertical: 8, paddingHorizontal: 16 });
     const row = flat(screen.getAllByTestId(/^txn-item-/)[0]);
     expect(row).toMatchObject({ borderTopWidth: 1, borderTopColor: "#EEF0F3" });
+  });
+});
+
+describe("Tổng quan month picker sheet", () => {
+  it("AC2: picking a month closes the sheet and reloads that month", async () => {
+    await add(50_000, "2026-11-05T03:00:00Z");
+    await add(70_000, "2026-10-05T03:00:00Z");
+    await renderOverview();
+    await waitFor(() => expect(text("overview-expense")).toBe("50.000đ"));
+    await fireEvent.press(screen.getByTestId("overview-month-button"));
+    expect(await screen.findByTestId("sheet-picker-layer")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("overview-pick-month-2026-10"));
+    await waitFor(() => expect(text("overview-expense")).toBe("70.000đ"));
+    await waitFor(() => expect(screen.queryByTestId("sheet-picker-layer")).toBeNull());
+    expect(screen.getByText("Tháng 10/2026")).toBeTruthy();
+  });
+
+  it("AC2: a backdrop press closes the sheet without reloading", async () => {
+    await add(50_000, "2026-11-05T03:00:00Z");
+    await renderOverview();
+    await waitFor(() => expect(text("overview-expense")).toBe("50.000đ"));
+    await fireEvent.press(screen.getByTestId("overview-month-button"));
+    await screen.findByTestId("sheet-picker-layer");
+    await fireEvent.press(screen.getByLabelText("Đóng"));
+    await waitFor(() => expect(screen.queryByTestId("sheet-picker-layer")).toBeNull());
+    expect(text("overview-expense")).toBe("50.000đ");
+    expect(screen.getByText("Tháng 11/2026")).toBeTruthy();
+  });
+
+  it("AC2: Modal onRequestClose closes the sheet", async () => {
+    await add(50_000, "2026-11-05T03:00:00Z");
+    await renderOverview();
+    await waitFor(() => expect(text("overview-expense")).toBe("50.000đ"));
+    await fireEvent.press(screen.getByTestId("overview-month-button"));
+    await screen.findByTestId("sheet-picker-layer");
+    let modal = screen.getByTestId("sheet-picker-layer").parent;
+    while (modal && !("onRequestClose" in modal.props)) modal = modal.parent;
+    await act(async () => modal!.props.onRequestClose());
+    await waitFor(() => expect(screen.queryByTestId("sheet-picker-layer")).toBeNull());
+    expect(screen.getByText("Tháng 11/2026")).toBeTruthy();
   });
 });
