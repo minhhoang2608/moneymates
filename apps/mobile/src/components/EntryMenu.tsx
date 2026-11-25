@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { AnimatedSheet } from "@/components/AnimatedSheet";
 import { PressableScale } from "@/components/PressableScale";
 
-import { useAiAvailable, useRefreshFeatures } from "@/api/features";
+import { useEntryOptions } from "@/components/useEntryOptions";
 import { vi } from "@/i18n/vi";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
@@ -21,29 +21,13 @@ export function EntryMenu({
   onVoice?: () => void;
   onBill?: () => void;
 }) {
-  const refreshFeatures = useRefreshFeatures();
-  const bill = useAiAvailable("parse_bill");
+  const { refreshFeatures, billAvailable: billAi, billHint, voiceHint, wrapBill } = useEntryOptions();
   useEffect(() => {
     if (visible) refreshFeatures();
   }, [visible, refreshFeatures]);
-  const voiceAi = useAiAvailable("parse_text").available;
-  const billAi = bill.available;
-  // Voice also works offline (rules only), so it is never gated on AI; bill capture needs the AI.
-  // Chụp bill is never greyed out for good: while the AI is not confirmed available, a tap re-checks the server
-  // and the row says why (a disabled button on a phone gave no clue and no way to retry).
-  const billHint = billAi
-    ? null
-    : bill.reason === "loading"
-      ? vi.entryMenu.billChecking
-      : bill.reason === "disabled"
-        ? vi.entryMenu.billDisabled
-        : vi.entryMenu.billRetry(
-            vi.apiErrors[bill.errorCode === "unknown" || !bill.errorCode ? "network" : bill.errorCode],
-            bill.errorCode ?? "?",
-          );
-  const onBillPress = onBill ? (billAi ? onBill : () => refreshFeatures(true)) : undefined;
+  const onBillPress = wrapBill(onBill);
   const aiItems: [string, string, (() => void) | undefined, boolean, string | null][] = [
-    ["entry-menu-voice", vi.entryMenu.voice, onVoice, true, voiceAi ? null : vi.voice.offlineHint],
+    ["entry-menu-voice", vi.entryMenu.voice, onVoice, true, voiceHint],
     ["entry-menu-bill", vi.entryMenu.bill, onBillPress, billAi, billHint],
   ];
   return (

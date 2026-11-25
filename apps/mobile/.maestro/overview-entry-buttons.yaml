@@ -1,0 +1,28 @@
+# Tổng quan has Nhập tay / Voice / Chụp bill buttons that open the same screens as the "+" menu.
+appId: com.moneymates.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Tổng quan"
+    timeout: 30000
+- assertVisible:
+    id: "overview-entry-manual"
+- assertVisible:
+    id: "overview-entry-voice"
+- assertVisible:
+    id: "overview-entry-bill"
+- tapOn:
+    id: "overview-entry-manual"
+- assertVisible:
+    id: "amount-input"
+- back
+- tapOn:
+    id: "overview-entry-voice"
+- assertVisible:
+    id: "voice-mic"
+- back
+- tapOn:
+    id: "overview-entry-bill"
+- assertVisible:
+    id: "screen-bill"

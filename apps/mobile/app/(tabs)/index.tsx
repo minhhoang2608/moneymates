@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { AddFab, FAB_CLEARANCE } from "@/components/AddFab";
+import { EntryButtons } from "@/components/EntryButtons";
 import { PressableScale } from "@/components/PressableScale";
 import { SkeletonCard } from "@/components/Skeleton";
 import { CalendarIcon, WarningIcon } from "@/components/icons";
@@ -87,7 +88,10 @@ export default function OverviewScreen() {
         </View>
 
         {data === null ? (
-          <SkeletonCard testID="overview-skeleton" />
+          <>
+            <SkeletonCard testID="overview-skeleton" />
+            <EntryButtons />
+          </>
         ) : (
           <>
             <Animated.View style={styles.hero} testID="overview-hero" {...fade}>
@@ -130,6 +134,8 @@ export default function OverviewScreen() {
                 </Text>
               </Animated.View>
             ) : null}
+
+            <EntryButtons />
 
             {o && o.top.length > 0 ? (
               <Animated.View style={styles.card} testID="overview-top" {...fade}>

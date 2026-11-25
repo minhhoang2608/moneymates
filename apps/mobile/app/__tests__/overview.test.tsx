@@ -74,6 +74,17 @@ async function renderOverview() {
 }
 
 describe("Tổng quan screen", () => {
+  it("shows the Nhập tay / Voice / Chụp bill row and opens manual entry", async () => {
+    await add(50_000, "2026-11-05T03:00:00Z");
+    await renderOverview();
+    await screen.findByTestId("overview-recent");
+    for (const id of ["manual", "voice", "bill"]) expect(screen.getByTestId(`overview-entry-${id}`)).toBeTruthy();
+    const style = StyleSheet.flatten(screen.getByTestId("overview-entry-manual").props.style);
+    expect(style.borderColor).toBe(colors.border);
+    await fireEvent.press(screen.getByTestId("overview-entry-manual"));
+    await screen.findByTestId("amount-input");
+  });
+
   it("AC1: shows monthly expense and income", async () => {
     await add(50_000, "2026-11-05T03:00:00Z");
     await add(150_000, "2026-11-06T03:00:00Z");
