@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react-native";
 import { buildQrImageContent, computeQrImageLayout } from "@/lib/share/qrTemplate";
 import { generateVietQr } from "@/lib/vietqr";
 
-import { QrImageTemplate } from "../QrImageTemplate";
+import { exportAtSize, QrImageTemplate } from "../QrImageTemplate";
 
 // Host-render the SVG primitives so text is queryable.
 jest.mock("react-native-svg", () => {
@@ -90,4 +90,15 @@ describe("QrImageTemplate", () => {
       expect(c.payload).not.toBe(fallbackPayload);
     });
   });
+});
+
+describe("exportAtSize", () => {
+  it("asks the Svg for a PNG of exactly width x height pixels", () => {
+    const real = jest.fn((cb: (d: string) => void) => cb("png"));
+    const cb = jest.fn();
+    exportAtSize({ toDataURL: real as never }, 540, 540)?.toDataURL(cb);
+    expect(real).toHaveBeenCalledWith(cb, { width: 540, height: 540 });
+    expect(cb).toHaveBeenCalledWith("png");
+  });
+  it("passes null through", () => expect(exportAtSize(null, 540, 540)).toBeNull());
 });

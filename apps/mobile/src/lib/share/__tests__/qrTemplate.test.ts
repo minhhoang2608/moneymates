@@ -9,6 +9,7 @@ import {
   CANVAS_W,
   computeQrImageLayout,
   computeQrOnlyLayout,
+  QR_ONLY_MODULE_PX,
   groupAccount,
   qrMatrix,
   stripShopPrefix,
@@ -149,16 +150,16 @@ describe("QR-only layout", () => {
   const real = qrMatrix(buildQrImageContent(PHO).payload).size;
   it.each([21, 29, 41, 57, real])("is a white square that fits the code for %i modules", (n) => {
     const L = computeQrOnlyLayout(n);
-    expect(L.width).toBe(CANVAS_W);
-    expect(L.height).toBe(CANVAS_W);
-    expect(L.box.size).toBeGreaterThanOrEqual(0.9 * CANVAS_W);
-    expect(L.box.x + L.box.size).toBeLessThanOrEqual(CANVAS_W);
+    expect(L.moduleSize).toBe(QR_ONLY_MODULE_PX);
+    expect(L.width).toBe((n + 8) * QR_ONLY_MODULE_PX);
+    expect(L.height).toBe(L.width);
+    expect(L.box.size).toBe(L.width);
     expect(Number.isInteger(L.qrOrigin.x)).toBe(true);
     expect(Number.isInteger(L.qrOrigin.y)).toBe(true);
     expect(Number.isInteger(L.moduleSize)).toBe(true);
-    expect(L.qrOrigin.x).toBeGreaterThanOrEqual(4 * L.moduleSize);
-    expect(CANVAS_W - (L.qrOrigin.x + n * L.moduleSize)).toBeGreaterThanOrEqual(4 * L.moduleSize);
-    expect(L.qrOrigin.y).toBeGreaterThanOrEqual(4 * L.moduleSize);
-    expect(CANVAS_W - (L.qrOrigin.y + n * L.moduleSize)).toBeGreaterThanOrEqual(4 * L.moduleSize);
+    expect(L.qrOrigin.x).toBe(4 * L.moduleSize);
+    expect(L.width - (L.qrOrigin.x + n * L.moduleSize)).toBe(4 * L.moduleSize);
+    expect(L.qrOrigin.y).toBe(4 * L.moduleSize);
+    expect(L.height - (L.qrOrigin.y + n * L.moduleSize)).toBe(4 * L.moduleSize);
   });
 });

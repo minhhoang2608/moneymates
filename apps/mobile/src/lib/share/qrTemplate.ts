@@ -166,16 +166,22 @@ export type QrOnlyLayout = {
   quietZone: number;
 };
 
-/** The bare QR on a white square (no text): the largest code that fits CANVAS_W, 4-module quiet zone kept. */
+/** Pixels per module of the QR-only image. The export is exactly this many px per module (see QrImageTemplate). */
+export const QR_ONLY_MODULE_PX = 12;
+
+/**
+ * The bare QR on a white square (no text): the code plus its 4-module quiet zone and nothing else, at exactly
+ * QR_ONLY_MODULE_PX per module. Exported at that pixel size (not 600 dp x screen density, which gave 2100 px images
+ * with fractional modules that MoMo's gallery scan rejected).
+ */
 export function computeQrOnlyLayout(moduleCount: number): QrOnlyLayout {
   const cells = moduleCount + QUIET * 2;
-  const moduleSize = Math.floor(CANVAS_W / cells);
+  const moduleSize = QR_ONLY_MODULE_PX;
   const boxSize = moduleSize * cells;
-  const offset = Math.floor((CANVAS_W - boxSize) / 2);
-  const box = { x: offset, y: offset, size: boxSize };
+  const box = { x: 0, y: 0, size: boxSize };
   return {
-    width: CANVAS_W,
-    height: CANVAS_W,
+    width: boxSize,
+    height: boxSize,
     moduleSize,
     box,
     qrOrigin: { x: box.x + QUIET * moduleSize, y: box.y + QUIET * moduleSize },
