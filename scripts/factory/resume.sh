@@ -37,6 +37,33 @@ for pair in "status:in-progress:assigned" "status:changes-requested:changes-requ
   done
 done
 
+# --- Escalated only because a dependency was missing: unblock once every dependency is on dev ---
+# Older Dev runs reported a missing dependency as `blocked` (needs-human). Reopen those tickets when every
+# "Depends on #N" and every reported blocker is merged or closed. At most twice per ticket, so a ticket
+# blocked by something the body does not list cannot loop.
+for n in $(gh issue list --state open --label needs-human --limit 100 --json number,labels \
+  --jq '.[] | select([.labels[].name] | any(. == "type:epic" or . == "test:real-device" or . == "status:triage") | not) | .number'); do
+  comments="$(gh api --paginate "repos/$GH_REPO/issues/$n/comments?per_page=100" --jq '.[].body')"
+  last_escalation="$(awk '/<!-- factory:escalation -->/{buf=""} {buf=buf "\n" $0} END{print buf}' <<<"$comments")"
+  grep -qiE 'dependenc|not on dev|not merged|still (open|in progress)' <<<"$last_escalation" || continue
+  [[ "$(grep -c '<!-- factory:auto-unblock -->' <<<"$comments" || true)" -ge 2 ]] && continue
+  body="$(gh issue view "$n" --json body --jq .body)"
+  deps="$( { deps_of_body "$body"; waiting_blockers "$n"; } | sort -u)"
+  [[ -z "$deps" ]] && continue
+  all=true
+  for dep in $deps; do dep_satisfied "$dep" || { all=false; break; }; done
+  [[ "$all" == true ]] || continue
+  gh issue edit "$n" --remove-label needs-human >/dev/null
+  dep_list="#${deps//$'\n'/, #}"
+  comment "$n" "<!-- factory:auto-unblock -->
+:unlock: Every dependency ($dep_list) is merged into dev, so \`needs-human\` was removed automatically. ([run]($RUN_URL))"
+  role="$(role_of_issue "$n")"
+  if [[ -n "$role" ]] && ! mentions "$active_dev" "$n"; then
+    dispatch dev.yml -f issue="$n" -f role="$role" -f reason=assigned
+  fi
+  resumed=$((resumed + 1))
+done
+
 # --- Waiting for review ---
 for n in $(stale_issues status:review); do
   pr="$(pr_for_issue "$n")"

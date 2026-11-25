@@ -11,6 +11,9 @@ source "$(dirname "$0")/lib.sh"
 cmd="${1:?command required}"
 PLAN_FILE="${PLAN_FILE:-.factory/plan.md}"
 
+# Issue numbers listed in result.json "blockers" (space separated).
+result_blockers() { jq -r '(.blockers // []) | map(tostring) | join(" ")' "$RESULT_FILE"; }
+
 route() {
   local issue="" role="" reason=""
   if [[ "${EVENT_NAME:-}" == "workflow_dispatch" ]]; then
@@ -90,7 +93,12 @@ plan_apply() {
   esac
   local outcome
   outcome="$(result_get .outcome)"
-  if [[ "$outcome" == blocked ]]; then
+  if [[ "$outcome" == waiting ]] && [[ -n "$(result_blockers)" ]]; then
+    park_waiting "$ISSUE" "$(result_blockers)" "Dev could not plan yet: $(result_get .reason)"
+    set_output proceed false
+    return 0
+  fi
+  if [[ "$outcome" == blocked || "$outcome" == waiting ]]; then
     escalate "$ISSUE" "Dev could not plan: $(result_get .reason)"
     set_output proceed false
     return 0
@@ -116,6 +124,14 @@ apply() {
   outcome="$(result_get .outcome)"
   summary_text="$(result_get .summary)"
   case "$outcome" in
+    waiting)
+      if [[ -n "$(result_blockers)" ]]; then
+        park_waiting "$ISSUE" "$(result_blockers)" "Dev ($ROLE) cannot start yet: $(result_get .reason)"
+      else
+        escalate "$ISSUE" "Dev ($ROLE) is waiting on an unnamed dependency: $(result_get .reason)"
+      fi
+      return 0
+      ;;
     blocked)
       escalate "$ISSUE" "Dev ($ROLE) is blocked: $(result_get .reason)"
       return 0

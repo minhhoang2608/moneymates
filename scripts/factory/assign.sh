@@ -35,7 +35,7 @@ collect() {
     n="$(jq -r .number <<<"$row")"
     body="$(jq -r '.body // ""' <<<"$row")"
     ok=true
-    for dep in $(deps_of_body "$body"); do
+    for dep in $( { deps_of_body "$body"; waiting_blockers "$n"; } | sort -u); do
       if ! dep_satisfied "$dep"; then ok=false; log "#$n waits for #$dep"; fi
     done
     if [[ "$ok" == true ]]; then eligible="$(jq -c --argjson r "$row" '. + [$r]' <<<"$eligible")"; fi
