@@ -25,10 +25,25 @@ appId: com.moneymates.app
       id: "onboarding-apps"
     timeout: 10000
 - assertVisible: "Bước 2/4"
+- scrollUntilVisible:
+    element:
+      id: "payment-app-check-tpb"
+    direction: DOWN
+    timeout: 15000
 - tapOn:
     id: "payment-app-check-tpb"
+- scrollUntilVisible:
+    element:
+      id: "payment-app-check-momo"
+    direction: DOWN
+    timeout: 15000
 - tapOn:
     id: "payment-app-check-momo"
+- scrollUntilVisible:
+    element:
+      id: "payment-app-check-vcb"
+    direction: DOWN
+    timeout: 15000
 - tapOn:
     id: "payment-app-check-vcb"
 - tapOn:
