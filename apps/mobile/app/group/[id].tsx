@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -21,6 +22,7 @@ type Loaded = {
 };
 
 export default function GroupDetailScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const groupId = String(id);
@@ -76,7 +78,7 @@ export default function GroupDetailScreen() {
 
   return (
     <View style={styles.root} testID="screen-group-detail">
-      <View style={styles.header}>
+      <View testID="screen-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="group-back"
           accessibilityRole="button"
@@ -186,7 +188,7 @@ export default function GroupDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingTop: 40, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: colors.background },
   header: { height: 64, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: { minWidth: 44, height: 44, alignItems: "center", justifyContent: "center" },
   backText: { fontFamily: fontFamily.semibold, fontSize: 28, color: colors.text },

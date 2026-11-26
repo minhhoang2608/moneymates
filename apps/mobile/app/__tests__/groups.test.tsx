@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -106,6 +107,14 @@ describe("Nhóm list", () => {
 });
 
 describe("Tạo/sửa nhóm", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await renderEdit();
+    expect(screen.getByTestId("screen-header")).toHaveStyle({ marginTop: 30 });
+  });
+
   it("AC1: creates Đà Lạt with icon, members and saves", async () => {
     freshFile();
     await renderEdit();

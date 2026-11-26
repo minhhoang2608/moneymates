@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 import * as camera from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
@@ -38,6 +39,14 @@ beforeEach(() => {
 });
 
 describe("scan screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the scan screen below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await open();
+    expect(screen.getByTestId("screen-scan")).toHaveStyle({ paddingTop: 50 });
+  });
+
   it("camera scan navigates to /pay-confirm once", async () => {
     await open();
     await scan(qr.dynamic);

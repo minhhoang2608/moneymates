@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { haptics } from "@/lib/haptics";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -37,6 +38,7 @@ import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 const RECENT_KEY = PREF_KEYS.recentPayApps;
 
 export default function PayConfirmScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<Record<string, string>>();
   const model = useMemo(() => parsePayConfirmParams(params), [params]);
@@ -245,7 +247,7 @@ export default function PayConfirmScreen() {
 
   return (
     <View style={styles.root} testID="screen-pay-confirm">
-      <View style={styles.header}>
+      <View testID="screen-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="pay-back"
           accessibilityRole="button"

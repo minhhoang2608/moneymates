@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -69,6 +70,15 @@ afterEach(() => {
 const accept = () => createAppSettingRepository(d()).set("bill_privacy_accepted", true);
 
 describe("bill scan screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await renderRouter("./app", { initialUrl: "/bill" });
+    await screen.findByTestId("bill-privacy");
+    expect(screen.getByTestId("screen-header")).toHaveStyle({ marginTop: 30 });
+  });
+
   it("AC2: shows the privacy notice before any upload on first use", async () => {
     await renderRouter("./app", { initialUrl: "/bill" });
     expect(await screen.findByTestId("bill-privacy")).toBeTruthy();
