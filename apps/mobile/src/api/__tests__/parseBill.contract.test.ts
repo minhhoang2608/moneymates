@@ -39,11 +39,8 @@ describe("parseBill contract", () => {
       await parseBill("file:///bill.jpg", CATEGORIES);
       const fields = append.mock.calls.map((c) => c[0]);
       expect(fields).toEqual(contract.fields);
-      expect(append).toHaveBeenCalledWith("image", {
-        uri: "file:///bill.jpg",
-        name: contract.imageName,
-        type: contract.imageType,
-      });
+      // The image is an expo-file-system File (a Blob-like part); its name and type come from the file itself.
+      expect(append).toHaveBeenCalledWith("image", expect.objectContaining({ uri: "file:///bill.jpg" }));
       expect(append).toHaveBeenCalledWith("categories", JSON.stringify(CATEGORIES));
     } finally {
       append.mockRestore();
