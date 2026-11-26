@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import * as Linking from "expo-linking";
+import * as safeArea from "react-native-safe-area-context";
 import { act, fireEvent, renderRouter, screen, waitFor, within } from "expo-router/testing-library";
 
 import { createPaymentAppPrefsRepository } from "@/db/repositories";
@@ -49,6 +50,14 @@ const enabledIds = () =>
   screen.getAllByTestId(/^payment-app-drag-/).map((n) => n.props.testID.replace("payment-app-drag-", ""));
 
 describe("App thanh toán page", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await open();
+    expect(screen.getByTestId("payment-apps-header")).toHaveStyle({ paddingTop: 30, height: 94 });
+  });
+
   it("AC2: shows the intro, sections and badges", async () => {
     await open();
     expect(

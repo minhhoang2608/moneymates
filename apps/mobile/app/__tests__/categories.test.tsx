@@ -1,6 +1,7 @@
 import { Alert, Keyboard } from "react-native";
 import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 import { router } from "expo-router";
+import * as safeArea from "react-native-safe-area-context";
 
 import { createCategoryRepository, createTransactionRepository } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
@@ -41,6 +42,14 @@ async function addCustom(name: string) {
 }
 
 describe("Danh mục screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await open();
+    expect(screen.getByTestId("categories-header")).toHaveStyle({ paddingTop: 30, height: 94 });
+  });
+
   it("pressing the sheet title dismisses the keyboard and keeps the sheet open", async () => {
     const spy = jest.spyOn(Keyboard, "dismiss");
     await open();

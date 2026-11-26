@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -15,6 +16,7 @@ import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 type Sheet = { item: Row | null } | null;
 
 export default function CategoriesScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { categories } = useRepositories();
   const [kind, setKind] = useState<CategoryKind>("expense");
@@ -62,7 +64,7 @@ export default function CategoriesScreen() {
 
   return (
     <View style={styles.root} testID="screen-categories">
-      <View style={styles.header}>
+      <View testID="categories-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="category-back"
           accessibilityRole="button"

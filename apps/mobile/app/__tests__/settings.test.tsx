@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { Alert } from "react-native";
+import * as safeArea from "react-native-safe-area-context";
 import { fireEvent, renderRouter, screen, waitFor, act } from "expo-router/testing-library";
 
 import {
@@ -52,6 +53,14 @@ const rowIds = () =>
   screen.getAllByTestId(/^settings-app-row-/).map((n) => n.props.testID.replace("settings-app-row-", ""));
 
 describe("Cài đặt screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await open();
+    expect(screen.getByTestId("settings-header")).toHaveStyle({ paddingTop: 30, height: 94 });
+  });
+
   it("AC1: the payment apps row shows the enabled count and opens the page", async () => {
     await createPaymentAppPrefsRepository(fresh()).setEnabledOrder(["mb", "tpb", "tcb", "momo"]);
     await open();

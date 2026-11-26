@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
@@ -21,6 +22,7 @@ import { useAutoDetect } from "@/stores/autoDetect";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { moneySources, preferences, appSettings, bankAccounts, handOffMemory } = useRepositories();
   const { enabled, reorder, reload } = useEnabledPayApps();
@@ -132,7 +134,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.root} testID="screen-settings">
-      <View style={styles.header}>
+      <View testID="settings-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="settings-back"
           accessibilityRole="button"

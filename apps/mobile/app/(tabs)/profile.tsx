@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -16,6 +17,7 @@ import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 type Href = "/bank-accounts" | "/categories" | "/settings";
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { profile, bankAccounts, categories } = useRepositories();
   const { mutateAsync: resetOnboarding } = useResetOnboarding();
@@ -102,7 +104,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <View style={styles.root} testID="screen-profile">
+    <View style={[styles.root, { paddingTop: insets.top }]} testID="screen-profile">
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} testID="profile-scroll">
         <Text style={styles.title}>{vi.profile.title}</Text>
 
