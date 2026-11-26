@@ -45,7 +45,11 @@ async function request<T>(path: string, init: Init, timeoutMs: number): Promise<
         }
         throw toApiError(res.status, body);
       }
-      return (await res.json()) as T;
+      try {
+        return (await res.json()) as T;
+      } catch {
+        throw new ApiError("http_error", res.status);
+      }
     })();
     run.catch(() => undefined); // avoid unhandled rejection when the timeout wins the race
     return await Promise.race([run, timeout]);

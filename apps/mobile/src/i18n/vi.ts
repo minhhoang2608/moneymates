@@ -388,6 +388,7 @@ export const vi = {
   },
   bill: {
     title: "Chụp bill",
+    failed: (detail: string) => `Không xử lý được ảnh bill (${detail}). Vui lòng thử lại hoặc nhập tay.`,
     close: "Đóng",
     done: "AI đã đọc xong bill",
     total: "Tổng tiền",
