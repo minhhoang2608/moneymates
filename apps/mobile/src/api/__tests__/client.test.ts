@@ -114,6 +114,7 @@ describe("api client", () => {
       const err = await fails(apiPost("/x", {}));
       expect(err).toBeInstanceOf(ApiError);
       expect(err.code).toBe("network");
+      expect(err.detail).toBe("Network request failed");
       messages.add(err.message);
     });
 

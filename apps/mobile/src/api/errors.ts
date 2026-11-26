@@ -14,12 +14,15 @@ export type ApiErrorCode =
 export class ApiError extends Error {
   readonly status: number | null;
   readonly code: ApiErrorCode;
+  /** The underlying error text (for example fetch's "Network request failed"), shown to help find the cause. */
+  readonly detail: string | null;
 
-  constructor(code: ApiErrorCode, status: number | null = null) {
+  constructor(code: ApiErrorCode, status: number | null = null, detail: string | null = null) {
     super(vi.apiErrors[code]);
     this.name = "ApiError";
     this.code = code;
     this.status = status;
+    this.detail = detail;
   }
 }
 
