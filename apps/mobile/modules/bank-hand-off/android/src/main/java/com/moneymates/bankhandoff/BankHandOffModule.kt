@@ -47,13 +47,13 @@ class BankHandOffModule : Module() {
       }
     }
 
-    // Sends a PNG to one package with ACTION_SEND. Throws when that package can't take image/png.
-    AsyncFunction("sharePng") { base64: String, pkg: String ->
+    // Sends a PNG or JPEG to one package with ACTION_SEND. Throws when that package can't take the type.
+    AsyncFunction("sharePng") { base64: String, pkg: String, mime: String ->
       val dir = File(context.cacheDir, "bank_hand_off").apply { mkdirs() }
-      val file = File(dir, "qr.png")
+      val file = File(dir, if (mime == "image/jpeg") "qr.jpg" else "qr.png")
       file.writeBytes(Base64.decode(base64, Base64.DEFAULT))
       val uri = FileProvider.getUriForFile(context, "${context.packageName}.bankhandoff.fileprovider", file)
-      sendImage(uri, pkg)
+      sendImage(uri, pkg, mime)
     }
 
     // Sends a photo that is already in the gallery (MediaStore id from expo-media-library) to one package,
@@ -61,25 +61,26 @@ class BankHandOffModule : Module() {
     // QR from such a URI and ignore a FileProvider one.
     AsyncFunction("shareMediaImage") { mediaId: String, pkg: String ->
       val id = mediaId.toLongOrNull() ?: throw CodedException("ERR_BAD_MEDIA_ID", "Invalid media id", null)
-      sendImage(ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id), pkg)
+      val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+      sendImage(uri, pkg, context.contentResolver.getType(uri) ?: "image/jpeg")
     }
   }
 
-  private fun sendImage(uri: Uri, pkg: String) {
+  private fun sendImage(uri: Uri, pkg: String, mime: String) {
     val send = Intent(Intent.ACTION_SEND).apply {
-      type = "image/png"
+      type = mime
       putExtra(Intent.EXTRA_STREAM, uri)
       clipData = ClipData.newRawUri("", uri)
       setPackage(pkg)
       addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     if (send.resolveActivity(context.packageManager) == null) {
-      throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept image/png", null)
+      throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept $mime", null)
     }
     try {
       context.startActivity(send)
     } catch (e: ActivityNotFoundException) {
-      throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept image/png", e)
+      throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept $mime", e)
     }
   }
 }

@@ -1,4 +1,5 @@
 import { Directory, File, Paths } from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as MediaLibrary from "expo-media-library/legacy";
 import * as Sharing from "expo-sharing";
 
@@ -10,6 +11,19 @@ export function writeQrPng(base64: string): string {
   file.create({ overwrite: true });
   file.write(base64, { encoding: "base64" });
   return file.uri;
+}
+
+/**
+ * Re-encodes the QR PNG as a full-quality JPEG. Bank apps register for image/jpeg (what the Gallery shares
+ * for photos and screenshots) more often than for image/png.
+ */
+export async function toQrJpeg(base64Png: string): Promise<{ uri: string; base64: string }> {
+  const res = await ImageManipulator.manipulateAsync(writeQrPng(base64Png), [], {
+    compress: 1,
+    format: ImageManipulator.SaveFormat.JPEG,
+    base64: true,
+  });
+  return { uri: res.uri, base64: res.base64 ?? "" };
 }
 
 export async function saveQrToGallery(base64: string): Promise<"saved" | "denied"> {

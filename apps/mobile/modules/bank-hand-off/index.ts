@@ -3,7 +3,7 @@ import { requireNativeModule } from "expo-modules-core";
 
 type BankHandOffNative = {
   openIntentUri(uri: string): Promise<void>;
-  sharePng(base64: string, pkg: string): Promise<void>;
+  sharePng(base64: string, pkg: string, mime: string): Promise<void>;
   shareMediaImage(mediaId: string, pkg: string): Promise<void>;
 };
 
@@ -23,11 +23,15 @@ export async function openIntentUri(uri: string): Promise<void> {
   await native.openIntentUri(uri);
 }
 
-/** Sends a base64 PNG to one Android package (ACTION_SEND). Rejects when it can't accept it or off Android. */
-export async function sharePng(base64: string, pkg: string): Promise<void> {
+/** Sends a base64 image (PNG or JPEG) to one Android package (ACTION_SEND). Rejects when it can't accept it or off Android. */
+export async function sharePng(
+  base64: string,
+  pkg: string,
+  mime: "image/png" | "image/jpeg" = "image/png",
+): Promise<void> {
   const native = load();
   if (!native) throw new Error("unsupported");
-  await native.sharePng(base64, pkg);
+  await native.sharePng(base64, pkg, mime);
 }
 
 /** Sends a photo already in the gallery (MediaStore id) to one Android package, as the Gallery app shares it. */

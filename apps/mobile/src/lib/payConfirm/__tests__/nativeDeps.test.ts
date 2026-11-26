@@ -1,4 +1,5 @@
 import * as Clipboard from "expo-clipboard";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as Linking from "expo-linking";
 import * as MediaLibrary from "expo-media-library/legacy";
 
@@ -68,20 +69,40 @@ describe("nativeDeps", () => {
     expect(sharePng).not.toHaveBeenCalled();
   });
 
-  it("falls back to the private PNG when sharing the album QR fails", async () => {
+  it("falls back to a private JPEG copy when sharing the album QR fails", async () => {
     jest.mocked(shareMediaImage).mockRejectedValueOnce(new Error("no"));
     jest.mocked(sharePng).mockClear();
+    jest
+      .mocked(ImageManipulator.manipulateAsync)
+      .mockResolvedValueOnce({ uri: "file:///q.jpg", base64: "JPEG" } as never);
     await createNativeDeps(async () => "AAAA").shareToPackage("com.x", "42");
-    expect(sharePng).toHaveBeenCalledWith("AAAA", "com.x");
+    expect(sharePng).toHaveBeenCalledWith("JPEG", "com.x", "image/jpeg");
   });
 
   it("shares to a package and opens intents through the native module", async () => {
     const d = createNativeDeps(async () => "AAAA");
+    jest
+      .mocked(ImageManipulator.manipulateAsync)
+      .mockResolvedValueOnce({ uri: "file:///q.jpg", base64: "JPEG" } as never);
     await d.shareToPackage("com.x");
     await d.openIntent("intent://#Intent;package=com.x;end");
-    expect(sharePng).toHaveBeenCalledWith("AAAA", "com.x");
+    expect(sharePng).toHaveBeenCalledWith("JPEG", "com.x", "image/jpeg");
     expect(openIntentUri).toHaveBeenCalledWith("intent://#Intent;package=com.x;end");
     await expect(createNativeDeps(async () => null).shareToPackage("com.x")).rejects.toThrow();
+  });
+
+  it("saves the album QR as a JPEG", async () => {
+    jest.mocked(MediaLibrary.requestPermissionsAsync).mockResolvedValueOnce({ granted: true } as never);
+    jest
+      .mocked(ImageManipulator.manipulateAsync)
+      .mockResolvedValueOnce({ uri: "file:///q.jpg", base64: "JPEG" } as never);
+    await createNativeDeps(async () => "AAAA").saveQrImage();
+    expect(ImageManipulator.manipulateAsync).toHaveBeenLastCalledWith(expect.any(String), [], {
+      compress: 1,
+      format: "jpeg",
+      base64: true,
+    });
+    expect(MediaLibrary.createAssetAsync).toHaveBeenLastCalledWith("file:///q.jpg");
   });
 
   it("returns the asset id on Android", async () => {

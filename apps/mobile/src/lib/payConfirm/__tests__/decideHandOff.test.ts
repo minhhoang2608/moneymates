@@ -8,8 +8,8 @@ describe("decideHandOff", () => {
     expect(decideHandOff(app("tcb"), "android")).toBe("direct-share");
     expect(decideHandOff(app("tcb"), "android", "share_ok")).toBe("direct-share");
   });
-  it("android + share_failed memory → open-only", () => {
-    expect(decideHandOff(app("tcb"), "android", "share_failed")).toBe("open-only");
+  it("android + an earlier failed share still tries direct-share again", () => {
+    expect(decideHandOff(app("tcb"), "android", "share_failed")).toBe("direct-share");
   });
   it("autofill app → autofill-link on both platforms", () => {
     expect(decideHandOff(app("mb"), "android")).toBe("autofill-link");

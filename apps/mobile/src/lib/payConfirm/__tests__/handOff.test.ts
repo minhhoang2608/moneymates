@@ -71,12 +71,11 @@ describe("handOff", () => {
     expect(calls).toEqual(["clip:0123456789", "image", `intent:${TCB_INTENT}`]);
   });
 
-  it("remembered share_failed → open-only through the intent", async () => {
-    const { calls, deps, handOff } = setup();
+  it("an earlier failed share is tried again", async () => {
+    const { deps, handOff } = setup();
     const res = await handOff(tcb, { model: vietqr, amount: 1, note: "", knownResult: "share_failed" });
-    expect(res).toMatchObject({ opened: true, mode: "direct", decision: "open-only" });
-    expect(deps.shareToPackage).not.toHaveBeenCalled();
-    expect(calls).toEqual(["clip:0123456789", "image", `intent:${TCB_INTENT}`]);
+    expect(res).toMatchObject({ opened: true, mode: "direct", decision: "direct-share", share: "shared" });
+    expect(deps.shareToPackage).toHaveBeenCalledTimes(1);
   });
 
   it("ios non-autofill: open-only with the scheme", async () => {

@@ -3,7 +3,7 @@ import * as Linking from "expo-linking";
 import * as MediaLibrary from "expo-media-library/legacy";
 import { Platform } from "react-native";
 
-import { writeQrPng } from "@/lib/share/qrImage";
+import { toQrJpeg } from "@/lib/share/qrImage";
 
 import { openIntentUri, shareMediaImage, sharePng } from "../../../modules/bank-hand-off";
 
@@ -30,7 +30,7 @@ export async function saveToMoneyMatesAlbum(base64: string): Promise<SavedQr | n
     const perm = await MediaLibrary.requestPermissionsAsync(true);
     if (!perm.granted) return null;
   }
-  const asset = await MediaLibrary.createAssetAsync(writeQrPng(base64));
+  const asset = await MediaLibrary.createAssetAsync((await toQrJpeg(base64)).uri);
   const album = await MediaLibrary.getAlbumAsync(ALBUM_NAME);
   if (album) await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
   else await MediaLibrary.createAlbumAsync(ALBUM_NAME, asset, false);
@@ -57,7 +57,7 @@ export function createNativeDeps(getQrBase64: () => Promise<string | null>): Han
       }
       const b64 = await getQrBase64();
       if (!b64) throw new Error("no QR image");
-      await sharePng(b64, pkg);
+      await sharePng((await toQrJpeg(b64)).base64, pkg, "image/jpeg");
     },
     setClipboard: async (text) => {
       await Clipboard.setStringAsync(text);
