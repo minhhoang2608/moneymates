@@ -118,12 +118,8 @@ export function createHandOff(deps: HandOffDeps) {
       };
     }
     if (model.kind === "vietqr") await attempt(() => deps.setClipboard(model.account));
-    // Autofill fell back to a direct hand-off, which still needs an image (album unless direct-share is known to work).
-    const storage: QrStorage = fellBack
-      ? decision === "direct-share" && input.knownResult === "share_ok"
-        ? "cache"
-        : "album"
-      : qrDecision.storage;
+    // Autofill fell back to a direct hand-off, which still needs an image in the album.
+    const storage: QrStorage = fellBack ? "album" : qrDecision.storage;
     const saved = storage === "album" ? await attempt(deps.saveQrImage) : undefined;
     const qr = { qrStorage: storage, qrAssetId: saved?.assetId, photoAccess: saved?.access };
 

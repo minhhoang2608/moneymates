@@ -15,8 +15,8 @@ describe("decideQrStorage", () => {
     expect(decideQrStorage({ platform, app: mb, bankAcceptsDirectShare })).toBe("none");
   });
 
-  it("android + direct share uses cache", () => {
-    expect(decideQrStorage({ platform: "android", app: tpbank, bankAcceptsDirectShare: true })).toBe("cache");
+  it("android + known direct share still uses the album (bank apps offer to pay the newest gallery QR)", () => {
+    expect(decideQrStorage({ platform: "android", app: tpbank, bankAcceptsDirectShare: true })).toBe("album");
   });
 
   it("android without direct share uses album", () => {
@@ -66,10 +66,10 @@ describe("decideQrHandOff", () => {
     ).toEqual({ storage: "none", method: "paste" });
   });
 
-  it("qr_image and the default keep the album / cache rule", () => {
+  it("qr_image and the default always use the album", () => {
     const base = { platform: "android", app: tpbank } as const;
     expect(decideQrHandOff({ ...base, bankAcceptsDirectShare: true, nonAutofillMode: "qr_image" })).toEqual({
-      storage: "cache",
+      storage: "album",
       method: "image",
     });
     expect(decideQrHandOff({ ...base, bankAcceptsDirectShare: false })).toEqual({
