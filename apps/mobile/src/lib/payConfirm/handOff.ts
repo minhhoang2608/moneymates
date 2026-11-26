@@ -16,7 +16,7 @@ export type HandOffDeps = {
    * Sends the QR PNG straight to an Android package; rejects when the app does not accept it.
    * `albumAssetId`: the QR already saved to the album, shared as that gallery photo (what Techcombank reads).
    */
-  shareToPackage: (pkg: string, albumAssetId?: string) => Promise<void>;
+  shareToPackage: (pkg: string, albumAssetId?: string) => Promise<string | void>;
   setClipboard: (text: string) => Promise<void>;
   /** Saves the QR image to the MoneyMates album. Returns the asset id, or null when nothing was saved. */
   saveQrImage: () => Promise<SavedQr | null>;
@@ -56,6 +56,8 @@ export type HandOffResult = {
   photoAccess?: PhotoPermission["access"];
   /** How the user gets the transfer into the app: scans the saved image, or pastes the copied text. */
   handOffMethod?: "image" | "paste";
+  /** Temporary diagnostic (#480): what the direct share did, shown when the user comes back. */
+  shareDiag?: string;
 };
 
 /** Hands the payment to the chosen app. Never throws: `opened:false` tells the caller it failed. */
@@ -128,12 +130,14 @@ export function createHandOff(deps: HandOffDeps) {
 
     if (decision === "direct-share" && app.androidPackage) {
       try {
-        await deps.shareToPackage(app.androidPackage, saved?.assetId);
-        return { opened: true, mode: "direct", decision, share: "shared", ...qr };
+        const sent = await deps.shareToPackage(app.androidPackage, saved?.assetId);
+        const shareDiag = `${saved?.assetId ? "ảnh album" : "không có ảnh album"} → ${sent || "đã gửi"}`;
+        return { opened: true, mode: "direct", decision, share: "shared", ...qr, shareDiag };
       } catch (e) {
         console.warn("direct share failed", e);
         const opened = await openApp(app);
-        return { opened, mode: "direct", decision, share: "share_failed", ...qr };
+        const shareDiag = `gửi lỗi: ${e instanceof Error ? e.message : String(e)}`;
+        return { opened, mode: "direct", decision, share: "share_failed", ...qr, shareDiag };
       }
     }
     return { opened: await openApp(app), mode: "direct", decision, ...qr };

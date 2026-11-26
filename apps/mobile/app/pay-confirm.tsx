@@ -32,6 +32,7 @@ import * as Clipboard from "expo-clipboard";
 import { formatVnd, parseAmount } from "@/lib/money";
 import { DEFAULT_NON_AUTOFILL_MODE, PREF_KEYS, type NonAutofillMode } from "@/lib/preferences/defaults";
 import { useToast } from "@/stores/toast";
+import { useHandOffDiag } from "@/stores/handOffDiag";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
@@ -226,6 +227,7 @@ export default function PayConfirmScreen() {
           onRow: (id) => usePendingHandOff.getState().setHandOffId(id),
         },
       );
+      useHandOffDiag.getState().set(result.shareDiag ?? null);
       // "Mở lại <bank>" only exists when there is a QR image (docs §1 step 5); paste mode has none.
       if (result.mode === "direct" && result.handOffMethod !== "paste") {
         usePendingHandOff.getState().setReopen({

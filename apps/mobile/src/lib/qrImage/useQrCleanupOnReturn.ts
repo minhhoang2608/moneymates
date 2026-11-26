@@ -2,7 +2,9 @@ import { useEffect } from "react";
 import { AppState } from "react-native";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
+import { useHandOffDiag } from "@/stores/handOffDiag";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
+import { useToast } from "@/stores/toast";
 
 import { createQrImageDeleter } from "./delete";
 import { getQrMediaLibrary } from "./mediaLibrary";
@@ -17,6 +19,8 @@ export function useQrCleanupOnReturn() {
       if (state === "background" || state === "inactive") sawBackground = true;
       else if (state === "active" && sawBackground) {
         sawBackground = false;
+        const diag = useHandOffDiag.getState().take();
+        if (diag) useToast.getState().show(`Chẩn đoán gửi ảnh: ${diag}`);
         deleter
           .deletePendingOnReturn()
           .then((r) => {

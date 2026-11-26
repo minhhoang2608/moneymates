@@ -212,6 +212,20 @@ describe("handOff", () => {
     expect(res).toMatchObject({ qrStorage: "album", qrAssetId: "a1", photoAccess: "read-write" });
   });
 
+  it("reports what the share did for the temporary diagnostic", async () => {
+    const { handOff } = setup({ shareToPackage: jest.fn(async () => "tcb.QrActivity (1), image/jpeg") });
+    const ok = await handOff(tcb, { model: vietqr, amount: 1, note: "" });
+    expect(ok.shareDiag).toBe("ảnh album → tcb.QrActivity (1), image/jpeg");
+    const { handOff: failing } = setup({
+      shareToPackage: jest.fn(async () => {
+        throw new Error("does not accept image/jpeg");
+      }),
+    });
+    expect((await failing(tcb, { model: vietqr, amount: 1, note: "" })).shareDiag).toBe(
+      "gửi lỗi: does not accept image/jpeg",
+    );
+  });
+
   it("shares without an album id when the album save was refused", async () => {
     const { deps, handOff } = setup({ saveQrImage: jest.fn(async () => null) });
     await handOff(tcb, { model: vietqr, amount: 1, note: "" });
