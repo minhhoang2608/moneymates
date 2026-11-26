@@ -9,7 +9,7 @@ def by_id(apps):
 
 def test_merges_android_and_ios_by_app_id():
     apps = by_id(merge(ANDROID["apps"], IOS["apps"], BANKS["data"]))
-    assert set(apps) == {"mb", "momo", "vcb"}
+    assert set(apps) == {"mb", "momo", "vcb", "stb"}
     assert apps["mb"]["name"] == "MB Bank"
 
 
@@ -28,7 +28,8 @@ def test_bin_and_code_from_banks():
 
 
 def test_unknown_bank_and_launch_fields_are_null():
-    apps = merge([{"appId": "zzz", "appName": "Zed", "autofill": 1}], [], [])
+    merged = merge([{"appId": "zzz", "appName": "Zed", "autofill": 1}], [], [])
+    apps = [a for a in merged if a["app_id"] == "zzz"]
     assert apps[0]["bank_code"] is None
     assert apps[0]["bin"] is None
     assert apps[0]["ios_scheme"] is None
@@ -48,4 +49,17 @@ def test_app_only_in_one_registry():
 
 
 def test_rows_without_app_id_are_skipped():
-    assert merge([{"appName": "x"}], [], []) == []
+    assert [a["app_id"] for a in merge([{"appName": "x"}], [], [])] == ["stb"]
+
+
+def test_sacombank_pay_is_added_when_the_registry_lacks_it():
+    stb = by_id(merge(ANDROID["apps"], IOS["apps"], BANKS["data"]))["stb"]
+    assert stb["name"] == "Sacombank Pay"
+    assert stb["bin"] == "970403"
+    assert stb["android_package"] == "com.sacombank.ewallet"
+    assert stb["autofill"] == {"android": False, "ios": False}
+
+
+def test_a_registry_entry_wins_over_the_extra_one():
+    apps = merge([{"appId": "stb", "appName": "Sacombank (VietQR)", "autofill": 0}], [], [])
+    assert [a["name"] for a in apps if a["app_id"] == "stb"] == ["Sacombank (VietQR)"]

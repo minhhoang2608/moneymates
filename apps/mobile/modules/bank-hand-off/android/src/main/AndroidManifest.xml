@@ -19,6 +19,7 @@
     <package android:name="com.mbmobile" />
     <package android:name="com.vietinbank.ipay" />
     <package android:name="com.mservice.momotransfer" />
+    <package android:name="com.sacombank.ewallet" />
     <intent>
       <action android:name="android.intent.action.VIEW" />
       <data android:scheme="tcb" />
