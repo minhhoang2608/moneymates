@@ -10,9 +10,9 @@ describe("shareMemory", () => {
     expect(decideHandOff(app("tcb"), "android", knownResultFor({}, "tcb"))).toBe("direct-share");
   });
 
-  it("a 'Chưa' answer makes the next hand-off open-only, 'Đã trả' keeps direct-share", () => {
+  it("a remembered failure no longer switches direct-share off; success is still remembered", () => {
     const failed = recordShareResult({}, "tcb", false);
-    expect(decideHandOff(app("tcb"), "android", knownResultFor(failed, "tcb"))).toBe("open-only");
+    expect(decideHandOff(app("tcb"), "android", knownResultFor(failed, "tcb"))).toBe("direct-share");
     const ok = recordShareResult(failed, "tcb", true);
     expect(knownResultFor(ok, "tcb")).toBe("share_ok");
     expect(decideHandOff(app("tcb"), "android", knownResultFor(ok, "tcb"))).toBe("direct-share");

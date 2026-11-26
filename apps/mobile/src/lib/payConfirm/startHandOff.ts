@@ -38,7 +38,7 @@ export type StartHandOffArgs = {
 
 /**
  * Hands the payment to the app, stores a hand-off row (new `started_at`), records the QR album asset
- * and remembers a rejected share. Used by the confirm screen and by "Mở lại". Rejects only when the hand-off itself throws.
+ * (a rejected share is not remembered: it is tried again next time). Used by the confirm screen and by "Mở lại". Rejects only when the hand-off itself throws.
  */
 export async function startHandOff(deps: StartHandOffDeps, args: StartHandOffArgs): Promise<HandOffResult> {
   const { app, model, amount, note, txId, getQrBase64, onRow, nonAutofillMode } = args;
@@ -69,6 +69,5 @@ export async function startHandOff(deps: StartHandOffDeps, args: StartHandOffArg
       console.warn("could not record hand-off", e);
     }
   }
-  if (share === "share_failed") await deps.handOffMemory.setShareResult(app.id, false).catch(() => {});
   return result;
 }

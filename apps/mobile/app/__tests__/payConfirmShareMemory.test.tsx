@@ -101,13 +101,12 @@ describe("pay-confirm share memory", () => {
     expect(mockHandOff.mock.calls[0][1].knownResult).toBe("share_failed");
   });
 
-  it("stores a rejected share as failed", async () => {
+  it("does not store a rejected share (it is tried again next time)", async () => {
     mockHandOff.mockResolvedValue({ opened: true, mode: "direct", decision: "direct-share", share: "share_failed" });
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
     await pickApp("tcb");
     await fireEvent.press(screen.getByTestId("pay-submit"));
-    await waitFor(async () =>
-      expect(await createHandOffMemoryRepository(testDb()).getShareMemory()).toEqual({ tcb: "share_failed" }),
-    );
+    await waitFor(() => expect(mockHandOff).toHaveBeenCalled());
+    expect(await createHandOffMemoryRepository(testDb()).getShareMemory()).toEqual({});
   });
 });

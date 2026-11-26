@@ -45,7 +45,7 @@ describe("startHandOff", () => {
     expect(onRow).toHaveBeenCalledWith("h2");
     expect(s.setQrAsset).toHaveBeenCalledWith("h2", "a1");
   });
-  it("remembers a rejected share and stores nothing without a transaction", async () => {
+  it("does not remember a rejected share and stores nothing without a transaction", async () => {
     const s = setup({
       opened: true,
       mode: "direct",
@@ -55,7 +55,7 @@ describe("startHandOff", () => {
     });
     await startHandOff(s.deps, { ...args, txId: undefined });
     expect(s.create).not.toHaveBeenCalled();
-    expect(s.setShareResult).toHaveBeenCalledWith("tpb", false);
+    expect(s.setShareResult).not.toHaveBeenCalled();
   });
   it("paste mode: row method is paste, nothing recorded for the album, mode is passed on", async () => {
     const s = setup({
