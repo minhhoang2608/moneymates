@@ -196,12 +196,12 @@ describe("handOff", () => {
     expect(await handOff(tpb, { model: vietqr, amount: 1, note: "" })).toMatchObject({ opened: false });
   });
 
-  it("known direct share on Android uses the private cache: no album save, no asset id", async () => {
+  it("known direct share on Android still saves to the album and shares", async () => {
     const { calls, deps, handOff } = setup();
     const res = await handOff(tpb, { model: vietqr, amount: 1, note: "", knownResult: "share_ok" });
-    expect(res).toMatchObject({ qrStorage: "cache", share: "shared" });
-    expect(res.qrAssetId).toBeUndefined();
-    expect(deps.saveQrImage).not.toHaveBeenCalled();
+    expect(res).toMatchObject({ qrStorage: "album", share: "shared" });
+    expect(res.qrAssetId).toBeDefined();
+    expect(deps.saveQrImage).toHaveBeenCalledTimes(1);
     expect(calls).toContain("share:com.tpb.mb.gprsandroid");
   });
 
