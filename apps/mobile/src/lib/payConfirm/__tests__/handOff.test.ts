@@ -209,7 +209,14 @@ describe("handOff", () => {
     const { deps, handOff } = setup();
     const res = await handOff(tcb, { model: vietqr, amount: 1, note: "" });
     expect(deps.saveQrImage).toHaveBeenCalledTimes(1);
+    expect(deps.shareToPackage).toHaveBeenCalledWith(tcb.androidPackage, "a1");
     expect(res).toMatchObject({ qrStorage: "album", qrAssetId: "a1", photoAccess: "read-write" });
+  });
+
+  it("shares without an album id when the album save was refused", async () => {
+    const { deps, handOff } = setup({ saveQrImage: jest.fn(async () => null) });
+    await handOff(tcb, { model: vietqr, amount: 1, note: "" });
+    expect(deps.shareToPackage).toHaveBeenCalledWith(tcb.androidPackage, undefined);
   });
 
   describe("non-autofill mode", () => {

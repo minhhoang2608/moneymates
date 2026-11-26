@@ -12,8 +12,11 @@ export type HandOffDeps = {
   openUrl: (url: string) => Promise<void>;
   /** Opens an Android `intent://` URL; rejects when the app is not installed. */
   openIntent: (url: string) => Promise<void>;
-  /** Sends the QR PNG straight to an Android package; rejects when the app does not accept it. */
-  shareToPackage: (pkg: string) => Promise<void>;
+  /**
+   * Sends the QR PNG straight to an Android package; rejects when the app does not accept it.
+   * `albumAssetId`: the QR already saved to the album, shared as that gallery photo (what Techcombank reads).
+   */
+  shareToPackage: (pkg: string, albumAssetId?: string) => Promise<void>;
   setClipboard: (text: string) => Promise<void>;
   /** Saves the QR image to the MoneyMates album. Returns the asset id, or null when nothing was saved. */
   saveQrImage: () => Promise<SavedQr | null>;
@@ -125,7 +128,7 @@ export function createHandOff(deps: HandOffDeps) {
 
     if (decision === "direct-share" && app.androidPackage) {
       try {
-        await deps.shareToPackage(app.androidPackage);
+        await deps.shareToPackage(app.androidPackage, saved?.assetId);
         return { opened: true, mode: "direct", decision, share: "shared", ...qr };
       } catch (e) {
         console.warn("direct share failed", e);

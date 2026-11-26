@@ -4,6 +4,7 @@ import { requireNativeModule } from "expo-modules-core";
 type BankHandOffNative = {
   openIntentUri(uri: string): Promise<void>;
   sharePng(base64: string, pkg: string): Promise<void>;
+  shareMediaImage(mediaId: string, pkg: string): Promise<void>;
 };
 
 function load(): BankHandOffNative | null {
@@ -27,4 +28,11 @@ export async function sharePng(base64: string, pkg: string): Promise<void> {
   const native = load();
   if (!native) throw new Error("unsupported");
   await native.sharePng(base64, pkg);
+}
+
+/** Sends a photo already in the gallery (MediaStore id) to one Android package, as the Gallery app shares it. */
+export async function shareMediaImage(mediaId: string, pkg: string): Promise<void> {
+  const native = load();
+  if (!native) throw new Error("unsupported");
+  await native.shareMediaImage(mediaId, pkg);
 }
