@@ -7,6 +7,20 @@ KNOWN_LAUNCH = {
     "momo": ("momo", None),
 }
 
+# Bank apps missing from VietQR's deeplink registries. A registry entry with the same app_id wins.
+EXTRA_APPS = [
+    {
+        "app_id": "stb",
+        "name": "Sacombank Pay",
+        "logo": None,
+        "bank_code": "STB",
+        "bin": "970403",
+        "autofill": {"android": False, "ios": False},
+        "ios_scheme": None,
+        "android_package": "com.sacombank.ewallet",
+    },
+]
+
 
 def _id(row):
     value = row.get("appId")
@@ -54,5 +68,11 @@ def merge(android, ios, banks):
                 "android_package": _text((a or {}).get("androidPackage")) or known_android,
             }
         )
+    have = {a["app_id"] for a in apps}
+    apps.extend(
+        {**extra, "autofill": dict(extra["autofill"])}
+        for extra in EXTRA_APPS
+        if extra["app_id"] not in have
+    )
     apps.sort(key=lambda x: (x["name"].casefold(), x["app_id"]))
     return apps

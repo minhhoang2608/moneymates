@@ -289,6 +289,19 @@
       "android_package": null
     },
     {
+      "app_id": "stb",
+      "name": "Sacombank Pay",
+      "logo": null,
+      "bank_code": "STB",
+      "bin": "970403",
+      "autofill": {
+        "android": false,
+        "ios": false
+      },
+      "ios_scheme": null,
+      "android_package": "com.sacombank.ewallet"
+    },
+    {
       "app_id": "sgicb",
       "name": "SAIGONBANK Smart Banking",
       "logo": "https://cdn.vietqr.io/bank-app-icon/sgicb-android.webp",
