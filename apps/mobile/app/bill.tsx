@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
@@ -19,6 +20,7 @@ import { colors, overlays, fontFamily, fontSize, radii } from "@/theme";
 type Phase = "init" | "consent" | "idle" | "uploading" | "result" | "error";
 
 export default function BillScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { groupId } = useLocalSearchParams<{ groupId?: string }>();
   const { categories: catRepo, appSettings } = useRepositories();
@@ -126,7 +128,7 @@ export default function BillScreen() {
 
   return (
     <View style={styles.root} testID="screen-bill">
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="bill-close"
           accessibilityRole="button"
@@ -277,7 +279,6 @@ export default function BillScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.scannerBg },
   header: {
-    marginTop: 40,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",

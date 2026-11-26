@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { haptics } from "@/lib/haptics";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -18,6 +19,7 @@ import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 const t = vi.bankAccounts;
 
 export default function BankAccountsScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { bankAccounts } = useRepositories();
   const [accounts, setAccounts] = useState<BankAccountRow[]>([]);
@@ -108,7 +110,7 @@ export default function BankAccountsScreen() {
 
   return (
     <View style={styles.root} testID="screen-bank-accounts">
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="bank-accounts-back"
           accessibilityLabel="Quay lại"
@@ -262,7 +264,7 @@ export default function BankAccountsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  header: { height: 64, marginTop: 40, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
+  header: { height: 64, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   back: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   backGlyph: { fontSize: 30, color: colors.text },
   title: { fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text },

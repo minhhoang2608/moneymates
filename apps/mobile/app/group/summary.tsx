@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -28,6 +29,7 @@ type Loaded = {
 const EMPTY_VIEW: SummaryView = { rows: [], items: [], toCollect: 0 };
 
 export default function GroupSummaryScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const groupId = String(id);
@@ -102,7 +104,7 @@ export default function GroupSummaryScreen() {
 
   return (
     <View style={styles.root} testID="screen-group-summary">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="summary-back"
           accessibilityRole="button"

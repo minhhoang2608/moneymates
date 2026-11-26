@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -44,6 +45,7 @@ function Donut({ breakdown }: { breakdown: Breakdown }) {
 }
 
 export default function StatsScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const repos = useRepositories();
   const [now] = useState(() => new Date());
@@ -73,7 +75,7 @@ export default function StatsScreen() {
 
   return (
     <View style={styles.root} testID="screen-stats">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="stats-back"
           accessibilityRole="button"

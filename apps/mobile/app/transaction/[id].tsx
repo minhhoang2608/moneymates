@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -26,6 +27,7 @@ function Row({ label, value, last, testID }: { label: string; value: string; las
 }
 
 export default function TransactionDetailScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { transactions, categories, groups, groupExpenses } = useRepositories();
@@ -80,7 +82,7 @@ export default function TransactionDetailScreen() {
 
   return (
     <View style={styles.root} testID="screen-transaction-detail">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="detail-back"
           accessibilityRole="button"

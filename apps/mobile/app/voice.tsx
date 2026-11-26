@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
@@ -22,6 +23,7 @@ import { colors, fontFamily, fontSize, radii } from "@/theme";
 const BARS = [12, 22, 34, 26, 38, 18, 28, 14, 8];
 
 export default function VoiceScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { groupId } = useLocalSearchParams<{ groupId?: string }>();
   const { categories: catRepo, groups } = useRepositories();
@@ -163,7 +165,7 @@ export default function VoiceScreen() {
 
   return (
     <View style={styles.root} testID="screen-voice">
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="voice-close"
           accessibilityRole="button"
@@ -282,7 +284,7 @@ export default function VoiceScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  header: { height: 64, paddingHorizontal: 12, marginTop: 40, flexDirection: "row", alignItems: "center", gap: 8 },
+  header: { height: 64, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   close: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   closeText: { fontSize: 20, color: colors.text },
   title: { fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text },

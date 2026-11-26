@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { haptics } from "@/lib/haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState, type ComponentRef } from "react";
@@ -37,6 +38,7 @@ function accountLabel(a: BankAccountRow | undefined): string {
 }
 
 export default function GroupEditScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { groups, bankAccounts, profile } = useRepositories();
@@ -170,7 +172,7 @@ export default function GroupEditScreen() {
 
   return (
     <View style={styles.root} testID="screen-group-edit">
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="group-close"
           accessibilityLabel={t.close}
@@ -394,7 +396,7 @@ export default function GroupEditScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  header: { height: 64, marginTop: 40, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
+  header: { height: 64, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   close: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   closeGlyph: { fontSize: 20, color: colors.text },
   title: { fontFamily: fontFamily.semibold, fontSize: fontSize.title, color: colors.text },

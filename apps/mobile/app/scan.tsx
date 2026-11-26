@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CameraView } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +17,7 @@ import { colors, fontFamily, fontSize, layout } from "@/theme";
 const ERROR_MS = 3000;
 
 export default function ScanScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const e2e = isE2E();
   const [permission, setPermission] = useState<PermissionInfo | null>(null);
@@ -76,7 +78,7 @@ export default function ScanScreen() {
   const denied = !e2e && permission !== null && permission.state !== "granted";
 
   return (
-    <View style={styles.root} testID="screen-scan">
+    <View style={[styles.root, { paddingTop: 20 + insets.top }]} testID="screen-scan">
       {showCamera ? (
         <CameraView
           style={StyleSheet.absoluteFill}
