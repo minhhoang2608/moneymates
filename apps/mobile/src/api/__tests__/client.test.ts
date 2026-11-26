@@ -117,6 +117,15 @@ describe("api client", () => {
       messages.add(err.message);
     });
 
+    it("a 200 response that is not JSON is an http_error, not a network error", async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => Promise.reject(new SyntaxError("bad json")),
+      });
+      expect((await fails(apiPost("/x", {}))).code).toBe("http_error");
+    });
+
     it("timeout aborts the request", async () => {
       jest.useFakeTimers();
       let signal: AbortSignal | undefined;

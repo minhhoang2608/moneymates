@@ -165,6 +165,16 @@ describe("bill scan screen", () => {
     });
   });
 
+  it("a camera failure shows its own message, not 'no network'", async () => {
+    await accept();
+    source.capture.mockRejectedValueOnce(new Error("camera boom"));
+    await renderRouter("./app", { initialUrl: "/bill" });
+    const err = await screen.findByTestId("bill-error");
+    expect(err).toHaveTextContent(/camera boom/);
+    expect(err).not.toHaveTextContent(/kết nối mạng/);
+    expect(postMultipart).not.toHaveBeenCalled();
+  });
+
   it("AC4: opened while AI is unavailable → error state, no capture, no upload", async () => {
     setup(false);
     await accept();
