@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { router } from "expo-router";
+import * as safeArea from "react-native-safe-area-context";
 import { act, fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import { pickAvatar } from "@/components/AvatarPicker";
@@ -57,6 +58,15 @@ async function rename(value: string) {
 }
 
 describe("Hồ sơ screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the screen below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    freshFile();
+    await renderProfile();
+    expect(screen.getByTestId("screen-profile")).toHaveStyle({ paddingTop: 30 });
+  });
+
   it("AC1: persists the name Hoàng and the avatar across remount", async () => {
     freshFile();
     pick.mockResolvedValue("file:///a.jpg");

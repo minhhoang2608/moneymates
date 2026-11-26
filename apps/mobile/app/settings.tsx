@@ -134,7 +134,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.root} testID="screen-settings">
-      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
+      <View testID="settings-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="settings-back"
           accessibilityRole="button"

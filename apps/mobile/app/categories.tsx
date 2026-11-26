@@ -64,7 +64,7 @@ export default function CategoriesScreen() {
 
   return (
     <View style={styles.root} testID="screen-categories">
-      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
+      <View testID="categories-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="category-back"
           accessibilityRole="button"

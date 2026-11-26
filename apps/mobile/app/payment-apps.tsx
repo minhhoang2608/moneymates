@@ -42,7 +42,7 @@ export default function PaymentAppsScreen() {
 
   return (
     <View style={styles.root} testID="screen-payment-apps">
-      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
+      <View testID="payment-apps-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="payment-apps-back"
           accessibilityRole="button"
