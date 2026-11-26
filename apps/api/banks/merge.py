@@ -1,9 +1,13 @@
 # Launch data the registries do not publish (app_id -> (ios_scheme, android_package)).
+# Kept identical to the mobile snapshot (apps/mobile/src/lib/vietqr/bankApps.snapshot.json):
+# without the Android package the app cannot share the QR to the bank app
+# (Techcombank's QR popup) and only opens it.
 KNOWN_LAUNCH = {
     "mb": ("mbbank", "com.mbmobile"),
-    "tpb": ("tpbank", None),
-    "tcb": ("techcombank", None),
-    "vcb": ("vcbpay", None),
+    "tpb": ("hydro", "com.tpb.mb.gprsandroid"),
+    "tcb": ("tcb", "vn.com.techcombank.bb.app"),
+    "vcb": ("vietcombankmobile", "com.VCB"),
+    "icb": ("vietinbankipay", "com.vietinbank.ipay"),
     "momo": ("momo", None),
 }
 
