@@ -319,19 +319,6 @@ export function TransactionForm({
           </View>
         )}
 
-        <View style={styles.modes}>
-          <View style={[styles.mode, styles.modeActive]}>
-            <Text style={[styles.modeText, { fontFamily: fontFamily.semibold, color: colors.primaryDark }]}>
-              {vi.txn.modeManual}
-            </Text>
-          </View>
-          {[vi.txn.modeVoice, vi.txn.modeBill].map((label) => (
-            <View key={label} style={[styles.mode, styles.modeDisabled]} accessibilityState={{ disabled: true }}>
-              <Text style={[styles.modeText, { color: colors.neutral }]}>{label}</Text>
-            </View>
-          ))}
-        </View>
-
         <View style={styles.card}>
           <Text style={styles.label}>{vi.txn.amount}</Text>
           <TextInput
@@ -507,11 +494,6 @@ const styles = StyleSheet.create({
   segmentItem: { flex: 1, height: 38, borderRadius: 9, alignItems: "center", justifyContent: "center" },
   segmentActive: { backgroundColor: colors.surface },
   segmentText: { fontFamily: fontFamily.regular, fontSize: fontSize.body, color: colors.textMuted },
-  modes: { flexDirection: "row", gap: 8 },
-  mode: { flex: 1, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1 },
-  modeActive: { borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.primarySoft },
-  modeDisabled: { borderColor: colors.border, backgroundColor: colors.surface },
-  modeText: { fontFamily: fontFamily.regular, fontSize: fontSize.secondary, color: colors.text },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.card,

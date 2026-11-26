@@ -75,6 +75,14 @@ describe("TransactionForm money sources", () => {
 });
 
 describe("TransactionForm", () => {
+  it("AC1: has no old disabled Nhập tay / Voice / Ảnh bill row", async () => {
+    const { mount } = form();
+    await mount();
+    expect(screen.queryByText("Ảnh bill")).toBeNull();
+    expect(screen.queryByText("Nhập tay")).toBeNull();
+    expect(screen.queryByText("Voice")).toBeNull();
+  });
+
   it("AC1: saves 50k Ăn uống phở as an expense", async () => {
     const { repos, mount, onClose } = form();
     await mount();
