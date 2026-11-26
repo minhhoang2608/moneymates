@@ -1,11 +1,8 @@
 # Scan flow in E2E mode: no camera, the hidden control feeds the dynamic TPBank fixture.
 appId: com.moneymates.app
 ---
-- launchApp:
-    clearState: true
-- extendedWaitUntil:
-    visible: "Tổng quan"
-    timeout: 30000
+- runFlow: subflows/launch-fresh.yaml
+- assertVisible: "Tổng quan"
 - tapOn:
     id: "tab-qr"
 - assertVisible:

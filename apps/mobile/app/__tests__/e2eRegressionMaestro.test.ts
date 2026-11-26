@@ -48,3 +48,26 @@ describe("e2e regression maestro flows (#456)", () => {
     expect(src.indexOf('id: "screen-pay-confirm"')).toBeLessThan(src.indexOf('id: "pay-category-more"'));
   });
 });
+
+describe("e2e regression maestro flows (#474)", () => {
+  it.each(["scan-pay", "handoff-undo", "notif-auto-paid", "qr-delete-return"])(
+    "%s scrolls to pay-category-more before tapping it",
+    (f) => {
+      const src = read(f);
+      const scroll = src.search(/scrollUntilVisible:\s*\n\s*element:\s*\n\s*id: "pay-category-more"/);
+      expect(scroll).toBeGreaterThan(-1);
+      expect(scroll).toBeLessThan(src.indexOf('tapOn:\n    id: "pay-category-more"'));
+    },
+  );
+
+  it.each(["scan-e2e", "scan-pay", "qr-delete-return"])("%s starts with the launch-fresh subflow", (f) => {
+    expect(body(f).startsWith("- runFlow: subflows/launch-fresh.yaml\n")).toBe(true);
+    expect(read(f)).not.toMatch(/launchApp:\s*\n\s*clearState/);
+  });
+
+  it.each(["scan-pay", "qr-delete-return"])("%s waits for screen-pay-confirm before pay-category-more", (f) => {
+    const src = read(f);
+    expect(src.indexOf('id: "screen-pay-confirm"')).toBeGreaterThan(src.indexOf('id: "scan-e2e-feed"'));
+    expect(src.indexOf('id: "screen-pay-confirm"')).toBeLessThan(src.indexOf('id: "pay-category-more"'));
+  });
+});

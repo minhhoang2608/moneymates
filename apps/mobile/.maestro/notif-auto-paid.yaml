@@ -17,6 +17,11 @@ appId: com.moneymates.app
     visible:
       id: "screen-pay-confirm"
     timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: "pay-category-more"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "pay-category-more"
 - tapOn: "Mua sắm"
