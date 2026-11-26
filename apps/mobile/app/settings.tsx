@@ -1,3 +1,4 @@
+import { usePayApps } from "@/api/bankApps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -13,7 +14,6 @@ import { isAccessGranted } from "../modules/notification-listener";
 import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { vi } from "@/i18n/vi";
 import { getAppLockAuth } from "@/lib/appLock/auth";
-import { PAY_APPS } from "@/lib/payConfirm/apps";
 import { suggestDefaultApp } from "@/lib/payConfirm/defaultSuggestion";
 import { SheetPicker } from "@/components/transaction/SheetPicker";
 import { DEFAULT_NON_AUTOFILL_MODE, PREF_KEYS, type NonAutofillMode } from "@/lib/preferences/defaults";
@@ -22,6 +22,7 @@ import { useAutoDetect } from "@/stores/autoDetect";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export default function SettingsScreen() {
+  const payApps = usePayApps();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { moneySources, preferences, appSettings, bankAccounts, handOffMemory } = useRepositories();
@@ -128,7 +129,7 @@ export default function SettingsScreen() {
   );
 
   const suggestedId = suggestDefaultApp({ order: enabled, recent, accountBins, dismissed });
-  const suggested = PAY_APPS.find((a) => a.id === suggestedId);
+  const suggested = payApps.find((a) => a.id === suggestedId);
 
   const version = Constants.expoConfig?.version ?? "";
 

@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { Platform } from "react-native";
 
 import { isE2E } from "@/e2e/isE2E";
+import { buildPayApps, type PayApp } from "@/lib/payConfirm/apps";
 import { SNAPSHOT, parseBankAppsResponse, type BankAppsResponse, type BankAppsSource } from "@/lib/vietqr/bankApps";
 
 import { apiGet } from "./client";
@@ -34,4 +37,10 @@ export function useBankApps(): BankAppsResponse {
     staleTime: 6 * 60 * 60 * 1000,
   });
   return (!e2e && data) || SNAPSHOT;
+}
+
+/** The payment-app catalogue for screens: banks from the live registry (bundled snapshot until it answers) plus wallets. */
+export function usePayApps(): PayApp[] {
+  const data = useBankApps();
+  return useMemo(() => buildPayApps(data, Platform.OS === "ios" ? "ios" : "android"), [data]);
 }
