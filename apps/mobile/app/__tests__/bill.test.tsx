@@ -175,6 +175,15 @@ describe("bill scan screen", () => {
     expect(postMultipart).not.toHaveBeenCalled();
   });
 
+  it("a network failure shows the underlying reason after the message", async () => {
+    await accept();
+    postMultipart.mockImplementation(async () => {
+      throw new ApiError("network", null, "Network request failed");
+    });
+    await renderRouter("./app", { initialUrl: "/bill" });
+    expect(await screen.findByTestId("bill-error")).toHaveTextContent(/kết nối mạng.*\(Network request failed\)/);
+  });
+
   it("AC4: opened while AI is unavailable → error state, no capture, no upload", async () => {
     setup(false);
     await accept();

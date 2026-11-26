@@ -63,7 +63,9 @@ export default function BillScreen() {
       if (!live()) return;
       // Only a real ApiError says anything about the network; a camera, resize or file failure must not read as "no internet".
       setError(
-        e instanceof ApiError ? billErrorMessage(e.code) : vi.bill.failed(e instanceof Error ? e.message : String(e)),
+        e instanceof ApiError
+          ? billErrorMessage(e.code) + (e.detail ? ` (${e.detail})` : "")
+          : vi.bill.failed(e instanceof Error ? e.message : String(e)),
       );
       setPhase("error");
     }

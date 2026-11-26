@@ -33,8 +33,8 @@ async function request<T>(path: string, init: Init, timeoutMs: number): Promise<
           body: init.body,
           signal: controller.signal,
         });
-      } catch {
-        throw new ApiError("network");
+      } catch (e) {
+        throw new ApiError("network", null, e instanceof Error ? e.message : String(e));
       }
       if (!res.ok) {
         let body: unknown = null;
