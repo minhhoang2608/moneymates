@@ -60,3 +60,33 @@ describe("bank apps snapshot", () => {
     expect(toPayApp(dto, "ios").scheme).toBeUndefined();
   });
 });
+
+describe("live rows without launch data (#488)", () => {
+  const live = (id: string) => ({
+    updated_at: "2026-11-26T00:00:00Z",
+    stale: false,
+    apps: [
+      {
+        app_id: id,
+        name: id,
+        logo: null,
+        bank_code: null,
+        bin: null,
+        autofill: { android: false, ios: false },
+        ios_scheme: null,
+        android_package: null,
+      },
+    ],
+  });
+
+  it("takes Techcombank's Android package and iOS scheme from the bundled snapshot", () => {
+    const [tcb] = registryPayApps("android", live("tcb"));
+    expect(tcb.androidPackage).toBe("vn.com.techcombank.bb.app");
+    expect(tcb.scheme).toBe("tcb");
+  });
+
+  it("leaves an app unknown to the snapshot without a package", () => {
+    const [zzz] = registryPayApps("android", live("zzz"));
+    expect(zzz.androidPackage).toBeUndefined();
+  });
+});

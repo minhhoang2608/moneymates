@@ -75,6 +75,21 @@ export function toPayApp(dto: BankAppDto, platform: Platform): PayApp {
   };
 }
 
+/**
+ * Fills the launch fields (iOS scheme, Android package) a live row lacks from the bundled snapshot. The live
+ * registry does not publish them; without the Android package the QR cannot be shared to the bank app.
+ */
+export function withSnapshotLaunch(dto: BankAppDto, snapshot: BankAppsResponse = SNAPSHOT): BankAppDto {
+  if (dto.android_package && dto.ios_scheme) return dto;
+  const known = snapshot.apps.find((a) => a.app_id === dto.app_id);
+  if (!known) return dto;
+  return {
+    ...dto,
+    ios_scheme: dto.ios_scheme ?? known.ios_scheme,
+    android_package: dto.android_package ?? known.android_package,
+  };
+}
+
 export function registryPayApps(platform: Platform, data: BankAppsResponse = SNAPSHOT): PayApp[] {
-  return data.apps.map((a) => toPayApp(a, platform));
+  return data.apps.map((a) => toPayApp(withSnapshotLaunch(a), platform));
 }
