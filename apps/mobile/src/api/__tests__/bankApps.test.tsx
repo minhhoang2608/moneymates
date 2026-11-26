@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { SNAPSHOT, type BankAppsResponse } from "@/lib/vietqr/bankApps";
 
-import { useBankApps } from "../bankApps";
+import { useBankApps, usePayApps } from "../bankApps";
 
 const original = global.fetch;
 
@@ -110,5 +110,21 @@ describe("useBankApps", () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(result.current).toBe(SNAPSHOT);
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+});
+
+describe("usePayApps", () => {
+  it("lists the banks from the live registry plus the wallets, so a bank added on the server shows up", async () => {
+    mockFetch(async () => ({ ok: true, status: 200, json: async () => LIVE }));
+    const { result } = await renderHook(() => usePayApps(), { wrapper: wrapper() });
+    await waitFor(() => expect(result.current.map((a) => a.id)).toContain("zzz"));
+    expect(result.current.find((a) => a.id === "zzz")).toMatchObject({ name: "ZZZ Bank", bin: "970999" });
+    expect(result.current.some((a) => a.type === "wallet")).toBe(true);
+  });
+
+  it("uses the bundled snapshot while the API has not answered", async () => {
+    mockFetch(() => new Promise(() => undefined));
+    const { result } = await renderHook(() => usePayApps(), { wrapper: wrapper() });
+    expect(result.current.map((a) => a.id)).toContain("stb");
   });
 });

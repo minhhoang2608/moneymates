@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppState, Platform } from "react-native";
 
 import NotifAccessScreen from "../notif-access";
@@ -48,9 +49,11 @@ function captureAppState() {
 
 async function open() {
   const view = await render(
-    <RepositoriesProvider db={fresh()}>
-      <NotifAccessScreen />
-    </RepositoriesProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <RepositoriesProvider db={fresh()}>
+        <NotifAccessScreen />
+      </RepositoriesProvider>
+    </QueryClientProvider>,
   );
   await screen.findByTestId("screen-notif-access");
   return view;
@@ -115,9 +118,11 @@ describe("notif-access explainer", () => {
   it("AC3: off Android it leaves right away", async () => {
     setOS("ios");
     await render(
-      <RepositoriesProvider db={fresh()}>
-        <NotifAccessScreen />
-      </RepositoriesProvider>,
+      <QueryClientProvider client={new QueryClient()}>
+        <RepositoriesProvider db={fresh()}>
+          <NotifAccessScreen />
+        </RepositoriesProvider>
+      </QueryClientProvider>,
     );
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
     expect(screen.queryByTestId("screen-notif-access")).toBeNull();

@@ -1,3 +1,4 @@
+import { usePayApps } from "@/api/bankApps";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
@@ -7,12 +8,13 @@ import { PressableScale } from "@/components/PressableScale";
 import { PaymentAppRow } from "@/components/settings/PaymentAppRow";
 import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { vi } from "@/i18n/vi";
-import { FEATURED_APP_IDS, PAY_APPS, searchApps, type PayApp } from "@/lib/payConfirm/apps";
+import { FEATURED_APP_IDS, searchApps, type PayApp } from "@/lib/payConfirm/apps";
 import { getInstalledPayApps } from "@/lib/payConfirm/getInstalledPayApps";
 import { colors, fontFamily, fontSize, radii } from "@/theme";
 
 /** Onboarding step 2/4: pick the payment apps. Nothing is written until "Tiếp tục". */
 export default function OnboardingAppsScreen() {
+  const payApps = usePayApps();
   const router = useRouter();
   const { reorder } = useEnabledPayApps();
   const t = vi.onboarding.apps;
@@ -35,10 +37,10 @@ export default function OnboardingAppsScreen() {
   }, []);
 
   const visible = useMemo(() => {
-    const found = searchApps(PAY_APPS, query);
+    const found = searchApps(payApps, query);
     if (query.trim() || showAll) return found;
     return found.filter((a) => FEATURED_APP_IDS.includes(a.id) || installed.includes(a.id) || selected.includes(a.id));
-  }, [query, showAll, installed, selected]);
+  }, [payApps, query, showAll, installed, selected]);
 
   const toggle = (id: string, on: boolean) =>
     setSelected((cur) => (on ? (cur.includes(id) ? cur : [...cur, id]) : cur.filter((x) => x !== id)));

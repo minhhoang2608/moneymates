@@ -1,3 +1,4 @@
+import { usePayApps } from "@/api/bankApps";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Platform } from "react-native";
@@ -5,10 +6,10 @@ import { Platform } from "react-native";
 import { NotifAccessExplainer } from "@/components/notifAccess/NotifAccessExplainer";
 import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { useNotifAccessOptIn } from "@/hooks/useNotifAccessOptIn";
-import { PAY_APPS } from "@/lib/payConfirm/apps";
 
 /** Explainer + opt-in for reading bank notifications (Android only). */
 export default function NotifAccessScreen() {
+  const payApps = usePayApps();
   const router = useRouter();
   const { enabled } = useEnabledPayApps();
   const isAndroid = Platform.OS === "android";
@@ -19,7 +20,7 @@ export default function NotifAccessScreen() {
   }, [isAndroid, router]);
   if (!isAndroid) return null;
 
-  const names = enabled.map((id) => PAY_APPS.find((a) => a.id === id)?.name).filter((n): n is string => !!n);
+  const names = enabled.map((id) => payApps.find((a) => a.id === id)?.name).filter((n): n is string => !!n);
   const leave = () => {
     void later().finally(() => router.back());
   };

@@ -1,3 +1,4 @@
+import { usePayApps } from "@/api/bankApps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -8,7 +9,7 @@ import { EnabledAppList } from "@/components/settings/EnabledAppList";
 import { PaymentAppRow } from "@/components/settings/PaymentAppRow";
 import { useEnabledPayApps } from "@/hooks/useEnabledPayApps";
 import { vi } from "@/i18n/vi";
-import { PAY_APPS, searchApps, type PayApp } from "@/lib/payConfirm/apps";
+import { searchApps, type PayApp } from "@/lib/payConfirm/apps";
 import { partitionApps } from "@/lib/payConfirm/enabledApps";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
@@ -30,14 +31,15 @@ function Group({ apps, enabled, onToggle }: { apps: PayApp[]; enabled: Set<strin
 type Props = { onToggle: (id: string, on: boolean) => void };
 
 export default function PaymentAppsScreen() {
+  const payApps = usePayApps();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { enabled, ready, toggle, reorder } = useEnabledPayApps();
   const [query, setQuery] = useState("");
   const searching = query.trim().length > 0;
   const enabledSet = new Set(enabled);
-  const { enabled: enabledApps, banks, wallets } = partitionApps(PAY_APPS, enabled);
-  const found = searching ? searchApps(PAY_APPS, query) : [];
+  const { enabled: enabledApps, banks, wallets } = partitionApps(payApps, enabled);
+  const found = searching ? searchApps(payApps, query) : [];
   const onToggle = (id: string, on: boolean) => void toggle(id, on);
 
   return (
