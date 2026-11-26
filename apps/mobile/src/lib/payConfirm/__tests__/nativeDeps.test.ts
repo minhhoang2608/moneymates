@@ -13,10 +13,13 @@ jest.mock("expo-linking", () => ({ openURL: jest.fn(async () => true) }));
 jest.mock("expo-media-library/legacy", () => ({
   requestPermissionsAsync: jest.fn(async () => ({ granted: false })),
   getPermissionsAsync: jest.fn(async () => ({ granted: false })),
-  createAssetAsync: jest.fn(async () => ({ id: "a1" })),
+  createAssetAsync: jest.fn(async () => ({ id: "a1", filename: "q.jpg" })),
   getAlbumAsync: jest.fn(async () => null),
-  createAlbumAsync: jest.fn(async () => ({})),
+  createAlbumAsync: jest.fn(async () => ({ id: "al" })),
   addAssetsToAlbumAsync: jest.fn(async () => true),
+  getAssetsAsync: jest.fn(async () => ({ assets: [] })),
+  MediaType: { photo: "photo" },
+  SortBy: { modificationTime: "modificationTime" },
 }));
 jest.mock("expo-file-system", () => ({
   Paths: { cache: "/cache" },
@@ -45,21 +48,30 @@ describe("nativeDeps", () => {
     expect(MediaLibrary.createAssetAsync).not.toHaveBeenCalled();
   });
 
-  it("creates the MoneyMates album when missing", async () => {
+  it("first use: creates the album and returns the id of the photo moved into it (not the deleted original)", async () => {
     jest.mocked(MediaLibrary.requestPermissionsAsync).mockResolvedValueOnce({ granted: true } as never);
-    await createNativeDeps(async () => "AAAA").saveQrImage();
+    jest.mocked(MediaLibrary.getAssetsAsync).mockResolvedValueOnce({
+      assets: [
+        { id: "other", filename: "x.jpg" },
+        { id: "moved", filename: "q.jpg" },
+      ],
+    } as never);
+    const saved = await createNativeDeps(async () => "AAAA").saveQrImage();
     expect(MediaLibrary.getAlbumAsync).toHaveBeenCalledWith("MoneyMates");
-    expect(MediaLibrary.createAlbumAsync).toHaveBeenCalledWith("MoneyMates", { id: "a1" }, false);
-    expect(MediaLibrary.addAssetsToAlbumAsync).not.toHaveBeenCalled();
+    expect(MediaLibrary.createAlbumAsync).toHaveBeenCalledWith("MoneyMates", { id: "a1", filename: "q.jpg" }, false);
+    expect(saved).toEqual({ assetId: "moved", access: "read-write" });
   });
 
-  it("reuses the album when present", async () => {
+  it("album present: creates the photo straight in the album and keeps that id", async () => {
     jest.mocked(MediaLibrary.requestPermissionsAsync).mockResolvedValueOnce({ granted: true } as never);
     jest.mocked(MediaLibrary.getAlbumAsync).mockResolvedValueOnce({ id: "al" } as never);
     jest.mocked(MediaLibrary.createAlbumAsync).mockClear();
-    await createNativeDeps(async () => "AAAA").saveQrImage();
-    expect(MediaLibrary.addAssetsToAlbumAsync).toHaveBeenCalledWith([{ id: "a1" }], { id: "al" }, false);
+    jest.mocked(MediaLibrary.createAssetAsync).mockResolvedValueOnce({ id: "in-album", filename: "q.jpg" } as never);
+    const saved = await createNativeDeps(async () => "AAAA").saveQrImage();
+    expect(MediaLibrary.createAssetAsync).toHaveBeenLastCalledWith(expect.any(String), { id: "al" });
+    expect(MediaLibrary.addAssetsToAlbumAsync).not.toHaveBeenCalled();
     expect(MediaLibrary.createAlbumAsync).not.toHaveBeenCalled();
+    expect(saved).toEqual({ assetId: "in-album", access: "read-write" });
   });
 
   it("shares the album QR as the gallery photo when there is one", async () => {
@@ -102,7 +114,7 @@ describe("nativeDeps", () => {
       format: "jpeg",
       base64: true,
     });
-    expect(MediaLibrary.createAssetAsync).toHaveBeenLastCalledWith("file:///q.jpg");
+    expect(MediaLibrary.createAssetAsync).toHaveBeenCalledWith("file:///q.jpg");
   });
 
   it("returns the asset id on Android", async () => {

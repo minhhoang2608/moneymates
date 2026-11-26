@@ -53,7 +53,7 @@ class BankHandOffModule : Module() {
       val file = File(dir, if (mime == "image/jpeg") "qr.jpg" else "qr.png")
       file.writeBytes(Base64.decode(base64, Base64.DEFAULT))
       val uri = FileProvider.getUriForFile(context, "${context.packageName}.bankhandoff.fileprovider", file)
-      sendImage(uri, pkg, mime)
+      return@AsyncFunction sendImage(uri, pkg, mime)
     }
 
     // Sends a photo that is already in the gallery (MediaStore id from expo-media-library) to one package,
@@ -62,11 +62,12 @@ class BankHandOffModule : Module() {
     AsyncFunction("shareMediaImage") { mediaId: String, pkg: String ->
       val id = mediaId.toLongOrNull() ?: throw CodedException("ERR_BAD_MEDIA_ID", "Invalid media id", null)
       val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-      sendImage(uri, pkg, context.contentResolver.getType(uri) ?: "image/jpeg")
+      return@AsyncFunction sendImage(uri, pkg, context.contentResolver.getType(uri) ?: "image/jpeg")
     }
   }
 
-  private fun sendImage(uri: Uri, pkg: String, mime: String) {
+  // Returns "<activity that got the image> (<n> activities take it), <mime>" for the temporary diagnostic (#480).
+  private fun sendImage(uri: Uri, pkg: String, mime: String): String {
     val send = Intent(Intent.ACTION_SEND).apply {
       type = mime
       putExtra(Intent.EXTRA_STREAM, uri)
@@ -74,13 +75,14 @@ class BankHandOffModule : Module() {
       setPackage(pkg)
       addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-    if (send.resolveActivity(context.packageManager) == null) {
-      throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept $mime", null)
-    }
+    val target = send.resolveActivity(context.packageManager)
+      ?: throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept $mime", null)
+    val count = context.packageManager.queryIntentActivities(send, 0).size
     try {
       context.startActivity(send)
     } catch (e: ActivityNotFoundException) {
       throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept $mime", e)
     }
+    return "${target.className} ($count), $mime"
   }
 }

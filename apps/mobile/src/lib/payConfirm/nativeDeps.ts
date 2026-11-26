@@ -12,7 +12,7 @@ import type { HandOffDeps, SavedQr } from "./handOff";
 export const ALBUM_NAME = "MoneyMates";
 
 /**
- * Saves the PNG into the "MoneyMates" album (created on first use) and returns the asset id with the access level.
+ * Saves the QR (as JPEG) into the "MoneyMates" album (created on first use) and returns the asset id with the access level.
  * iOS falls back to add-only access when read/write is denied. Returns null when permission is denied.
  */
 export async function saveToMoneyMatesAlbum(base64: string): Promise<SavedQr | null> {
@@ -30,11 +30,25 @@ export async function saveToMoneyMatesAlbum(base64: string): Promise<SavedQr | n
     const perm = await MediaLibrary.requestPermissionsAsync(true);
     if (!perm.granted) return null;
   }
-  const asset = await MediaLibrary.createAssetAsync((await toQrJpeg(base64)).uri);
+  const uri = (await toQrJpeg(base64)).uri;
   const album = await MediaLibrary.getAlbumAsync(ALBUM_NAME);
-  if (album) await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
-  else await MediaLibrary.createAlbumAsync(ALBUM_NAME, asset, false);
-  return { assetId: asset.id, access };
+  if (album) {
+    // Created straight in the album, so this id is the photo that stays there (and is deleted on return).
+    const asset = await MediaLibrary.createAssetAsync(uri, album);
+    return { assetId: asset.id, access };
+  }
+  // First use: an album needs a photo to exist. On Android 11+ "moving" a photo into an album copies it and
+  // deletes the original, so the id from createAssetAsync is gone; look the photo up in the new album instead.
+  const first = await MediaLibrary.createAssetAsync(uri);
+  const created = await MediaLibrary.createAlbumAsync(ALBUM_NAME, first, false);
+  const page = await MediaLibrary.getAssetsAsync({
+    album: created,
+    first: 20,
+    mediaType: MediaLibrary.MediaType.photo,
+    sortBy: [[MediaLibrary.SortBy.modificationTime, false]],
+  });
+  const moved = page.assets.find((a) => a.filename === first.filename) ?? page.assets[0];
+  return { assetId: moved?.id ?? first.id, access };
 }
 
 /** Live deps; `getQrBase64` returns the PNG of the current QR from the hidden QRCode. */
@@ -48,16 +62,18 @@ export function createNativeDeps(getQrBase64: () => Promise<string | null>): Han
       await openIntentUri(url);
     },
     shareToPackage: async (pkg, albumAssetId) => {
+      let albumError = "";
       if (albumAssetId) {
         try {
           return await shareMediaImage(albumAssetId, pkg);
         } catch (e) {
           console.warn("sharing the album QR failed, sending a private copy", e);
+          albumError = `album lỗi (${e instanceof Error ? e.message : String(e)}), `;
         }
       }
       const b64 = await getQrBase64();
       if (!b64) throw new Error("no QR image");
-      await sharePng((await toQrJpeg(b64)).base64, pkg, "image/jpeg");
+      return `${albumError}file tạm: ${await sharePng((await toQrJpeg(b64)).base64, pkg, "image/jpeg")}`;
     },
     setClipboard: async (text) => {
       await Clipboard.setStringAsync(text);
