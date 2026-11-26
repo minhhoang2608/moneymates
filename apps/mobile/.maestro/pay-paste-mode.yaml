@@ -29,9 +29,6 @@ appId: com.moneymates.app
 - tapOn:
     id: "pay-submit"
 - extendedWaitUntil:
-    visible: "Đã lưu 55\\.000đ.*"
+    notVisible:
+      id: "screen-pay-confirm"
     timeout: 10000
-- assertNotVisible:
-    id: "handoff-qr-deleted"
-- assertNotVisible:
-    id: "handoff-reopen"

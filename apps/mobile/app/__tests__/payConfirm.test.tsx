@@ -14,6 +14,7 @@ import {
   createTransactionRepository,
 } from "@/db/repositories";
 import type { AnyDb } from "@/db/seed";
+import { useToast } from "@/stores/toast";
 import { openTestDb } from "@/db/testing/testDb";
 import { setHapticsEnabled } from "@/lib/haptics";
 import { hasValidCrc, parseVietQr } from "@/lib/vietqr";
@@ -82,6 +83,7 @@ describe("pay-confirm screen", () => {
   });
 
   beforeEach(async () => {
+    useToast.getState().hide();
     jest.clearAllMocks();
     setHapticsEnabled(true);
     mockHandOff.mockReset();

@@ -62,7 +62,7 @@ async function pickApp(id: string) {
 describe("pay-confirm share memory", () => {
   beforeEach(async () => {
     mockHandOff.mockReset();
-    usePendingHandOff.setState({ pending: null, visible: false });
+    usePendingHandOff.setState({ pending: null });
     const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mm-pay-")), "test.db");
     global.__PAY_TEST_DB__ = openTestDb(file).db;
   });

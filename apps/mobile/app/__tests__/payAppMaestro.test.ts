@@ -35,8 +35,8 @@ describe("pay app row maestro flows", () => {
     expect(tsx).toContain("pay-app-change");
   });
 
-  it("pay-paste-mode asserts handoff-reopen is not visible after the saved line", () => {
+  it("pay-paste-mode waits for the confirm screen to close after paying", () => {
     const src = read("pay-paste-mode");
-    expect(src.indexOf('assertNotVisible:\n    id: "handoff-reopen"')).toBeGreaterThan(src.indexOf("Đã lưu 55"));
+    expect(src.indexOf('notVisible:\n      id: "screen-pay-confirm"')).toBeGreaterThan(src.indexOf('id: "pay-submit"'));
   });
 });

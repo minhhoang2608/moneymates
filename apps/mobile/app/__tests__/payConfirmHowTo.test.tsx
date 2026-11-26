@@ -9,6 +9,7 @@ import { createPreferencesRepository, createTransactionRepository } from "@/db/r
 import type { AnyDb } from "@/db/seed";
 import { openTestDb } from "@/db/testing/testDb";
 import { vi } from "@/i18n/vi";
+import { useToast } from "@/stores/toast";
 import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { setHapticsEnabled } from "@/lib/haptics";
 import { hasValidCrc, parseVietQr } from "@/lib/vietqr";
@@ -136,12 +137,11 @@ describe("pay-confirm how-to line", () => {
     await fireEvent.press(await screen.findByTestId("pay-submit"));
     await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(usePendingHandOff.getState().pending?.txId).toBeTruthy());
-    expect(usePendingHandOff.getState().pending?.reopen).toBeUndefined();
   });
 
-  it("default image mode: direct hand-off keeps the reopen data (regression)", async () => {
+  it("a bank app that does not open shows a toast instead of the old banner", async () => {
     mockHandOff.mockImplementation(async () => ({
-      opened: true,
+      opened: false,
       mode: "direct",
       decision: "open-only",
       qrStorage: "album",
@@ -149,8 +149,8 @@ describe("pay-confirm how-to line", () => {
     }));
     await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
     await fireEvent.press(await screen.findByTestId("pay-submit"));
-    await waitFor(() => expect(mockHandOff).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(usePendingHandOff.getState().pending?.reopen?.app.id).toBe("tpb"));
+    await waitFor(() => expect(useToast.getState().text).toBe("Không mở được TPBank. Giao dịch đã được lưu."));
+    useToast.getState().hide();
   });
 
   it("howToText joins the parts", () => {

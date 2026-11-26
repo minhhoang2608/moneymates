@@ -28,8 +28,8 @@ appId: com.moneymates.app
 - tapOn:
     id: "pay-submit"
 - extendedWaitUntil:
-    visible:
-      id: "handoff-return-banner"
+    notVisible:
+      id: "screen-pay-confirm"
     timeout: 10000
 - tapOn:
     id: "e2e-notif-inject-tpbank"
@@ -38,11 +38,3 @@ appId: com.moneymates.app
       id: "e2e-notif-status"
       text: "paid:notification"
     timeout: 10000
-- pressKey: home
-- launchApp:
-    stopApp: false
-- extendedWaitUntil:
-    visible:
-      id: "handoff-qr-deleted"
-    timeout: 30000
-- assertVisible: "Đã xoá ảnh QR tạm khỏi Ảnh"
