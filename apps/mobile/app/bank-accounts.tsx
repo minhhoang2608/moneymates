@@ -110,7 +110,7 @@ export default function BankAccountsScreen() {
 
   return (
     <View style={styles.root} testID="screen-bank-accounts">
-      <View style={[styles.header, { marginTop: insets.top }]}>
+      <View testID="screen-header" style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="bank-accounts-back"
           accessibilityLabel="Quay lại"

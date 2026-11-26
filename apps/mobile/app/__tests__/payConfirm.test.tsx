@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import { fireEvent, renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import fs from "node:fs";
@@ -71,6 +72,15 @@ const urlFor = (text: string) => {
 };
 
 describe("pay-confirm screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await renderRouter("./app", { initialUrl: urlFor(qr.dynamic) });
+    await screen.findByTestId("pay-submit");
+    expect(screen.getByTestId("screen-header")).toHaveStyle({ paddingTop: 30, height: 94 });
+  });
+
   beforeEach(async () => {
     jest.clearAllMocks();
     setHapticsEnabled(true);

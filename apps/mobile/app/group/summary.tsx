@@ -104,7 +104,7 @@ export default function GroupSummaryScreen() {
 
   return (
     <View style={styles.root} testID="screen-group-summary">
-      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
+      <View testID="screen-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="summary-back"
           accessibilityRole="button"
@@ -248,7 +248,7 @@ export default function GroupSummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingTop: 40, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: colors.background },
   header: { height: 64, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: { minWidth: 44, height: 44, alignItems: "center", justifyContent: "center" },
   backText: { fontFamily: fontFamily.semibold, fontSize: 28, color: colors.text },

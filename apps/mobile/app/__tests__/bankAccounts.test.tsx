@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -68,6 +69,15 @@ async function fillAndSave(opts: { bank?: string; no?: string; holder?: string }
 }
 
 describe("Tài khoản nhận tiền screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    freshFile();
+    await renderScreen();
+    expect(screen.getByTestId("screen-header")).toHaveStyle({ marginTop: 30 });
+  });
+
   it("AC1: adds TPBank on an empty list and marks it default", async () => {
     freshFile();
     await renderScreen();

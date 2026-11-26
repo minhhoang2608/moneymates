@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -97,6 +98,15 @@ async function open(id: string, from = "/history") {
 }
 
 describe("Chi tiết giao dịch screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    const t = await add(50_000, "2026-11-21T07:02:00Z");
+    await open(t.id);
+    expect(screen.getByTestId("screen-header")).toHaveStyle({ paddingTop: 30, height: 94 });
+  });
+
   it("settings AC3: a transaction keeps its money source after the source is deleted", async () => {
     const sources = createMoneySourceRepository(global.__DETAIL_TEST_DB__ as unknown as AnyDb);
     const visa = await sources.addSource("Visa", "card");

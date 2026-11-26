@@ -128,7 +128,7 @@ export default function BillScreen() {
 
   return (
     <View style={styles.root} testID="screen-bill">
-      <View style={[styles.header, { marginTop: insets.top }]}>
+      <View testID="screen-header" style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="bill-close"
           accessibilityRole="button"

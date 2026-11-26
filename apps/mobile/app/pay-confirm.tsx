@@ -247,7 +247,7 @@ export default function PayConfirmScreen() {
 
   return (
     <View style={styles.root} testID="screen-pay-confirm">
-      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
+      <View testID="screen-header" style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="pay-back"
           accessibilityRole="button"

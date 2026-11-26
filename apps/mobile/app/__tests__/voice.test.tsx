@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -91,6 +92,15 @@ async function groupSetup() {
 }
 
 describe("voice entry screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await renderRouter("./app", { initialUrl: "/voice" });
+    await screen.findByTestId("voice-mic");
+    expect(screen.getByTestId("screen-header")).toHaveStyle({ marginTop: 30 });
+  });
+
   it("draws the design SVG mic (32 px), not an emoji", async () => {
     await renderRouter("./app", { initialUrl: "/voice" });
     await screen.findByTestId("voice-mic");

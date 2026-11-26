@@ -1,3 +1,4 @@
+import * as safeArea from "react-native-safe-area-context";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -82,6 +83,14 @@ async function seedGroupShare() {
 }
 
 describe("Thống kê screen", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("keeps the header below the status bar", async () => {
+    jest.spyOn(safeArea, "useSafeAreaInsets").mockReturnValue({ top: 30, bottom: 0, left: 0, right: 0 });
+    await renderStats();
+    expect(screen.getByTestId("screen-header")).toHaveStyle({ paddingTop: 30, height: 94 });
+  });
+
   it("AC1: shows Nov expense total 500.000đ with Ăn uống first", async () => {
     await add(300_000, "2025-11-05T03:00:00Z");
     await add(200_000, "2025-11-06T03:00:00Z", "expense", "Di chuyển");

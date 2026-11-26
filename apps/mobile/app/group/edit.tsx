@@ -172,7 +172,7 @@ export default function GroupEditScreen() {
 
   return (
     <View style={styles.root} testID="screen-group-edit">
-      <View style={[styles.header, { marginTop: insets.top }]}>
+      <View testID="screen-header" style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="group-close"
           accessibilityLabel={t.close}

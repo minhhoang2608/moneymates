@@ -165,7 +165,7 @@ export default function VoiceScreen() {
 
   return (
     <View style={styles.root} testID="screen-voice">
-      <View style={[styles.header, { marginTop: insets.top }]}>
+      <View testID="screen-header" style={[styles.header, { marginTop: insets.top }]}>
         <PressableScale
           testID="voice-close"
           accessibilityRole="button"
