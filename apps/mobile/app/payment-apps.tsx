@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -29,6 +30,7 @@ function Group({ apps, enabled, onToggle }: { apps: PayApp[]; enabled: Set<strin
 type Props = { onToggle: (id: string, on: boolean) => void };
 
 export default function PaymentAppsScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { enabled, ready, toggle, reorder } = useEnabledPayApps();
   const [query, setQuery] = useState("");
@@ -40,7 +42,7 @@ export default function PaymentAppsScreen() {
 
   return (
     <View style={styles.root} testID="screen-payment-apps">
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top, height: 64 + insets.top }]}>
         <PressableScale
           testID="payment-apps-back"
           accessibilityRole="button"
