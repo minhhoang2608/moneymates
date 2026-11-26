@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 
 import { writeQrPng } from "@/lib/share/qrImage";
 
-import { openIntentUri, sharePng } from "../../../modules/bank-hand-off";
+import { openIntentUri, shareMediaImage, sharePng } from "../../../modules/bank-hand-off";
 
 import type { HandOffDeps, SavedQr } from "./handOff";
 
@@ -47,7 +47,14 @@ export function createNativeDeps(getQrBase64: () => Promise<string | null>): Han
     openIntent: async (url) => {
       await openIntentUri(url);
     },
-    shareToPackage: async (pkg) => {
+    shareToPackage: async (pkg, albumAssetId) => {
+      if (albumAssetId) {
+        try {
+          return await shareMediaImage(albumAssetId, pkg);
+        } catch (e) {
+          console.warn("sharing the album QR failed, sending a private copy", e);
+        }
+      }
       const b64 = await getQrBase64();
       if (!b64) throw new Error("no QR image");
       await sharePng(b64, pkg);

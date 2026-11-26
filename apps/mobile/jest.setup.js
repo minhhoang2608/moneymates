@@ -114,6 +114,7 @@ jest.mock("@/db/client", () => ({ db: require("./src/db/testing/testDb").openTes
 jest.mock("./modules/bank-hand-off", () => ({
   openIntentUri: jest.fn(async () => {}),
   sharePng: jest.fn(async () => {}),
+  shareMediaImage: jest.fn(async () => {}),
 }));
 
 // expo-share-intent has no native module under Jest.

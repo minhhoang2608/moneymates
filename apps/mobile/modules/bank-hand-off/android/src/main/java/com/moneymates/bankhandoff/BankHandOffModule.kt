@@ -1,7 +1,11 @@
 package com.moneymates.bankhandoff
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ContentUris
 import android.content.Intent
+import android.net.Uri
+import android.provider.MediaStore
 import android.util.Base64
 import androidx.core.content.FileProvider
 import expo.modules.kotlin.exception.CodedException
@@ -49,20 +53,33 @@ class BankHandOffModule : Module() {
       val file = File(dir, "qr.png")
       file.writeBytes(Base64.decode(base64, Base64.DEFAULT))
       val uri = FileProvider.getUriForFile(context, "${context.packageName}.bankhandoff.fileprovider", file)
-      val send = Intent(Intent.ACTION_SEND).apply {
-        type = "image/png"
-        putExtra(Intent.EXTRA_STREAM, uri)
-        setPackage(pkg)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-      }
-      if (send.resolveActivity(context.packageManager) == null) {
-        throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept image/png", null)
-      }
-      try {
-        context.startActivity(send)
-      } catch (e: ActivityNotFoundException) {
-        throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept image/png", e)
-      }
+      sendImage(uri, pkg)
+    }
+
+    // Sends a photo that is already in the gallery (MediaStore id from expo-media-library) to one package,
+    // with the same content://media URI the Gallery app shares. Some bank apps (Techcombank) only read the
+    // QR from such a URI and ignore a FileProvider one.
+    AsyncFunction("shareMediaImage") { mediaId: String, pkg: String ->
+      val id = mediaId.toLongOrNull() ?: throw CodedException("ERR_BAD_MEDIA_ID", "Invalid media id", null)
+      sendImage(ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id), pkg)
+    }
+  }
+
+  private fun sendImage(uri: Uri, pkg: String) {
+    val send = Intent(Intent.ACTION_SEND).apply {
+      type = "image/png"
+      putExtra(Intent.EXTRA_STREAM, uri)
+      clipData = ClipData.newRawUri("", uri)
+      setPackage(pkg)
+      addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    if (send.resolveActivity(context.packageManager) == null) {
+      throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept image/png", null)
+    }
+    try {
+      context.startActivity(send)
+    } catch (e: ActivityNotFoundException) {
+      throw CodedException("ERR_SHARE_UNSUPPORTED", "$pkg does not accept image/png", e)
     }
   }
 }

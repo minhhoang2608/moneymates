@@ -4,7 +4,7 @@ import * as MediaLibrary from "expo-media-library/legacy";
 
 import { Platform } from "react-native";
 
-import { openIntentUri, sharePng } from "../../../../modules/bank-hand-off";
+import { openIntentUri, shareMediaImage, sharePng } from "../../../../modules/bank-hand-off";
 import { createNativeDeps } from "../nativeDeps";
 
 jest.mock("expo-clipboard", () => ({ setStringAsync: jest.fn(async () => true) }));
@@ -59,6 +59,20 @@ describe("nativeDeps", () => {
     await createNativeDeps(async () => "AAAA").saveQrImage();
     expect(MediaLibrary.addAssetsToAlbumAsync).toHaveBeenCalledWith([{ id: "a1" }], { id: "al" }, false);
     expect(MediaLibrary.createAlbumAsync).not.toHaveBeenCalled();
+  });
+
+  it("shares the album QR as the gallery photo when there is one", async () => {
+    jest.mocked(sharePng).mockClear();
+    await createNativeDeps(async () => "AAAA").shareToPackage("com.x", "42");
+    expect(shareMediaImage).toHaveBeenCalledWith("42", "com.x");
+    expect(sharePng).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the private PNG when sharing the album QR fails", async () => {
+    jest.mocked(shareMediaImage).mockRejectedValueOnce(new Error("no"));
+    jest.mocked(sharePng).mockClear();
+    await createNativeDeps(async () => "AAAA").shareToPackage("com.x", "42");
+    expect(sharePng).toHaveBeenCalledWith("AAAA", "com.x");
   });
 
   it("shares to a package and opens intents through the native module", async () => {
