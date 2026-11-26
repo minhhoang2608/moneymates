@@ -143,9 +143,7 @@ export const vi = {
     manage: "Quản lý app thanh toán ›",
   },
   handOff: {
-    saved: (amount: string, note: string) => (note ? `Đã lưu ${amount} · ${note}` : `Đã lưu ${amount}`),
-    undo: "Hoàn tác",
-    reopen: (bank: string) => `Mở lại ${bank}`,
+    openFailed: (bank: string) => `Không mở được ${bank}. Giao dịch đã được lưu.`,
   },
   receipt: {
     attached: (recipient: string) =>
@@ -169,7 +167,6 @@ export const vi = {
     hasReceipt: "có biên lai",
   },
   qrImage: {
-    deletedOnReturn: "Đã xoá ảnh QR tạm khỏi Ảnh",
     addOnlyPermission:
       "Chưa cho phép xoá ảnh. Vào Cài đặt > Ảnh, chọn quyền đọc và ghi để MoneyMates tự xoá ảnh QR tạm.",
   },

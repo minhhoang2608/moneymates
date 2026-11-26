@@ -13,7 +13,7 @@ import { Toast } from "@/components/Toast";
 import { AppLockGate } from "@/components/appLock/AppLockGate";
 import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { ReceiptShareHandler } from "@/components/receipt/ReceiptShareHandler";
-import { ReturnBanner } from "@/components/payConfirm/ReturnBanner";
+import { HandOffReturnWatcher } from "@/components/payConfirm/HandOffReturnWatcher";
 import { QueryProvider } from "@/api/QueryProvider";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { RepositoriesProvider } from "@/db/RepositoriesProvider";
@@ -77,7 +77,7 @@ export default function RootLayout() {
               <Stack.Screen name="transaction/[id]" />
               <Stack.Screen name="transaction/new" options={{ presentation: "modal" }} />
             </Stack>
-            <ReturnBanner />
+            <HandOffReturnWatcher />
             <Toast />
             <ReceiptShareHandler />
             {isE2E() ? <E2eNotificationInjector /> : null}

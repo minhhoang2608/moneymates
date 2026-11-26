@@ -17,7 +17,6 @@ import { formatVnd } from "@/lib/money";
 import { fadeInProps, useReduceMotion } from "@/lib/motion";
 import { formatCompactVnd } from "@/lib/stats/formatCompactVnd";
 import { loadOverview, type OverviewData } from "@/lib/stats/loadOverview";
-import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { chartColors, colors, fontFamily, fontSize, layout, overlays, radii } from "@/theme";
 
 export default function OverviewScreen() {
@@ -33,12 +32,9 @@ export default function OverviewScreen() {
   const [pickedMonth, setPickedMonth] = useState<string | null>(null);
   const months = useMemo(() => recentMonths(new Date()), []);
 
-  const deletedVersion = usePendingHandOff((s) => s.deletedVersion);
-
   useFocusEffect(
     useCallback(() => {
       let alive = true;
-      void deletedVersion; // reload after the return banner deletes a payment
       Promise.all([
         loadOverview(repos, {
           myShares: repos.groupExpenses.mySharesInMonth,
@@ -55,7 +51,7 @@ export default function OverviewScreen() {
       return () => {
         alive = false;
       };
-    }, [repos, profile, deletedVersion, pickedMonth]),
+    }, [repos, profile, pickedMonth]),
   );
 
   const o = data?.overview;

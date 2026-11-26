@@ -194,7 +194,6 @@ export default function PayConfirmScreen() {
       await appSettings.set(RECENT_KEY, [selected.id, ...recent.filter((id) => id !== selected.id)].slice(0, 10));
       usePendingHandOff.getState().set({ txId, amount: parsed.vnd, label: note });
     } catch {
-      usePendingHandOff.getState().reveal();
       busy.current = false;
       router.back();
       return;
@@ -228,20 +227,9 @@ export default function PayConfirmScreen() {
         },
       );
       useHandOffDiag.getState().set(result.shareDiag ?? null);
-      // "Mở lại <bank>" only exists when there is a QR image (docs §1 step 5); paste mode has none.
-      if (result.mode === "direct" && result.handOffMethod !== "paste") {
-        usePendingHandOff.getState().setReopen({
-          app: selected,
-          model,
-          amount,
-          note: text,
-          qrInAlbum: result.qrStorage === "album" && !!result.qrAssetId,
-          nonAutofillMode,
-        });
-      }
-      if (!result.opened) usePendingHandOff.getState().reveal();
+      if (!result.opened) useToast.getState().show(vi.handOff.openFailed(selected.name));
     } catch {
-      usePendingHandOff.getState().reveal();
+      useToast.getState().show(vi.handOff.openFailed(selected.name));
     } finally {
       router.back();
     }

@@ -22,12 +22,9 @@ appId: com.moneymates.app
 - tapOn:
     id: "pay-submit"
 - extendedWaitUntil:
-    visible:
-      id: "handoff-return-banner"
+    notVisible:
+      id: "screen-pay-confirm"
     timeout: 10000
-- assertVisible: "Đã lưu 55\\.000đ.*"
-- assertVisible:
-    id: "handoff-undo"
 - assertNotVisible: "Đã thanh toán xong chưa?"
 - tapOn:
     id: "tab-history"

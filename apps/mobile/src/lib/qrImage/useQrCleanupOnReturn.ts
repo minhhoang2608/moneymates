@@ -3,13 +3,12 @@ import { AppState } from "react-native";
 
 import { useRepositories } from "@/db/RepositoriesProvider";
 import { useHandOffDiag } from "@/stores/handOffDiag";
-import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { useToast } from "@/stores/toast";
 
 import { createQrImageDeleter } from "./delete";
 import { getQrMediaLibrary } from "./mediaLibrary";
 
-/** On background → active, deletes the temporary QR images and tells the banner when something was removed. */
+/** On background → active, deletes the temporary QR images (silently). */
 export function useQrCleanupOnReturn() {
   const { handOffs } = useRepositories();
   useEffect(() => {
@@ -21,12 +20,7 @@ export function useQrCleanupOnReturn() {
         sawBackground = false;
         const diag = useHandOffDiag.getState().take();
         if (diag) useToast.getState().show(`Chẩn đoán gửi ảnh: ${diag}`);
-        deleter
-          .deletePendingOnReturn()
-          .then((r) => {
-            if (r.deleted.length > 0) usePendingHandOff.getState().markQrImagesDeleted();
-          })
-          .catch((e) => console.warn("could not delete QR images", e));
+        deleter.deletePendingOnReturn().catch((e) => console.warn("could not delete QR images", e));
       }
     });
     return () => sub.remove();

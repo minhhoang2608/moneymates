@@ -18,6 +18,6 @@ appId: com.moneymates.app
 - tapOn:
     id: "pay-submit"
 - extendedWaitUntil:
-    visible:
-      id: "handoff-return-banner"
+    notVisible:
+      id: "screen-pay-confirm"
     timeout: 10000

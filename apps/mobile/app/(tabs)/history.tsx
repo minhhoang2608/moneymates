@@ -26,7 +26,6 @@ import {
 } from "@/lib/history";
 import { formatVnd } from "@/lib/money";
 import { motionProps, useReduceMotion } from "@/lib/motion";
-import { usePendingHandOff } from "@/stores/pendingHandOff";
 import { colors, fontFamily, fontSize, layout, radii } from "@/theme";
 
 export const historyLayout = { headerGap: 12, listTop: 12, dayGap: 14 } as const;
@@ -47,13 +46,11 @@ export default function HistoryScreen() {
   const [picker, setPicker] = useState<Picker>(null);
   const [deleted, setDeleted] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
-  const deletedVersion = usePendingHandOff((s) => s.deletedVersion);
 
   useFocusEffect(
     useCallback(() => {
       let alive = true;
       void version; // reload after delete / undo
-      void deletedVersion; // ...and after the return banner deletes a payment
       Promise.all([
         transactions.listWithReceiptFlag(toTransactionFilter(filters)),
         categories.listByKind("expense"),
@@ -71,7 +68,7 @@ export default function HistoryScreen() {
       return () => {
         alive = false;
       };
-    }, [transactions, categories, groupRepo, filters, version, deletedVersion]),
+    }, [transactions, categories, groupRepo, filters, version]),
   );
 
   const groups = useMemo(() => groupByDay(rows), [rows]);

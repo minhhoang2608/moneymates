@@ -1,18 +1,15 @@
 import { usePendingHandOff } from "../pendingHandOff";
 
-describe("pendingHandOff", () => {
-  beforeEach(() => usePendingHandOff.setState({ pending: null, visible: false }));
-  it("hide keeps the pending hand-off, clear drops it", () => {
-    const s = usePendingHandOff.getState();
-    s.set({ txId: "t", amount: 1, label: "x" });
-    s.reveal();
-    usePendingHandOff.getState().hide();
-    expect(usePendingHandOff.getState()).toMatchObject({ visible: false, pending: { txId: "t" } });
-    usePendingHandOff.getState().clear();
+describe("pendingHandOff store", () => {
+  beforeEach(() => usePendingHandOff.getState().clear());
+
+  it("keeps the pending payment and its hand-off id until cleared", () => {
+    usePendingHandOff.getState().setHandOffId("ignored");
     expect(usePendingHandOff.getState().pending).toBeNull();
-  });
-  it("setReopen and setHandOffId are no-ops without a pending hand-off", () => {
-    usePendingHandOff.getState().setHandOffId("h");
+    usePendingHandOff.getState().set({ txId: "t1", amount: 55000, label: "Phở" });
+    usePendingHandOff.getState().setHandOffId("h1");
+    expect(usePendingHandOff.getState().pending).toEqual({ txId: "t1", amount: 55000, label: "Phở", handOffId: "h1" });
+    usePendingHandOff.getState().clear();
     expect(usePendingHandOff.getState().pending).toBeNull();
   });
 });
